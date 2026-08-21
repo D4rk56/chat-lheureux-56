@@ -1,0 +1,9 @@
+Routing Netlify Edge Functions
+
+[[edge_functions]]
+path = "/chat-detail*"
+function = "og-preview"
+
+[[edge_functions]]
+path = "/api/cat-image*"
+function = "og-preview"

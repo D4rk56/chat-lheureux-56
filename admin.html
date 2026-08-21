@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth overflow-x-hidden max-w-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Administration — Chat L'Heureux 56</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #090d16; color: #f8fafc; overflow-x: hidden; width: 100%; }
+        .font-title { font-family: 'Outfit', sans-serif; }
+        .glass-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .bg-brand-gradient { background: linear-gradient(135deg, #d24de3 0%, #7db1f9 100%); }
+        .text-brand-gradient { background: linear-gradient(135deg, #d24de3 0%, #7db1f9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col relative selection:bg-pink-500 selection:text-white max-w-full overflow-x-hidden">
+
+    <!-- Notifications Toast -->
+    <div id="toastContainer" class="fixed top-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none sm:max-w-md"></div>
+
+    <header class="glass-panel sticky top-0 z-40 border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <a href="index.html" class="flex items-center gap-1.5 group shrink-0">
+                    <span class="font-title font-black text-lg sm:text-2xl tracking-tight text-brand-gradient truncate">
+                        Chat L'Heureux 56
+                    </span>
+                </a>
+                <span class="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shrink-0">
+                    Admin
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <a href="index.html" target="_blank" class="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800/80 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-slate-700/60" title="Voir le site public">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[11px] text-pink-400"></i>
+                    <span class="hidden md:inline">Voir le site</span>
+                </a>
+                <button id="logoutBtn" class="hidden text-xs font-bold bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl transition-all items-center gap-1.5">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="hidden sm:inline">Déconnexion</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page de connexion -->
+    <main id="authSection" class="flex-grow flex items-center justify-center p-3 sm:p-4 my-auto">
+        <div class="glass-panel w-full max-w-md p-6 sm:p-10 rounded-2xl sm:rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-pink-500/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl"></div>
+
+            <div class="text-center mb-6 sm:mb-8 relative z-10">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-brand-gradient rounded-2xl flex items-center justify-center text-white text-xl sm:text-2xl mx-auto mb-3 sm:mb-4 shadow-lg shadow-pink-500/20">
+                    <i class="fa-solid fa-shield-cat"></i>
+                </div>
+                <h1 class="font-title text-xl sm:text-2xl font-black text-white mb-1">Espace Gestion</h1>
+                <p class="text-xs font-semibold text-slate-400">Accès sécurisé pour le bureau de l'association</p>
+            </div>
+
+            <form id="loginForm" class="space-y-4 relative z-10" autocomplete="off">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Adresse E-mail</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="email" id="loginEmail" value="" placeholder="votre.email@exemple.fr" autocomplete="off" required class="w-full bg-slate-900/90 border border-slate-800 text-white text-xs font-semibold rounded-xl sm:rounded-2xl pl-9 sm:pl-10 pr-3 py-3 focus:outline-none focus:border-pink-500 transition-colors">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Mot de passe</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required class="w-full bg-slate-900/90 border border-slate-800 text-white text-xs font-semibold rounded-xl sm:rounded-2xl pl-9 sm:pl-10 pr-3 py-3 focus:outline-none focus:border-pink-500 transition-colors">
+                    </div>
+                </div>
+
+                <div id="loginError" class="hidden bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold p-3 rounded-xl text-center"></div>
+
+                <button type="submit" id="loginBtn" class="w-full bg-brand-gradient text-white font-black py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl shadow-lg shadow-pink-500/20 hover:opacity-95 transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                    <span>Se connecter</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Tableau de bord connecté -->
+    <main id="dashboardSection" class="hidden flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-slate-800/80">
+            <div>
+                <h1 class="font-title text-xl sm:text-3xl font-black text-white mb-0.5">Console de Gestion</h1>
+                <p class="text-xs font-semibold text-slate-400">Gestion en temps réel de Cloud Firestore</p>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <button id="tabBtnCats" onclick="switchTab('cats')" class="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center">
+                    <i class="fa-solid fa-cat mr-1.5"></i> Chats (<span id="catCounter">0</span>)
+                </button>
+                <button id="tabBtnStories" onclick="switchTab('stories')" class="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center">
+                    <i class="fa-solid fa-heart mr-1.5"></i> Avis (<span id="storyCounter">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- Cartes Statistiques Cliquables -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+            <div id="cardStatDispo" onclick="filterCatsByStatus('Disponible')" class="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800/80 flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-all select-none">
+                <div>
+                    <span class="block text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Disponibles</span>
+                    <strong id="statDispo" class="text-lg sm:text-2xl font-black text-emerald-400">0</strong>
+                </div>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs sm:text-sm">
+                    <i class="fa-solid fa-paw"></i>
+                </div>
+            </div>
+
+            <div id="cardStatUrgence" onclick="filterCatsByStatus('Urgence')" class="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800/80 flex items-center justify-between cursor-pointer hover:border-rose-500/50 transition-all select-none">
+                <div>
+                    <span class="block text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">🚨 Urgences</span>
+                    <strong id="statUrgence" class="text-lg sm:text-2xl font-black text-rose-400">0</strong>
+                </div>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xs sm:text-sm">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+
+            <div id="cardStatReserve" onclick="filterCatsByStatus('Réservé')" class="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800/80 flex items-center justify-between cursor-pointer hover:border-amber-500/50 transition-all select-none">
+                <div>
+                    <span class="block text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Réservés</span>
+                    <strong id="statReserve" class="text-lg sm:text-2xl font-black text-amber-400">0</strong>
+                </div>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs sm:text-sm">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+
+            <div id="cardStatAdopte" onclick="filterCatsByStatus('Adopté')" class="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800/80 flex items-center justify-between cursor-pointer hover:border-pink-500/50 transition-all select-none">
+                <div>
+                    <span class="block text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">🎉 Adoptés</span>
+                    <strong id="statAdopte" class="text-lg sm:text-2xl font-black text-pink-400">0</strong>
+                </div>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-xs sm:text-sm">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Chats -->
+        <section id="tabContentCats" class="space-y-4 sm:space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <div class="flex items-center gap-2 w-full sm:w-auto flex-1">
+                    <div class="relative w-full sm:w-80">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="searchCatInput" placeholder="Rechercher par nom ou ville..." class="w-full bg-slate-900 border border-slate-800 text-xs font-semibold text-white rounded-xl sm:rounded-2xl pl-9 pr-4 py-3 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <button id="resetFilterBtn" onclick="filterCatsByStatus(null)" class="hidden text-xs font-bold px-3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl sm:rounded-2xl border border-slate-700 whitespace-nowrap transition-colors">
+                        <i class="fa-solid fa-xmark mr-1"></i> Réinitialiser
+                    </button>
+                </div>
+                <button onclick="openCatModal()" class="w-full sm:w-auto bg-brand-gradient text-white px-5 py-3 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Ajouter un chat</span>
+                </button>
+            </div>
+
+            <div id="catsLoading" class="text-center py-12 text-slate-400 font-bold text-xs">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-pink-500 mb-2 block"></i>
+                Chargement des chats depuis Firestore...
+            </div>
+
+            <div id="catsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 hidden"></div>
+            
+            <div id="noCatsMessage" class="hidden glass-card p-8 sm:p-12 rounded-2xl sm:rounded-[2rem] text-center text-slate-400 font-bold text-xs">
+                Aucun chat enregistré dans la base de données.
+            </div>
+        </section>
+
+        <!-- Onglet Avis -->
+        <section id="tabContentStories" class="space-y-4 sm:space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <h2 class="font-title text-lg sm:text-xl font-bold text-white">Avis adoptants ("Ils sont heureux")</h2>
+                <button onclick="openStoryModal()" class="bg-brand-gradient text-white px-5 py-3 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Ajouter un avis</span>
+                </button>
+            </div>
+
+            <div id="storiesLoading" class="text-center py-12 text-slate-400 font-bold text-xs">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-pink-500 mb-2 block"></i>
+                Chargement des témoignages...
+            </div>
+
+            <div id="storiesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 hidden"></div>
+
+            <div id="noStoriesMessage" class="hidden glass-card p-8 sm:p-12 rounded-2xl sm:rounded-[2rem] text-center text-slate-400 font-bold text-xs">
+                Aucun témoignage enregistré pour le moment.
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modale Chat -->
+    <div id="catModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="glass-panel w-full max-w-3xl rounded-2xl sm:rounded-[2.5rem] border border-slate-800 my-auto overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            
+            <div class="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80 shrink-0">
+                <h2 id="catModalTitle" class="font-title text-lg sm:text-xl font-black text-white">Fiche Chat</h2>
+                <button onclick="closeCatModal()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs sm:text-sm transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="catForm" class="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto flex-grow text-xs font-semibold">
+                <input type="hidden" id="catId">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Nom du chat *</label>
+                        <input type="text" id="formName" required class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Statut *</label>
+                        <select id="formStatus" required class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                            <option value="Disponible">Disponible</option>
+                            <option value="Réservé">Réservé</option>
+                            <option value="Urgence">🚨 Urgence</option>
+                            <option value="Adopté">🎉 Adopté</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Sexe *</label>
+                        <select id="formSex" required class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                            <option value="Femelle">♀ Femelle</option>
+                            <option value="Mâle">♂ Mâle</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Âge (ex: 2 ans, 6 mois)</label>
+                        <input type="text" id="formAge" placeholder="ex: 2 ans" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Localisation (Ville FA)</label>
+                        <input type="text" id="formLocation" placeholder="ex: Colpo (56)" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                    </div>
+                </div>
+
+                <!-- Photos -->
+                <div class="space-y-3 bg-slate-900/60 p-3.5 sm:p-4 rounded-2xl border border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-pink-400 font-bold uppercase tracking-wider">
+                            <i class="fa-solid fa-images mr-1"></i> Photos (Max 5 photos)
+                        </label>
+                        <span id="catPhotosCounter" class="text-[10px] text-slate-400">0 / 5 photos</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                        <div>
+                            <label class="block text-slate-500 text-[10px] mb-1">Option A : Fichier PC / Téléphone</label>
+                            <input type="file" id="formPhotoFile" accept="image/*" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-pink-500/20 file:text-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 text-[10px] mb-1">Option B : Lien URL Web</label>
+                            <div class="flex gap-2">
+                                <input type="url" id="formPhotosUrl" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none">
+                                <button type="button" onclick="handlePhotosUrlInput('cat')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">
+                                    Ajouter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="catPhotoThumbs" class="grid grid-cols-3 sm:grid-cols-5 gap-2 pt-2"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-slate-400 uppercase tracking-wider">Ententes & Compatibilités</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                        <div>
+                            <label class="block text-[10px] text-pink-400 font-bold mb-1">🐱 Autres chats</label>
+                            <input type="text" id="formCompatCats" placeholder="ex: Oui" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-amber-400 font-bold mb-1">🐶 Chiens</label>
+                            <input type="text" id="formCompatDogs" placeholder="ex: Non testé" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-blue-400 font-bold mb-1">👶 Enfants</label>
+                            <input type="text" id="formCompatKids" placeholder="ex: Oui" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2.5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-slate-400 uppercase tracking-wider">Bilan Vétérinaire</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-900/40 p-3 rounded-xl border border-slate-800 text-[11px] sm:text-xs">
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                            <input type="checkbox" id="vetSterilized" class="rounded bg-slate-800 border-slate-700 text-pink-500 focus:ring-0"> Stérilisé(e)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                            <input type="checkbox" id="vetChipped" class="rounded bg-slate-800 border-slate-700 text-pink-500 focus:ring-0"> Pucé(e) ICAD
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                            <input type="checkbox" id="vetVaccinated" class="rounded bg-slate-800 border-slate-700 text-pink-500 focus:ring-0"> Vacciné(e)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                            <input type="checkbox" id="vetTested" class="rounded bg-slate-800 border-slate-700 text-pink-500 focus:ring-0"> Tests FIV/FeLV
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 uppercase tracking-wider mb-1">Histoire & Caractère</label>
+                    <textarea id="formDescription" rows="3" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl p-3 focus:outline-none focus:border-pink-500"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 uppercase tracking-wider mb-1">Foyer idéal recherché</label>
+                    <textarea id="formIdealHome" rows="2" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl p-3 focus:outline-none focus:border-pink-500"></textarea>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2.5">
+                    <button type="button" onclick="closeCatModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold">Annuler</button>
+                    <button type="submit" id="saveCatBtn" class="px-5 py-2.5 rounded-xl bg-brand-gradient text-white font-black uppercase tracking-wider shadow-lg shadow-pink-500/20">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale Témoignage -->
+    <div id="storyModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="glass-panel w-full max-w-xl rounded-2xl sm:rounded-[2.5rem] border border-slate-800 my-auto overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            
+            <div class="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80 shrink-0">
+                <h2 id="storyModalTitle" class="font-title text-lg sm:text-xl font-black text-white">Témoignage d'adoptant</h2>
+                <button onclick="closeStoryModal()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs sm:text-sm transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="storyForm" class="p-4 sm:p-8 space-y-4 overflow-y-auto flex-grow text-xs font-semibold">
+                <input type="hidden" id="storyId">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Nom du chat *</label>
+                        <input type="text" id="storyCatName" required class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Nom de l'adoptant *</label>
+                        <input type="text" id="storyAdoptant" required placeholder="ex: Sophie D." class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 uppercase tracking-wider mb-1">Ville / Secteur (ex: Lorient (56))</label>
+                    <input type="text" id="storyLocation" placeholder="ex: Vannes (56)" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500">
+                </div>
+
+                <div class="space-y-2.5 bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-pink-400 font-bold uppercase tracking-wider">Photo de l'adopté</label>
+                        <span id="storyPhotosCounter" class="text-[10px] text-slate-400">0 / 5 photos</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <input type="file" id="storyPhotoFile" accept="image/*" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-pink-500/20 file:text-pink-300">
+                        <div class="flex gap-2">
+                            <input type="url" id="storyPhotoUrl" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none">
+                            <button type="button" onclick="handlePhotosUrlInput('story')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">
+                                Ajouter
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="storyPhotoThumbs" class="grid grid-cols-3 sm:grid-cols-5 gap-2 pt-2"></div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 uppercase tracking-wider mb-1">Message / Nouvelles de la famille *</label>
+                    <textarea id="storyContent" rows="4" required class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl p-3 focus:outline-none focus:border-pink-500"></textarea>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 flex justify-end gap-2.5">
+                    <button type="button" onclick="closeStoryModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold">Annuler</button>
+                    <button type="submit" id="saveStoryBtn" class="px-5 py-2.5 rounded-xl bg-brand-gradient text-white font-black uppercase tracking-wider shadow-lg shadow-pink-500/20">
+                        Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modale de Confirmation de Suppression -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-sm rounded-2xl p-6 text-center border border-slate-800 shadow-2xl">
+            <div class="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-title text-lg font-black text-white mb-2">Confirmation</h3>
+            <p id="deleteModalMsg" class="text-xs text-slate-300 font-semibold mb-6">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs">Annuler</button>
+                <button id="confirmDeleteActionBtn" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider shadow-lg">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
+            authDomain: "chat-lheureux-56.firebaseapp.com",
+            projectId: "chat-lheureux-56",
+            storageBucket: "chat-lheureux-56.firebasestorage.app",
+            messagingSenderId: "238050920889",
+            appId: "1:238050920889:web:08f43e255fd1cb2f9c4e68"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Variables globales
+        let allCats = [];
+        let allStories = [];
+        let currentCatPhotos = [];
+        let currentStoryPhotos = [];
+        let pendingDeleteId = null;
+        let pendingDeleteType = null;
+        let activeStatusFilter = null;
+
+        // DOM Elements
+        const authSection = document.getElementById('authSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                logoutBtn.classList.add('flex');
+                loadAllData();
+            } else {
+                authSection.classList.remove('hidden');
+                dashboardSection.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+                logoutBtn.classList.remove('flex');
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errDiv = document.getElementById('loginError');
+            errDiv.classList.add('hidden');
+
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                showToast('Connexion réussie', 'Bienvenue dans la console admin');
+            } catch (err) {
+                console.error("Firebase Login Error:", err);
+                let msg = `Erreur : ${err.code || err.message}`;
+                if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                    msg = "Identifiants incorrects ou compte non créé dans la console Firebase.";
+                } else if (err.code === 'auth/wrong-password') {
+                    msg = "Mot de passe incorrect.";
+                } else if (err.code === 'auth/too-many-requests') {
+                    msg = "Accès bloqué temporairement suite à trop de tentatives. Réessayez dans quelques minutes.";
+                }
+                errDiv.innerText = msg;
+                errDiv.classList.remove('hidden');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth).then(() => showToast('Déconnexion', 'À bientôt !', 'info'));
+        });
+
+        async function loadAllData() {
+            await Promise.all([fetchCats(), fetchStories()]);
+        }
+
+        async function fetchCats() {
+            const spinner = document.getElementById('catsLoading');
+
+            try {
+                const snapshot = await getDocs(collection(db, "chats"));
+                allCats = [];
+                snapshot.forEach(docSnap => {
+                    allCats.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                document.getElementById('catCounter').innerText = allCats.length;
+                updateStatsCounters(allCats);
+
+                if (spinner) spinner.classList.add('hidden');
+                applyAdminCatFilters();
+            } catch (err) {
+                console.error("Erreur Firestore chats:", err);
+                if (spinner) spinner.innerText = "Erreur de chargement des chats.";
+            }
+        }
+
+        function updateStatsCounters(cats) {
+            let dispo = 0, urgence = 0, reserve = 0, adopte = 0;
+            cats.forEach(c => {
+                const s = c.status || 'Disponible';
+                if (s === 'Disponible') dispo++;
+                else if (s === 'Urgence') urgence++;
+                else if (s === 'Réservé') reserve++;
+                else if (s === 'Adopté') adopte++;
+            });
+
+            document.getElementById('statDispo').innerText = dispo;
+            document.getElementById('statUrgence').innerText = urgence;
+            document.getElementById('statReserve').innerText = reserve;
+            document.getElementById('statAdopte').innerText = adopte;
+        }
+
+        window.filterCatsByStatus = function(status) {
+            if (activeStatusFilter === status || status === null) {
+                activeStatusFilter = null;
+            } else {
+                activeStatusFilter = status;
+            }
+
+            if (document.getElementById('tabContentCats').classList.contains('hidden')) {
+                switchTab('cats');
+            }
+
+            applyAdminCatFilters();
+        };
+
+        function applyAdminCatFilters() {
+            const query = (document.getElementById('searchCatInput')?.value || '').toLowerCase();
+
+            const filtered = allCats.filter(c => {
+                const matchQuery = (c.name || '').toLowerCase().includes(query) || (c.location || '').toLowerCase().includes(query);
+                const matchStatus = !activeStatusFilter || (c.status || 'Disponible') === activeStatusFilter;
+                return matchQuery && matchStatus;
+            });
+
+            const cards = {
+                'Disponible': { el: document.getElementById('cardStatDispo'), color: 'ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500' },
+                'Urgence': { el: document.getElementById('cardStatUrgence'), color: 'ring-2 ring-rose-500 bg-rose-500/10 border-rose-500' },
+                'Réservé': { el: document.getElementById('cardStatReserve'), color: 'ring-2 ring-amber-500 bg-amber-500/10 border-amber-500' },
+                'Adopté': { el: document.getElementById('cardStatAdopte'), color: 'ring-2 ring-pink-500 bg-pink-500/10 border-pink-500' }
+            };
+
+            Object.keys(cards).forEach(key => {
+                const item = cards[key];
+                if (item.el) {
+                    const isActive = activeStatusFilter === key;
+                    if (isActive) {
+                        item.el.className = `glass-card p-3.5 sm:p-5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all select-none ${item.color}`;
+                    } else {
+                        item.el.className = `glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800/80 flex items-center justify-between cursor-pointer hover:border-slate-700 transition-all select-none opacity-80 hover:opacity-100`;
+                    }
+                }
+            });
+
+            const resetBtn = document.getElementById('resetFilterBtn');
+            if (resetBtn) {
+                if (activeStatusFilter || query) {
+                    resetBtn.classList.remove('hidden');
+                } else {
+                    resetBtn.classList.add('hidden');
+                }
+            }
+
+            renderCatsList(filtered);
+        }
+
+        function renderCatsList(cats) {
+            const grid = document.getElementById('catsGrid');
+            const emptyMsg = document.getElementById('noCatsMessage');
+
+            if (!grid) return;
+
+            if (cats.length === 0) {
+                grid.classList.add('hidden');
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            grid.innerHTML = cats.map(cat => {
+                const photo = (cat.photos && cat.photos.length > 0) ? cat.photos[0] : (cat.image || 'https://placehold.co/600x400?text=Photo');
+                const gender = cat.sex || cat.gender || 'Femelle';
+                const status = cat.status || 'Disponible';
+                const location = cat.location || 'Colpo (56)';
+
+                let badgeBg = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                if (status === 'Urgence') badgeBg = 'bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse';
+                if (status === 'Réservé') badgeBg = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+                if (status === 'Adopté') badgeBg = 'bg-pink-500/20 text-pink-400 border-pink-500/30';
+
+                return `
+                    <div class="glass-card rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-4 flex flex-col justify-between border border-slate-800">
+                        <div>
+                            <div class="relative h-44 sm:h-52 rounded-xl sm:rounded-2xl overflow-hidden mb-3 bg-slate-900">
+                                <img src="${photo}" class="w-full h-full object-cover">
+                                <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${badgeBg}">
+                                    ${status}
+                                </span>
+                                <span class="absolute top-2.5 right-2.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-300 border border-slate-800">
+                                    ${gender === 'Femelle' ? '♀' : '♂'} ${cat.age || ''}
+                                </span>
+                            </div>
+                            <h3 class="font-title text-lg sm:text-xl font-black text-white mb-0.5">${cat.name || 'Chat'}</h3>
+                            <p class="text-xs text-slate-400 font-semibold mb-2"><i class="fa-solid fa-location-dot text-pink-400 mr-1"></i> ${location}</p>
+                            <p class="text-slate-300 text-xs line-clamp-2 mb-3 font-medium">${cat.description || 'Pas de description.'}</p>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                            <a href="chat-detail.html?id=${cat.id}" target="_blank" class="text-xs font-bold text-pink-400 hover:text-pink-300 flex items-center gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 px-2.5 py-1.5 rounded-xl transition-all">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Voir la fiche
+                            </a>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editCat('${cat.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors">
+                                    <i class="fa-solid fa-pen text-[10px] mr-1"></i> Modifier
+                                </button>
+                                <button onclick="promptDelete('${cat.id}', 'cat', '${(cat.name || 'ce chat').replace(/'/g, "\\'")}')" class="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+                                    <i class="fa-solid fa-trash text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('searchCatInput').addEventListener('input', applyAdminCatFilters);
+
+        async function fetchStories() {
+            const spinner = document.getElementById('storiesLoading');
+
+            try {
+                const snapshot = await getDocs(collection(db, "testimonials"));
+                allStories = [];
+                snapshot.forEach(docSnap => {
+                    allStories.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                document.getElementById('storyCounter').innerText = allStories.length;
+                if (spinner) spinner.classList.add('hidden');
+
+                renderStoriesList(allStories);
+            } catch (err) {
+                console.error("Erreur Firestore témoignages:", err);
+                if (spinner) spinner.innerText = "Erreur de chargement des témoignages.";
+            }
+        }
+
+        function renderStoriesList(stories) {
+            const grid = document.getElementById('storiesGrid');
+            const emptyMsg = document.getElementById('noStoriesMessage');
+
+            if (!grid) return;
+
+            if (stories.length === 0) {
+                grid.classList.add('hidden');
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            grid.innerHTML = stories.map(story => {
+                const photo = (story.photos && story.photos.length > 0) ? story.photos[0] : 'https://placehold.co/600x400?text=Adopt%C3%A9';
+
+                return `
+                    <div class="glass-card rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-4 flex flex-col justify-between border border-slate-800">
+                        <div>
+                            <div class="relative h-36 sm:h-44 rounded-xl sm:rounded-2xl overflow-hidden mb-2.5 bg-slate-900">
+                                <img src="${photo}" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-title text-base sm:text-lg font-black text-white mb-0.5">${story.catName}</h3>
+                            <p class="text-xs text-pink-400 font-bold mb-2">Par ${story.adoptant} • ${story.location || 'Morbihan'}</p>
+                            <p class="text-slate-400 text-xs italic line-clamp-3 mb-3">« ${story.content} »</p>
+                        </div>
+
+                        <div class="pt-2.5 border-t border-slate-800/80 flex items-center justify-end gap-2">
+                            <button onclick="editStory('${story.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors">
+                                <i class="fa-solid fa-pen text-[10px]"></i> Modifier
+                            </button>
+                            <button onclick="promptDelete('${story.id}', 'story', 'le témoignage de ${(story.catName || '').replace(/'/g, "\\'")}')" class="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+                                <i class="fa-solid fa-trash text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('formPhotoFile').addEventListener('change', (e) => handleFileInput(e, 'cat'));
+        document.getElementById('storyPhotoFile').addEventListener('change', (e) => handleFileInput(e, 'story'));
+
+        function handleFileInput(e, targetType) {
+            const files = Array.from(e.target.files);
+            const targetArray = targetType === 'cat' ? currentCatPhotos : currentStoryPhotos;
+
+            files.forEach(file => {
+                if (targetArray.length >= 5) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const maxDim = 1000;
+                        let w = img.width, h = img.height;
+                        if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
+                        else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                        targetArray.push(compressedBase64);
+                        renderPhotoThumbs(targetType);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.handlePhotosUrlInput = function(targetType) {
+            const inputId = targetType === 'cat' ? 'formPhotosUrl' : 'storyPhotoUrl';
+            const raw = document.getElementById(inputId).value;
+            if (!raw) return;
+
+            const urls = raw.split(/[\n,]+/).map(u => u.trim()).filter(u => u.length > 5);
+            const targetArray = targetType === 'cat' ? currentCatPhotos : currentStoryPhotos;
+
+            urls.forEach(url => {
+                if (targetArray.length < 5 && !targetArray.includes(url)) {
+                    targetArray.push(url);
+                }
+            });
+
+            document.getElementById(inputId).value = '';
+            renderPhotoThumbs(targetType);
+        };
+
+        window.removePhoto = function(index, targetType) {
+            if (targetType === 'cat') currentCatPhotos.splice(index, 1);
+            else currentStoryPhotos.splice(index, 1);
+            renderPhotoThumbs(targetType);
+        };
+
+        window.setPrimaryPhoto = function(index, targetType) {
+            const arr = targetType === 'cat' ? currentCatPhotos : currentStoryPhotos;
+            if (index > 0 && index < arr.length) {
+                const item = arr.splice(index, 1)[0];
+                arr.unshift(item);
+                renderPhotoThumbs(targetType);
+            }
+        };
+
+        window.movePhoto = function(index, direction, targetType) {
+            const arr = targetType === 'cat' ? currentCatPhotos : currentStoryPhotos;
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < arr.length) {
+                const temp = arr[index];
+                arr[index] = arr[newIndex];
+                arr[newIndex] = temp;
+                renderPhotoThumbs(targetType);
+            }
+        };
+
+        function renderPhotoThumbs(targetType) {
+            const isCat = targetType === 'cat';
+            const photos = isCat ? currentCatPhotos : currentStoryPhotos;
+            const container = document.getElementById(isCat ? 'catPhotoThumbs' : 'storyPhotoThumbs');
+            const counter = document.getElementById(isCat ? 'catPhotosCounter' : 'storyPhotosCounter');
+
+            if (counter) counter.innerText = `${photos.length} / 5 photos`;
+            if (!container) return;
+
+            container.innerHTML = photos.map((p, idx) => `
+                <div class="relative rounded-xl overflow-hidden bg-slate-800 border ${idx === 0 ? 'border-pink-500 ring-2 ring-pink-500/40' : 'border-slate-700'} h-24 flex flex-col justify-between p-1 transition-all">
+                    <img src="${p}" class="absolute inset-0 w-full h-full object-cover opacity-80">
+                    
+                    <div class="relative z-10 flex justify-between items-start">
+                        ${idx === 0 ? `
+                            <span class="bg-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">
+                                ★ Couverture
+                            </span>
+                        ` : `<div></div>`}
+                        
+                        <button type="button" onclick="removePhoto(${idx}, '${targetType}')" title="Supprimer" class="w-5 h-5 rounded-md bg-rose-600/90 text-white text-[10px] flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="relative z-10 bg-slate-950/85 rounded-lg p-0.5 flex items-center justify-around backdrop-blur-xs">
+                        ${idx > 0 ? `
+                            <button type="button" onclick="setPrimaryPhoto(${idx}, '${targetType}')" title="Photo principale" class="w-6 h-6 rounded text-pink-400 hover:text-pink-300 text-xs flex items-center justify-center font-bold">
+                                ★
+                            </button>
+                            <button type="button" onclick="movePhoto(${idx}, -1, '${targetType}')" title="Gauche" class="w-6 h-6 rounded text-slate-200 text-xs flex items-center justify-center font-bold">
+                                ‹
+                            </button>
+                        ` : ''}
+                        ${idx < photos.length - 1 ? `
+                            <button type="button" onclick="movePhoto(${idx}, 1, '${targetType}')" title="Droite" class="w-6 h-6 rounded text-slate-200 text-xs flex items-center justify-center font-bold">
+                                ›
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.openCatModal = function() {
+            document.getElementById('catModalTitle').innerText = "Ajouter un chat";
+            document.getElementById('catForm').reset();
+            document.getElementById('catId').value = "";
+            currentCatPhotos = [];
+            renderPhotoThumbs('cat');
+            document.getElementById('catModal').classList.remove('hidden');
+        };
+
+        window.closeCatModal = function() {
+            document.getElementById('catModal').classList.add('hidden');
+        };
+
+        window.openStoryModal = function() {
+            document.getElementById('storyModalTitle').innerText = "Ajouter un avis";
+            document.getElementById('storyForm').reset();
+            document.getElementById('storyId').value = "";
+            currentStoryPhotos = [];
+            renderPhotoThumbs('story');
+            document.getElementById('storyModal').classList.remove('hidden');
+        };
+
+        window.closeStoryModal = function() {
+            document.getElementById('storyModal').classList.add('hidden');
+        };
+
+        window.promptDelete = function(id, type, label) {
+            pendingDeleteId = id;
+            pendingDeleteType = type;
+            document.getElementById('deleteModalMsg').innerText = `Êtes-vous sûr de vouloir supprimer définitivement ${label} ?`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+
+        window.closeDeleteModal = function() {
+            pendingDeleteId = null;
+            pendingDeleteType = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        };
+
+        document.getElementById('confirmDeleteActionBtn').addEventListener('click', async () => {
+            if (!pendingDeleteId || !pendingDeleteType) return;
+            const collectionName = pendingDeleteType === 'cat' ? 'chats' : 'testimonials';
+            
+            try {
+                await deleteDoc(doc(db, collectionName, pendingDeleteId));
+                showToast('Suppression', 'L\'élément a bien été retiré de la base.');
+                closeDeleteModal();
+                if (pendingDeleteType === 'cat') fetchCats();
+                else fetchStories();
+            } catch (err) {
+                console.error(err);
+                showToast('Erreur', 'Impossible de supprimer l\'élément.', 'error');
+                closeDeleteModal();
+            }
+        });
+
+        document.getElementById('catForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('catId').value;
+            const btn = document.getElementById('saveCatBtn');
+            btn.disabled = true;
+            btn.innerText = "Enregistrement...";
+
+            const catData = {
+                name: document.getElementById('formName').value,
+                status: document.getElementById('formStatus').value,
+                sex: document.getElementById('formSex').value,
+                gender: document.getElementById('formSex').value,
+                age: document.getElementById('formAge').value,
+                location: document.getElementById('formLocation').value || "Colpo (56)",
+                description: document.getElementById('formDescription').value,
+                idealHome: document.getElementById('formIdealHome').value,
+                compatibilities: {
+                    cats: document.getElementById('formCompatCats').value || "Oui",
+                    dogs: document.getElementById('formCompatDogs').value || "Non testé",
+                    kids: document.getElementById('formCompatKids').value || "Oui"
+                },
+                vetStatus: {
+                    sterilized: document.getElementById('vetSterilized').checked,
+                    chipped: document.getElementById('vetChipped').checked,
+                    vaccinated: document.getElementById('vetVaccinated').checked,
+                    tested: document.getElementById('vetTested').checked
+                },
+                photos: currentCatPhotos,
+                image: currentCatPhotos[0] || "https://placehold.co/600x400?text=Pas+de+photo",
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, "chats", id), catData);
+                    showToast('Mise à jour', `${catData.name} a bien été modifié.`);
+                } else {
+                    await addDoc(collection(db, "chats"), catData);
+                    showToast('Nouveau chat', `${catData.name} est en ligne.`);
+                }
+                closeCatModal();
+                fetchCats();
+            } catch (err) {
+                console.error(err);
+                showToast('Erreur', 'Impossible d\'enregistrer le chat.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Enregistrer";
+            }
+        });
+
+        document.getElementById('storyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('storyId').value;
+            const btn = document.getElementById('saveStoryBtn');
+            btn.disabled = true;
+            btn.innerText = "Enregistrement...";
+
+            const storyData = {
+                catName: document.getElementById('storyCatName').value,
+                adoptant: document.getElementById('storyAdoptant').value,
+                location: document.getElementById('storyLocation').value || "Morbihan (56)",
+                content: document.getElementById('storyContent').value,
+                photos: currentStoryPhotos,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, "testimonials", id), storyData);
+                    showToast('Témoignage mis à jour', 'Informations enregistrées.');
+                } else {
+                    await addDoc(collection(db, "testimonials"), storyData);
+                    showToast('Témoignage publié', 'Publié sur le site.');
+                }
+                closeStoryModal();
+                fetchStories();
+            } catch (err) {
+                console.error(err);
+                showToast('Erreur', 'Impossible d\'enregistrer le témoignage.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Enregistrer";
+            }
+        });
+
+        window.editCat = function(id) {
+            const cat = allCats.find(c => c.id === id);
+            if (!cat) return;
+
+            document.getElementById('catModalTitle').innerText = `Modifier ${cat.name}`;
+            document.getElementById('catId').value = cat.id;
+            document.getElementById('formName').value = cat.name || '';
+            document.getElementById('formStatus').value = cat.status || 'Disponible';
+            document.getElementById('formSex').value = cat.sex || cat.gender || 'Femelle';
+            document.getElementById('formAge').value = cat.age || '';
+            document.getElementById('formLocation').value = cat.location || '';
+            document.getElementById('formDescription').value = cat.description || '';
+            document.getElementById('formIdealHome').value = cat.idealHome || '';
+
+            const comp = cat.compatibilities || {};
+            document.getElementById('formCompatCats').value = comp.cats || '';
+            document.getElementById('formCompatDogs').value = comp.dogs || '';
+            document.getElementById('formCompatKids').value = comp.kids || '';
+
+            const vet = cat.vetStatus || {};
+            document.getElementById('vetSterilized').checked = !!vet.sterilized;
+            document.getElementById('vetChipped').checked = !!vet.chipped;
+            document.getElementById('vetVaccinated').checked = !!vet.vaccinated;
+            document.getElementById('vetTested').checked = !!vet.tested;
+
+            currentCatPhotos = cat.photos ? [...cat.photos] : (cat.image ? [cat.image] : []);
+            renderPhotoThumbs('cat');
+
+            document.getElementById('catModal').classList.remove('hidden');
+        };
+
+        window.editStory = function(id) {
+            const story = allStories.find(s => s.id === id);
+            if (!story) return;
+
+            document.getElementById('storyModalTitle').innerText = `Modifier l'avis de ${story.catName}`;
+            document.getElementById('storyId').value = story.id;
+            document.getElementById('storyCatName').value = story.catName || '';
+            document.getElementById('storyAdoptant').value = story.adoptant || '';
+            document.getElementById('storyLocation').value = story.location || '';
+            document.getElementById('storyContent').value = story.content || '';
+
+            currentStoryPhotos = story.photos ? [...story.photos] : [];
+            renderPhotoThumbs('story');
+
+            document.getElementById('storyModal').classList.remove('hidden');
+        };
+
+        window.switchTab = function(tab) {
+            const isCats = tab === 'cats';
+            document.getElementById('tabContentCats').classList.toggle('hidden', !isCats);
+            document.getElementById('tabContentStories').classList.toggle('hidden', isCats);
+
+            document.getElementById('tabBtnCats').className = isCats ? "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center" : "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center";
+            document.getElementById('tabBtnStories').className = !isCats ? "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center" : "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center";
+        };
+
+        function showToast(title, msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const isErr = type === 'error';
+            toast.className = `pointer-events-auto flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl shadow-xl backdrop-blur-md border ${isErr ? 'bg-rose-950/95 border-rose-500/50 text-rose-200' : 'bg-slate-900/95 border-emerald-500/50 text-emerald-200'} transition-all transform duration-300`;
+            toast.innerHTML = `
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 ${isErr ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
+                    <i class="fa-solid ${isErr ? 'fa-triangle-exclamation' : 'fa-check'}"></i>
+                </div>
+                <div class="min-w-0">
+                    <strong class="block text-xs font-bold text-white truncate">${title}</strong>
+                    <span class="text-[11px] opacity-80 truncate block">${msg}</span>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
