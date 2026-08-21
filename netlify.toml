@@ -1,4 +1,4 @@
-Routing Netlify Edge Functions
+# Routing Netlify Edge Functions
 
 [[edge_functions]]
 path = "/chat-detail*"
