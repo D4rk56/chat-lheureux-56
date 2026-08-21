@@ -55,10 +55,10 @@ export default async (request, context) => {
 
   // Interception des robots de réseaux sociaux
   const userAgent = request.headers.get("user-agent") || "";
-  const isSocialBot = /facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Pinterest|Slackbot/i.test(userAgent);
+  const isSocialBot = /facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Pinterest|Slackbot|vkShare|W3C_Validator|redditbot|Applebot/i.test(userAgent);
 
   if (!isSocialBot) {
-    return context.next ? context.next() : undefined;
+    return;
   }
 
   const catId = url.searchParams.get("id");
@@ -164,4 +164,8 @@ export default async (request, context) => {
       "cache-control": "public, max-age=300, s-maxage=300",
     },
   });
+};
+
+export const config = {
+  path: ["/chat-detail*", "/api/cat-image*"],
 };
