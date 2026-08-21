@@ -260,19 +260,24 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-slate-400 uppercase tracking-wider mb-1">Traits de caractère / Tags (séparés par des virgules)</label>
+                    <input type="text" id="formTags" placeholder="ex: Câlin, Joueur, Sociable, OK Appartement" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                </div>
+
                 <!-- Photos -->
                 <div class="space-y-3 bg-slate-900/60 p-3.5 sm:p-4 rounded-2xl border border-slate-800">
                     <div class="flex items-center justify-between">
                         <label class="block text-pink-400 font-bold uppercase tracking-wider">
-                            <i class="fa-solid fa-images mr-1"></i> Photos (Max 5 photos)
+                            <i class="fa-solid fa-images mr-1"></i> Photos (Sélection multiple possible - Max 5)
                         </label>
                         <span id="catPhotosCounter" class="text-[10px] text-slate-400">0 / 5 photos</span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                         <div>
-                            <label class="block text-slate-500 text-[10px] mb-1">Option A : Fichier PC / Téléphone</label>
-                            <input type="file" id="formPhotoFile" accept="image/*" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-pink-500/20 file:text-pink-300">
+                            <label class="block text-slate-500 text-[10px] mb-1">Option A : Sélectionner des fichiers PC / Tél</label>
+                            <input type="file" id="formPhotoFile" accept="image/*" multiple class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-pink-500/20 file:text-pink-300 cursor-pointer">
                         </div>
                         <div>
                             <label class="block text-slate-500 text-[10px] mb-1">Option B : Lien URL Web</label>
@@ -381,7 +386,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <input type="file" id="storyPhotoFile" accept="image/*" class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-pink-500/20 file:text-pink-300">
+                        <input type="file" id="storyPhotoFile" accept="image/*" multiple class="w-full text-slate-400 text-[11px] file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-pink-500/20 file:text-pink-300">
                         <div class="flex gap-2">
                             <input type="url" id="storyPhotoUrl" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs focus:outline-none">
                             <button type="button" onclick="handlePhotosUrlInput('story')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-xs font-bold shrink-0">
@@ -845,6 +850,7 @@
             document.getElementById('catModalTitle').innerText = "Ajouter un chat";
             document.getElementById('catForm').reset();
             document.getElementById('catId').value = "";
+            document.getElementById('formTags').value = "";
             currentCatPhotos = [];
             renderPhotoThumbs('cat');
             document.getElementById('catModal').classList.remove('hidden');
@@ -904,6 +910,9 @@
             btn.disabled = true;
             btn.innerText = "Enregistrement...";
 
+            const tagsInput = document.getElementById('formTags').value || '';
+            const parsedTags = tagsInput.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
             const catData = {
                 name: document.getElementById('formName').value,
                 status: document.getElementById('formStatus').value,
@@ -913,6 +922,7 @@
                 location: document.getElementById('formLocation').value || "Colpo (56)",
                 description: document.getElementById('formDescription').value,
                 idealHome: document.getElementById('formIdealHome').value,
+                tags: parsedTags.length > 0 ? parsedTags : [document.getElementById('formStatus').value || 'À adopter'],
                 compatibilities: {
                     cats: document.getElementById('formCompatCats').value || "Oui",
                     dogs: document.getElementById('formCompatDogs').value || "Non testé",
@@ -996,6 +1006,7 @@
             document.getElementById('formLocation').value = cat.location || '';
             document.getElementById('formDescription').value = cat.description || '';
             document.getElementById('formIdealHome').value = cat.idealHome || '';
+            document.getElementById('formTags').value = (cat.tags && Array.isArray(cat.tags)) ? cat.tags.join(', ') : '';
 
             const comp = cat.compatibilities || {};
             document.getElementById('formCompatCats').value = comp.cats || '';
