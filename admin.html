@@ -249,14 +249,50 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                        <label class="block text-slate-400 uppercase tracking-wider mb-1">Âge (ex: 2 ans, 6 mois)</label>
-                        <input type="text" id="formAge" placeholder="ex: 2 ans" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
-                    </div>
+                <!-- Gestion de l'Âge (2 options) & Localisation -->
+                <div class="space-y-3">
                     <div>
                         <label class="block text-slate-400 uppercase tracking-wider mb-1">Localisation (Ville FA)</label>
                         <input type="text" id="formLocation" placeholder="ex: Colpo (56)" class="w-full bg-slate-900 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 sm:py-3 focus:outline-none focus:border-pink-500">
+                    </div>
+
+                    <div class="bg-slate-900/70 p-3.5 sm:p-4 rounded-2xl border border-slate-800 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label class="block text-pink-400 font-bold uppercase tracking-wider text-[11px]">
+                                <i class="fa-solid fa-cake-candles mr-1"></i> Mode de saisie de l'âge
+                            </label>
+                            <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800 text-[11px] font-bold">
+                                <button type="button" id="ageModeBirthBtn" onclick="setAgeMode('birthDate')" class="px-3 py-1 rounded-lg transition-all text-white bg-pink-600 shadow-sm">
+                                    📅 Date de naissance (Calcul auto)
+                                </button>
+                                <button type="button" id="ageModeFreeBtn" onclick="setAgeMode('freeText')" class="px-3 py-1 rounded-lg transition-all text-slate-400 hover:text-white">
+                                    ✍️ Âge estimé / texte libre
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Option 1 : Date de naissance (Calcul automatique) -->
+                        <div id="ageBlockBirth" class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                            <div>
+                                <label class="block text-slate-400 text-[10px] uppercase font-bold mb-1">Sélectionner la date de naissance</label>
+                                <input type="date" id="formBirthDate" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500 text-xs">
+                            </div>
+                            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-sm shrink-0">
+                                    <i class="fa-solid fa-calculator"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Âge calculé pour l'affichage :</span>
+                                    <strong id="computedAgePreview" class="text-xs text-pink-300 font-black truncate block">Aucune date choisie</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2 : Texte libre sans date précise -->
+                        <div id="ageBlockFree" class="hidden">
+                            <label class="block text-slate-400 text-[10px] uppercase font-bold mb-1">Âge estimé / indicatif (ex: 2 ans, environ 6 mois, junior...)</label>
+                            <input type="text" id="formAge" placeholder="ex: 2 ans" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500 text-xs">
+                        </div>
                     </div>
                 </div>
 
@@ -454,6 +490,79 @@
         let pendingDeleteId = null;
         let pendingDeleteType = null;
         let activeStatusFilter = null;
+        let currentAgeMode = 'birthDate'; // 'birthDate' ou 'freeText'
+
+        // Calcul dynamique et naturel de l'âge en français
+        function calculateAgeFromBirthDate(birthDateStr) {
+            if (!birthDateStr) return '';
+            const birth = new Date(birthDateStr);
+            if (isNaN(birth.getTime())) return '';
+            const now = new Date();
+
+            let years = now.getFullYear() - birth.getFullYear();
+            let months = now.getMonth() - birth.getMonth();
+            let days = now.getDate() - birth.getDate();
+
+            if (days < 0) months--;
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            const totalMonths = years * 12 + months;
+            if (totalMonths < 1) {
+                const diffDays = Math.floor((now - birth) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 7) return "Quelques jours";
+                const weeks = Math.max(1, Math.floor(diffDays / 7));
+                return `${weeks} semaine${weeks > 1 ? 's' : ''}`;
+            }
+            if (totalMonths < 12) {
+                return `${totalMonths} mois`;
+            }
+            if (years === 1) {
+                if (months >= 5 && months <= 7) return "1 an et demi";
+                return "1 an";
+            }
+            if (months >= 5 && months <= 7) {
+                return `${years} ans et demi`;
+            }
+            return `${years} ans`;
+        }
+
+        window.setAgeMode = function(mode) {
+            currentAgeMode = mode;
+            const isBirth = mode === 'birthDate';
+            
+            document.getElementById('ageBlockBirth').classList.toggle('hidden', !isBirth);
+            document.getElementById('ageBlockFree').classList.toggle('hidden', isBirth);
+
+            const btnBirth = document.getElementById('ageModeBirthBtn');
+            const btnFree = document.getElementById('ageModeFreeBtn');
+
+            if (isBirth) {
+                btnBirth.className = "px-3 py-1 rounded-lg transition-all text-white bg-pink-600 shadow-sm";
+                btnFree.className = "px-3 py-1 rounded-lg transition-all text-slate-400 hover:text-white";
+                updateComputedAge();
+            } else {
+                btnBirth.className = "px-3 py-1 rounded-lg transition-all text-slate-400 hover:text-white";
+                btnFree.className = "px-3 py-1 rounded-lg transition-all text-white bg-pink-600 shadow-sm";
+            }
+        };
+
+        function updateComputedAge() {
+            const birthVal = document.getElementById('formBirthDate').value;
+            const preview = document.getElementById('computedAgePreview');
+            if (!birthVal) {
+                preview.innerText = "Aucune date choisie";
+                preview.className = "text-xs text-slate-500 font-bold block";
+                return;
+            }
+            const calculated = calculateAgeFromBirthDate(birthVal);
+            preview.innerText = calculated || "Date invalide";
+            preview.className = "text-xs text-emerald-400 font-black block";
+        }
+
+        document.getElementById('formBirthDate').addEventListener('input', updateComputedAge);
 
         // DOM Elements
         const authSection = document.getElementById('authSection');
@@ -851,6 +960,10 @@
             document.getElementById('catForm').reset();
             document.getElementById('catId').value = "";
             document.getElementById('formTags').value = "";
+            setAgeMode('birthDate');
+            document.getElementById('formBirthDate').value = "";
+            document.getElementById('formAge').value = "";
+            updateComputedAge();
             currentCatPhotos = [];
             renderPhotoThumbs('cat');
             document.getElementById('catModal').classList.remove('hidden');
@@ -913,12 +1026,25 @@
             const tagsInput = document.getElementById('formTags').value || '';
             const parsedTags = tagsInput.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
+            // Calcul ou récupération de l'âge selon le mode choisi
+            const birthDateVal = document.getElementById('formBirthDate').value;
+            const freeAgeVal = document.getElementById('formAge').value.trim();
+            let finalAge = '';
+
+            if (currentAgeMode === 'birthDate' && birthDateVal) {
+                finalAge = calculateAgeFromBirthDate(birthDateVal);
+            } else {
+                finalAge = freeAgeVal;
+            }
+
             const catData = {
                 name: document.getElementById('formName').value,
                 status: document.getElementById('formStatus').value,
                 sex: document.getElementById('formSex').value,
                 gender: document.getElementById('formSex').value,
-                age: document.getElementById('formAge').value,
+                ageMode: currentAgeMode,
+                birthDate: (currentAgeMode === 'birthDate' && birthDateVal) ? birthDateVal : null,
+                age: finalAge || (birthDateVal ? calculateAgeFromBirthDate(birthDateVal) : ''),
                 location: document.getElementById('formLocation').value || "Colpo (56)",
                 description: document.getElementById('formDescription').value,
                 idealHome: document.getElementById('formIdealHome').value,
@@ -1002,11 +1128,23 @@
             document.getElementById('formName').value = cat.name || '';
             document.getElementById('formStatus').value = cat.status || 'Disponible';
             document.getElementById('formSex').value = cat.sex || cat.gender || 'Femelle';
-            document.getElementById('formAge').value = cat.age || '';
             document.getElementById('formLocation').value = cat.location || '';
             document.getElementById('formDescription').value = cat.description || '';
             document.getElementById('formIdealHome').value = cat.idealHome || '';
             document.getElementById('formTags').value = (cat.tags && Array.isArray(cat.tags)) ? cat.tags.join(', ') : '';
+
+            // Remplissage selon si une date de naissance est présente ou un texte libre
+            if (cat.birthDate) {
+                setAgeMode('birthDate');
+                document.getElementById('formBirthDate').value = cat.birthDate;
+                document.getElementById('formAge').value = cat.age || '';
+                updateComputedAge();
+            } else {
+                setAgeMode('freeText');
+                document.getElementById('formBirthDate').value = '';
+                document.getElementById('formAge').value = cat.age || '';
+                updateComputedAge();
+            }
 
             const comp = cat.compatibilities || {};
             document.getElementById('formCompatCats').value = comp.cats || '';
