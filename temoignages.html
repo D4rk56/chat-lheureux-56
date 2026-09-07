@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Optimisation : Pré-connexion à Firebase -->
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+
     <script>
         window.navigateTo = function(url) {
             if (!url) return;
@@ -240,7 +243,7 @@
                         <!-- Photo : fermement ancrée en haut (lg:self-start) pour ne jamais descendre au dépliage du texte -->
                         <div class="w-full lg:w-5/12 shrink-0 lg:self-start lg:sticky lg:top-24">
                             <div class="relative h-60 sm:h-72 w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-100 shadow-sm">
-                                <img src="${photo}" alt="${catName}" class="w-full h-full object-cover">
+                                <img src="${photo}" alt="${catName}" loading="lazy" decoding="async" class="w-full h-full object-cover">
                                 <div class="absolute top-3 left-3 bg-white/95 px-3 py-1 rounded-full text-[11px] font-black text-gray-800 shadow flex items-center gap-1.5">
                                     <i class="fa-solid fa-heart text-pink-500"></i>
                                     <span>Adopté 🎉</span>

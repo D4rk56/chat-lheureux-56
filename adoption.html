@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Optimisation : Pré-connexion à Firebase -->
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+
     <script>
         window.navigateTo = function(url) {
             if (!url) return;
@@ -218,7 +221,7 @@
                 return `
                     <div onclick="navigateTo('chat-detail.html?id=${cat.id}')" class="glass-card rounded-[2rem] p-4 hover-lift group cursor-pointer flex flex-col ${borderClass} ${isAdopted ? 'opacity-80 bg-gray-50/80' : 'bg-white'}">
                         <div class="relative h-60 sm:h-64 rounded-3xl overflow-hidden mb-4 bg-gray-100">
-                            <img src="${photo}" alt="${name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isAdopted ? 'grayscale filter blur-[0.5px]' : ''}">
+                            <img src="${photo}" alt="${name}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isAdopted ? 'grayscale filter blur-[0.5px]' : ''}">
                             
                             <span class="absolute top-3 right-3 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-black shadow-sm ${isFemale ? 'bg-pink-100/90 text-pink-700 border border-pink-200' : 'bg-blue-100/90 text-blue-700 border border-blue-200'}">
                                 ${isFemale ? '♀' : '♂'} ${age}
