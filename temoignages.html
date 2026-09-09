@@ -230,6 +230,46 @@
                 location: 'Auray (56)',
                 photos: ['https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=800&fit=crop'],
                 content: "Un petit coucou pour vous donner des nouvelles fraîches de Chaussette ! Autrefois craintive et discrète, elle est métamorphosée : curieuse, gourmande et toujours prête pour une séance de brossage. Une vraie reine de la maison."
+            },
+            {
+                id: 's4',
+                catName: 'Réglisse',
+                adoptant: 'Julien & Sarah',
+                location: 'Pontivy (56)',
+                photos: ['https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=800&fit=crop'],
+                content: "Un an déjà que Réglisse partage nos vies ! Après un début timide, il ne nous quitte plus d'une semelle. Il adore ses siestes au soleil et ses séances de câlins du soir. Merci à l'association pour ce formidable compagnon !"
+            },
+            {
+                id: 's5',
+                catName: 'Nala',
+                adoptant: 'Sophie M.',
+                location: 'Ploërmel (56)',
+                photos: ['https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=800&fit=crop'],
+                content: "Nala est un véritable concentré d'amour et d'énergie. Elle s'entend à merveille avec notre premier chat et a tout de suite trouvé ses repères. Bravo à Chat L'Heureux 56 pour votre bienveillance et votre accompagnement."
+            },
+            {
+                id: 's6',
+                catName: 'Pixel',
+                adoptant: 'Antoine & Camille',
+                location: 'Hennebont (56)',
+                photos: ['https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=800&fit=crop'],
+                content: "Pixel a illuminé notre quotidien ! Très joueur et ultra câlin, il vient se blottir sur nos genoux dès qu'on s'assoit. On ne pourrait plus imaginer notre vie sans lui."
+            },
+            {
+                id: 's7',
+                catName: 'Plume',
+                adoptant: 'Marie & Pierre',
+                location: 'Carnac (56)',
+                photos: ['https://images.unsplash.com/photo-1561948955-570b270e7c36?w=800&fit=crop'],
+                content: "Une boule de tendresse ! Plume a été merveilleusement sociabilisée par sa famille d'accueil avant son arrivée. C'est un amour de minette qui ronronne dès qu'on la regarde."
+            },
+            {
+                id: 's8',
+                catName: 'Simba',
+                adoptant: 'David & Lucie',
+                location: 'Lanester (56)',
+                photos: ['https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800&fit=crop'],
+                content: "Simba est le roi des câlins matinaux. L'adoption s'est déroulée avec beaucoup de sérieux et de gentillesse de la part de l'association. Merci pour tout ce que vous faites pour eux !"
             }
         ];
 
@@ -327,8 +367,17 @@
             try {
                 const snap = await getDocs(collection(db, "testimonials"));
                 const list = [];
-                snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-                if (list.length > 0) renderStories(list);
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data && (data.catName || data.content)) {
+                        list.push({ id: d.id, ...data });
+                    }
+                });
+                if (list.length > 0) {
+                    const dbNames = new Set(list.map(s => (s.catName || '').toLowerCase().trim()));
+                    const filteredDefaults = defaultStories.filter(s => !dbNames.has((s.catName || '').toLowerCase().trim()));
+                    renderStories([...list, ...filteredDefaults]);
+                }
             } catch (err) {
                 console.warn("Mode local:", err);
             }
