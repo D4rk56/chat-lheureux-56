@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>L'Association - Chat L'Heureux 56</title>
+    <title>L'Association — Chat L'Heureux 56 (Colpo, Morbihan)</title>
+    <meta name="description" content="Découvrez les missions et valeurs de l'association Chat L'Heureux 56 à Colpo : sauvetage, soins vétérinaires, familles d'accueil et adoption responsable dans le Morbihan.">
+    
+    <!-- Favicon officiel -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chat L'Heureux 56">
+    <meta property="og:title" content="L'Association — Chat L'Heureux 56 (Morbihan)">
+    <meta property="og:description" content="Sauver, soigner, aimer. Découvrez notre fonctionnement 100% en Familles d'Accueil dans le Morbihan et notre Foire Aux Questions.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
+    <meta property="og:locale" content="fr_FR">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script>
         window.navigateTo = function(url) {
@@ -24,13 +37,16 @@
         .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
         .hover-lift { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .hover-lift:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(210, 77, 227, 0.15); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s ease-out, opacity 0.25s ease-out; opacity: 0; }
+        .faq-answer.open { max-height: 600px; opacity: 1; transition: max-height 0.45s ease-in, opacity 0.35s ease-in; }
     </style>
 </head>
 <body class="antialiased flex flex-col min-h-screen relative overflow-x-hidden w-full max-w-full">
 
-    <div class="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
+    <div class="fixed top-0 left-0 right-0 z-40 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
         <nav class="glass-nav rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center w-full max-w-[calc(100vw-1.5rem)] sm:max-w-5xl pointer-events-auto shadow-lg shadow-gray-200/50">
             <div class="flex items-center gap-2 cursor-pointer group shrink-0" onclick="navigateTo('index.html')">
+                <img src="favicon.svg" alt="Logo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full">
                 <span class="font-title font-black text-lg sm:text-2xl tracking-tight text-brand-gradient">
                     Chat L'Heureux 56
                 </span>
@@ -55,6 +71,7 @@
         </nav>
     </div>
 
+    <!-- Menu Mobile -->
     <div id="mobileMenu" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex-col justify-center items-center gap-6 text-center text-white text-lg font-bold p-6">
         <button id="closeMobileMenuBtn" class="absolute top-6 right-6 text-2xl w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
             <i class="fa-solid fa-xmark"></i>
@@ -78,10 +95,11 @@
                 Notre mission : <span class="text-brand-gradient">Sauver, soigner, aimer.</span>
             </h1>
             <p class="text-xs sm:text-lg text-gray-600 font-medium leading-relaxed max-w-2xl mx-auto">
-                Basée à Colpo (56), l'association Chat L'Heureux 56 est née d'une passion commune pour les félins et d'une volonté d'agir contre l'errance et la maltraitance animale dans le Morbihan.
+                Basée à Colpo (56), l'association Chat L'Heureux 56 est née d'une passion commune pour les félins et d'une volonté d'agir contre l'errance et la maltraitance animale dans tout le département du Morbihan.
             </p>
         </section>
 
+        <!-- Les 3 piliers -->
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 sm:mb-24">
             <h2 class="font-title text-2xl sm:text-3xl font-extrabold text-center mb-8 sm:mb-10 text-gray-900">Les piliers de notre action</h2>
             
@@ -96,7 +114,7 @@
                         </div>
                         <h3 class="font-title text-xl sm:text-2xl font-black text-gray-900 mb-3">Le Sauvetage</h3>
                         <p class="text-gray-600 font-medium text-xs sm:text-sm leading-relaxed mb-6">
-                            Prise en charge des chats abandonnés, errants ou maltraités sur le secteur de Colpo et dans tout le Morbihan. Nous intervenons pour les mettre en sécurité.
+                            Prise en charge des chats abandonnés, errants ou maltraités sur le secteur de Colpo et dans tout le Morbihan. Nous intervenons pour les mettre en sécurité immédiate.
                         </p>
                     </div>
 
@@ -124,7 +142,7 @@
                         <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-400"></i> Identification (Puce ICAD)</li>
                         <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-400"></i> Stérilisation obligatoire</li>
                         <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-400"></i> Vaccins Typhus, Coryza, Leucose</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-400"></i> Tests FIV / FeLV (à partir de 6 mois)</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-400"></i> Tests FIV / FeLV (selon âge)</li>
                     </ul>
                 </div>
 
@@ -138,20 +156,21 @@
                         </div>
                         <h3 class="font-title text-xl sm:text-2xl font-black text-gray-900 mb-3">L'Adoption Responsable</h3>
                         <p class="text-gray-600 font-medium text-xs sm:text-sm leading-relaxed mb-6">
-                            Une étude attentive des besoins de chaque animal et des adoptants pour créer des duos parfaits et durables.
+                            Une étude attentive des besoins de chaque animal et du mode de vie des adoptants pour former des duos équilibrés et heureux.
                         </p>
                     </div>
 
                     <ul class="space-y-2.5 pt-4 border-t border-gray-100 text-xs font-bold text-gray-700">
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Questionnaire approfondi</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Placement 100% en FA</li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Suivi post-adoption</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Questionnaire préalable</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Placement 100% en FA (zéro cage)</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Accompagnement & conseils</li>
                     </ul>
                 </div>
             </div>
         </section>
 
-        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- L'équipe & Présidente -->
+        <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 sm:mb-24">
             <div class="bg-slate-900 rounded-[2.5rem] p-6 sm:p-12 text-white relative overflow-hidden shadow-2xl border border-slate-800">
                 <div class="relative z-10 flex flex-col md:flex-row gap-8 items-center">
                     <div class="w-full md:w-1/3 text-center">
@@ -166,11 +185,140 @@
                     <div class="w-full md:w-2/3">
                         <h2 class="font-title text-2xl sm:text-3xl font-extrabold mb-4">Une équipe de passionnés 🐾</h2>
                         <p class="text-slate-300 font-medium text-xs sm:text-sm leading-relaxed mb-6">
-                            "L'association ne serait rien sans le dévouement quotidien de nos bénévoles et de nos Familles d'Accueil (FA). Nous n'avons pas de refuge physique : cela signifie que chaque chat sauvé est placé dans un foyer chaleureux en attendant son adoption."
+                            "L'association ne serait rien sans le dévouement quotidien de nos bénévoles et de nos Familles d'Accueil (FA). Nous n'avons pas de refuge physique : cela signifie que chaque chat sauvé est placé dans un foyer chaleureux en attendant son adoption définitive."
                         </p>
-                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2_gn8dq66LJu-AWQ90dI-DRc2FP5NdD88cNcgoAyEX7IHfA/viewform" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 py-2.5 rounded-xl transition-all text-xs">
-                            <i class="fa-solid fa-house-user"></i> Devenir Famille d'Accueil
-                        </a>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2_gn8dq66LJu-AWQ90dI-DRc2FP5NdD88cNcgoAyEX7IHfA/viewform" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-brand-gradient hover:opacity-95 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-xs shadow-md">
+                                <i class="fa-solid fa-house-user"></i> Devenir Famille d'Accueil
+                            </a>
+                            <a href="don-contact.html" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 py-2.5 rounded-xl transition-all text-xs">
+                                <i class="fa-solid fa-heart"></i> Nous soutenir
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nouvelle Section : FAQ Interactive (Foire Aux Questions) -->
+        <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 text-[#d24de3] border border-pink-100 text-xs font-bold mb-3 shadow-xs">
+                    <i class="fa-solid fa-circle-question"></i> Questions Fréquentes
+                </div>
+                <h2 class="font-title text-2xl sm:text-4xl font-black text-gray-900 tracking-tight mb-3">
+                    Tout ce que vous devez <span class="text-brand-gradient">savoir</span>
+                </h2>
+                <p class="text-xs sm:text-base text-gray-600 font-medium">
+                    Voici les réponses aux questions les plus courantes sur nos adoptions et notre mode de fonctionnement.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Question 1 -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 border border-gray-100 bg-white shadow-sm cursor-pointer transition-all" onclick="toggleFaq(1)">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="font-title text-sm sm:text-base font-bold text-gray-900 flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-pink-50 text-[#d24de3] flex items-center justify-center text-xs font-black shrink-0">1</span>
+                            Que couvrent les frais d'adoption ?
+                        </h3>
+                        <i id="faqIcon_1" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="faqAnswer_1" class="faq-answer">
+                        <div class="pt-4 mt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
+                            <p>Les frais d'adoption demandés sont un remboursement partiel des actes vétérinaires engagés pour la mise en conformité et la santé de l'animal :</p>
+                            <ul class="list-disc list-inside space-y-1 pl-2 font-medium text-gray-700">
+                                <li>Identification officielle par puce électronique (ICAD).</li>
+                                <li>Primo-vaccination + rappel (Typhus, Coryza, Leucose).</li>
+                                <li>Stérilisation / Castration obligatoire (ou bon d'engagement pour les chatons).</li>
+                                <li>Déparasitage interne (vermifuge) et externe (puces/tiques).</li>
+                                <li>Test de dépistage FIV / FeLV (selon l'âge).</li>
+                            </ul>
+                            <p class="text-[11px] text-gray-500 italic">L'association ne réalise aucun bénéfice : ces frais permettent d'assurer les soins du chat et de pérenniser les sauvetages futurs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 border border-gray-100 bg-white shadow-sm cursor-pointer transition-all" onclick="toggleFaq(2)">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="font-title text-sm sm:text-base font-bold text-gray-900 flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-black shrink-0">2</span>
+                            Pourquoi vos chats sont-ils 100% en Famille d'Accueil ?
+                        </h3>
+                        <i id="faqIcon_2" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="faqAnswer_2" class="faq-answer">
+                        <div class="pt-4 mt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
+                            <p>Nous n'avons volontairement pas de refuge en cage : chaque félin sauvé est accueilli dans le foyer bienveillant d'un bénévole.</p>
+                            <p>Ce fonctionnement offre d'immenses avantages :</p>
+                            <ul class="list-disc list-inside space-y-1 pl-2 font-medium text-gray-700">
+                                <li><strong>Zéro stress de box :</strong> le chat vit dans une maison ou un appartement avec ses repères.</li>
+                                <li><strong>Connaissance précise du caractère :</strong> sa famille d'accueil sait s'il est câlin, joueur, s'il aime les enfants ou s'entend avec les chiens.</li>
+                                <li><strong>Sociabilisation optimale :</strong> les chatons et chats craintifs apprennent la confiance dans un cadre familial rassurant.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 border border-gray-100 bg-white shadow-sm cursor-pointer transition-all" onclick="toggleFaq(3)">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="font-title text-sm sm:text-base font-bold text-gray-900 flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xs font-black shrink-0">3</span>
+                            Peut-on adopter si l'on vit en appartement sans extérieur ?
+                        </h3>
+                        <i id="faqIcon_3" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="faqAnswer_3" class="faq-answer">
+                        <div class="pt-4 mt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
+                            <p><strong>Oui, absolument !</strong> De nombreux chats s'épanouissent parfaitement en appartement, à condition de disposer d'enrichissements (griffoirs, arbres à chat, perchoirs près d'une fenêtre) et de moments de jeu réguliers avec leurs humains.</p>
+                            <p>Nous précisons systématiquement sur chaque fiche si le chat a impérativement besoin d'un jardin ou s'il convient idéalement à la vie en intérieur.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 4 -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 border border-gray-100 bg-white shadow-sm cursor-pointer transition-all" onclick="toggleFaq(4)">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="font-title text-sm sm:text-base font-bold text-gray-900 flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs font-black shrink-0">4</span>
+                            Comment devenir Famille d'Accueil (FA) ?
+                        </h3>
+                        <i id="faqIcon_4" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="faqAnswer_4" class="faq-answer">
+                        <div class="pt-4 mt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
+                            <p>Être Famille d'Accueil consiste à héberger temporairement un chat ou une portée de chatons jusqu'à leur adoption. C'est le cœur battant de notre association !</p>
+                            <ul class="list-disc list-inside space-y-1 pl-2 font-medium text-gray-700">
+                                <li><strong>Frais vétérinaires :</strong> intégralement pris en charge par l'association.</li>
+                                <li><strong>Nourriture & matériel :</strong> l'association fournit ou complète litière et nourriture selon vos besoins.</li>
+                                <li><strong>Votre engagement :</strong> offrir de l'amour, un toit chaleureux, et nous donner régulièrement des nouvelles et photos.</li>
+                            </ul>
+                            <div class="pt-2">
+                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSe2_gn8dq66LJu-AWQ90dI-DRc2FP5NdD88cNcgoAyEX7IHfA/viewform" target="_blank" class="text-pink-600 font-bold hover:underline">
+                                    👉 Remplir le formulaire pour devenir Famille d'Accueil
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 5 -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 border border-gray-100 bg-white shadow-sm cursor-pointer transition-all" onclick="toggleFaq(5)">
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="font-title text-sm sm:text-base font-bold text-gray-900 flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs font-black shrink-0">5</span>
+                            Que faire si j'ai trouvé un chat errant ou blessé ?
+                        </h3>
+                        <i id="faqIcon_5" class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </div>
+                    <div id="faqAnswer_5" class="faq-answer">
+                        <div class="pt-4 mt-3 border-t border-gray-100 text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
+                            <p>1. <strong>Vérifier l'identification :</strong> emmenez le chat chez le vétérinaire le plus proche (le contrôle de la puce électronique est gratuit et sans rendez-vous) ou contactez la mairie du lieu de découverte.</p>
+                            <p>2. <strong>Publier sur les groupes :</strong> signalez l'animal sur les groupes Facebook locaux d'animaux perdus/trouvés (ex: Pet Alert 56, Chats Perdus Morbihan).</p>
+                            <p>3. <strong>En cas d'urgence vitale :</strong> contactez un cabinet vétérinaire de garde ou écrivez-nous sur Facebook avec photos et localisation exacte.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,13 +326,21 @@
 
     </main>
 
+    <!-- Bouton flottant retour en haut -->
+    <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-slate-900/90 text-white shadow-xl hover:bg-pink-600 transition-all duration-300 flex items-center justify-center opacity-0 pointer-events-none" title="Retour en haut">
+        <i class="fa-solid fa-arrow-up text-xs"></i>
+    </button>
+
     <footer class="bg-slate-950 text-white border-t border-slate-800/80 pt-12 sm:pt-16 pb-10 mt-auto relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 mb-10">
                 <div class="md:col-span-5">
-                    <div class="mb-4">
-                        <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
-                        <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                    <div class="mb-4 flex items-center gap-3">
+                        <img src="favicon.svg" alt="Logo" class="w-9 h-9 rounded-full">
+                        <div>
+                            <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
+                            <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                        </div>
                     </div>
                     <p class="text-slate-400 font-medium text-xs sm:text-sm mb-4 leading-relaxed max-w-md">
                         Association déclarée à but non lucratif dédiée à la protection, au soin, à la stérilisation et à l'adoption responsable de chats abandonnés dans le Morbihan (56).
@@ -199,7 +355,9 @@
                     <ul class="space-y-2.5 font-semibold text-xs sm:text-sm">
                         <li><a href="index.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Accueil</a></li>
                         <li><a href="adoption.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> À l'adoption</a></li>
+                        <li><a href="temoignages.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Ils sont heureux</a></li>
                         <li><a href="association.html" class="text-pink-400 font-bold flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-pink-400"></i> L'Association</a></li>
+                        <li><a href="don-contact.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Soutenir & Dons</a></li>
                     </ul>
                 </div>
 
@@ -225,6 +383,34 @@
     </footer>
 
     <script>
+        // Gestion de l'accordéon FAQ
+        window.toggleFaq = function(id) {
+            const answer = document.getElementById(`faqAnswer_${id}`);
+            const icon = document.getElementById(`faqIcon_${id}`);
+            const isOpen = answer.classList.contains('open');
+
+            // Fermer les autres questions
+            document.querySelectorAll('.faq-answer').forEach(el => el.classList.remove('open'));
+            document.querySelectorAll('[id^="faqIcon_"]').forEach(el => el.classList.remove('rotate-180'));
+
+            if (!isOpen) {
+                answer.classList.add('open');
+                if (icon) icon.classList.add('rotate-180');
+            }
+        };
+
+        // Bouton retour en haut
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 350) {
+                backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+            }
+        });
+
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');

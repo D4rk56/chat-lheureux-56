@@ -3,11 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chat L'Heureux 56 - Adoption de chats dans le Morbihan</title>
+    <title>Chat L'Heureux 56 — Association pour l'Adoption de Chats dans le Morbihan (56)</title>
+    <meta name="description" content="Association de protection féline à Colpo dans le Morbihan (56). Sauvetage, soins, stérilisation et adoption responsable de chats et chatons 100% hébergés en familles d'accueil.">
+    
+    <!-- Favicon officiel -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph / Réseaux sociaux -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chat L'Heureux 56">
+    <meta property="og:title" content="Chat L'Heureux 56 — Adoption de chats dans le Morbihan (56)">
+    <meta property="og:description" content="Donnez une seconde chance avec Chat L'Heureux 56. Sauvetage, soins et adoption de chats sans cage, 100% en familles d'accueil.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
+    <meta property="og:locale" content="fr_FR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chat L'Heureux 56 — Adoption de chats en Morbihan">
+    <meta name="twitter:description" content="Sauvetage et adoption responsable de chats à Colpo et en Morbihan (56).">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
+
+    <!-- Données structurées Google (Schema.org) pour le référencement local -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "AnimalShelter",
+      "name": "Chat L'Heureux 56",
+      "description": "Association de protection, soin et adoption de chats dans le Morbihan (56).",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Colpo",
+        "postalCode": "56390",
+        "addressRegion": "Morbihan",
+        "addressCountry": "FR"
+      },
+      "telephone": "+33661508828",
+      "email": "asso.chatslheureux@gmail.com",
+      "identifier": "930923800",
+      "url": "https://chat-lheureux-56.netlify.app"
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Optimisation : Pré-connexion à Firebase pour accélérer la récupération des données -->
     <link rel="preconnect" href="https://firestore.googleapis.com">
@@ -36,12 +76,17 @@
 </head>
 <body class="antialiased flex flex-col min-h-screen relative overflow-x-hidden w-full max-w-full">
 
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm"></div>
+
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
 
-    <div class="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
+    <!-- Navigation Bar -->
+    <div class="fixed top-0 left-0 right-0 z-40 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
         <nav class="glass-nav rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center w-full max-w-[calc(100vw-1.5rem)] sm:max-w-5xl pointer-events-auto shadow-lg shadow-gray-200/50">
             <div class="flex items-center gap-2 cursor-pointer group shrink-0" onclick="navigateTo('index.html')">
+                <img src="favicon.svg" alt="Logo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full">
                 <span class="font-title font-black text-lg sm:text-2xl tracking-tight text-brand-gradient group-hover:opacity-90 transition-opacity">
                     Chat L'Heureux 56
                 </span>
@@ -66,6 +111,7 @@
         </nav>
     </div>
 
+    <!-- Menu Mobile -->
     <div id="mobileMenu" class="fixed inset-0 bg-slate-900/90 backdrop-blur-lg z-50 hidden flex-col justify-center items-center gap-6 text-center text-white text-lg font-bold p-6">
         <button id="closeMobileMenuBtn" class="absolute top-6 right-6 text-2xl w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
             <i class="fa-solid fa-xmark"></i>
@@ -80,6 +126,7 @@
     </div>
 
     <main class="flex-grow pt-28 sm:pt-32 pb-10">
+        <!-- Hero Section -->
         <section class="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-12 sm:mb-16">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
                 
@@ -153,11 +200,15 @@
             </div>
         </section>
 
+        <!-- Section Chats du moment -->
         <section class="py-12 relative">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 sm:mb-12 gap-4">
                     <div class="max-w-2xl">
-                        <h2 class="font-title text-2xl sm:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">Nos moustachus <span class="text-brand-gradient">du moment</span></h2>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 text-[#d24de3] border border-pink-100 text-[11px] font-bold mb-2">
+                            <i class="fa-solid fa-heart"></i> Coups de cœur
+                        </div>
+                        <h2 class="font-title text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">Nos moustachus <span class="text-brand-gradient">du moment</span></h2>
                         <p class="text-xs sm:text-base text-gray-600 font-medium">Découvrez les moustachus accueillis dans nos Familles d'Accueil du Morbihan (56).</p>
                     </div>
                     <a href="adoption.html" class="hidden md:inline-flex items-center gap-2 font-extrabold text-gray-900 hover:text-[#d24de3] transition-colors group bg-white px-6 py-3.5 rounded-full shadow-sm border border-gray-100 text-xs sm:text-sm">
@@ -208,6 +259,172 @@
             </div>
         </section>
 
+        <!-- Nouvelle Section : Le parcours d'une adoption réussie en 4 étapes -->
+        <section class="py-16 sm:py-20 relative bg-white/70 border-y border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 text-[#d24de3] border border-pink-100 text-xs font-bold mb-3 shadow-xs">
+                        <i class="fa-solid fa-route"></i> Démarche Simple & Bienveillante
+                    </div>
+                    <h2 class="font-title text-2xl sm:text-4xl font-black text-gray-900 tracking-tight mb-3">
+                        Comment adopter chez <span class="text-brand-gradient">Chat L'Heureux 56</span> ?
+                    </h2>
+                    <p class="text-xs sm:text-base text-gray-600 font-medium">
+                        Nous mettons un point d'honneur à ce que chaque adoption soit une belle histoire durable pour le chat comme pour sa nouvelle famille.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card rounded-3xl p-6 relative flex flex-col justify-between border border-pink-100/70 hover-lift bg-white">
+                        <span class="text-4xl font-title font-black text-pink-100 absolute top-4 right-4">01</span>
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-pink-50 text-[#d24de3] flex items-center justify-center text-xl mb-5 shadow-xs font-bold">
+                                😻
+                            </div>
+                            <h3 class="font-title text-lg font-black text-gray-900 mb-2">Le Coup de Cœur</h3>
+                            <p class="text-gray-600 text-xs sm:text-sm font-medium leading-relaxed">
+                                Parcourez les fiches de nos chats ou suivez nos sauvetages sur les réseaux pour repérer le petit protégé qui vous fait craquer.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-pink-600">
+                            Sur notre site ou Instagram
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-6 relative flex flex-col justify-between border border-blue-100/70 hover-lift bg-white">
+                        <span class="text-4xl font-title font-black text-blue-100 absolute top-4 right-4">02</span>
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-5 shadow-xs font-bold">
+                                📝
+                            </div>
+                            <h3 class="font-title text-lg font-black text-gray-900 mb-2">Le Questionnaire</h3>
+                            <p class="text-gray-600 text-xs sm:text-sm font-medium leading-relaxed">
+                                Remplissez notre questionnaire d'adoption en ligne pour nous présenter votre mode de vie et vérifier l'adéquation avec le chat.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-blue-600">
+                            En quelques minutes en ligne
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-6 relative flex flex-col justify-between border border-purple-100/70 hover-lift bg-white">
+                        <span class="text-4xl font-title font-black text-purple-100 absolute top-4 right-4">03</span>
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-5 shadow-xs font-bold">
+                                🏡
+                            </div>
+                            <h3 class="font-title text-lg font-black text-gray-900 mb-2">La Rencontre</h3>
+                            <p class="text-gray-600 text-xs sm:text-sm font-medium leading-relaxed">
+                                Rendez visite au chat directement au sein de sa Famille d'Accueil dans le Morbihan, dans son environnement détendu et sans stress.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-purple-600">
+                            Échange avec la famille d'accueil
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-6 relative flex flex-col justify-between border border-emerald-100/70 hover-lift bg-white">
+                        <span class="text-4xl font-title font-black text-emerald-100 absolute top-4 right-4">04</span>
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-5 shadow-xs font-bold">
+                                📜
+                            </div>
+                            <h3 class="font-title text-lg font-black text-gray-900 mb-2">Le Grand Départ</h3>
+                            <p class="text-gray-600 text-xs sm:text-sm font-medium leading-relaxed">
+                                Signature du contrat associatif, remise du carnet de santé à jour (puce, vaccins, stérilisation) et suivi chaleureux dans le temps.
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-gray-100 text-[11px] font-bold text-emerald-600">
+                            Prêt pour une vie de bonheur !
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nouvelle Section : Avis & Témoignages récents -->
+        <section class="py-14 sm:py-18 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 text-[#d24de3] border border-pink-100 text-[11px] font-bold mb-2">
+                            <i class="fa-solid fa-heart text-pink-500"></i> Des vies transformées
+                        </div>
+                        <h2 class="font-title text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
+                            Ils ont trouvé leur <span class="text-brand-gradient">famille pour la vie</span> 🏡
+                        </h2>
+                    </div>
+                    <a href="temoignages.html" class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#d24de3] hover:text-pink-600 transition-colors">
+                        <span>Voir tous les témoignages</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="homeStoriesGrid">
+                    <div class="glass-card rounded-3xl p-6 border border-pink-100 flex flex-col justify-between hover-lift bg-white">
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-pink-100 text-[#d24de3] font-black text-xs flex items-center justify-center shrink-0">
+                                    É
+                                </div>
+                                <div>
+                                    <h4 class="font-title text-sm font-bold text-gray-900">Filou</h4>
+                                    <span class="text-[11px] text-gray-500">Adopté par Élodie & Thomas (Vannes)</span>
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-600 font-medium italic leading-relaxed mb-4">
+                                « Filou s'est adapté à une vitesse folle ! C'est un vrai pot de colle qui nous accueille dès qu'on passe la porte en ronronnant. Merci à toute l'équipe ! »
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 pt-3 border-t border-gray-100">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Heureux au foyer depuis 6 mois
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-6 border border-blue-100 flex flex-col justify-between hover-lift bg-white">
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-black text-xs flex items-center justify-center shrink-0">
+                                    C
+                                </div>
+                                <div>
+                                    <h4 class="font-title text-sm font-bold text-gray-900">Mimi & Caramel</h4>
+                                    <span class="text-[11px] text-gray-500">Adoptés par Claire B. (Lorient)</span>
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-600 font-medium italic leading-relaxed mb-4">
+                                « Adopter ce duo inséparable a été la meilleure décision. Ils dorment toujours collés l'un à l'autre et font rire toute la famille. »
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 pt-3 border-t border-gray-100">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Duo inséparable
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-3xl p-6 border border-purple-100 flex flex-col justify-between hover-lift bg-white">
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 font-black text-xs flex items-center justify-center shrink-0">
+                                    M
+                                </div>
+                                <div>
+                                    <h4 class="font-title text-sm font-bold text-gray-900">Chaussette</h4>
+                                    <span class="text-[11px] text-gray-500">Adoptée par Marc & Nathalie (Auray)</span>
+                                </div>
+                            </div>
+                            <p class="text-xs sm:text-sm text-gray-600 font-medium italic leading-relaxed mb-4">
+                                « Autrefois craintive et discrète, elle est métamorphosée : curieuse, gourmande et toujours prête pour une séance de brossage ! »
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 pt-3 border-t border-gray-100">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> Reine de la maison
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Instagram -->
         <section class="py-12 sm:py-16 relative bg-gradient-to-b from-transparent via-pink-50/40 to-transparent">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center max-w-3xl mx-auto">
@@ -231,13 +448,21 @@
         </section>
     </main>
 
+    <!-- Bouton flottant retour en haut -->
+    <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-slate-900/90 text-white shadow-xl hover:bg-pink-600 transition-all duration-300 flex items-center justify-center opacity-0 pointer-events-none" title="Retour en haut">
+        <i class="fa-solid fa-arrow-up text-xs"></i>
+    </button>
+
     <footer class="bg-slate-950 text-white border-t border-slate-800/80 pt-12 sm:pt-16 pb-10 mt-auto relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 mb-10 sm:mb-12">
                 <div class="md:col-span-5">
-                    <div class="mb-4 sm:mb-5">
-                        <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
-                        <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                    <div class="mb-4 sm:mb-5 flex items-center gap-3">
+                        <img src="favicon.svg" alt="Logo" class="w-9 h-9 rounded-full">
+                        <div>
+                            <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-0.5">Association (56)</span>
+                            <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                        </div>
                     </div>
                     <p class="text-slate-400 font-medium text-xs sm:text-sm mb-4 leading-relaxed max-w-md">
                         Association déclarée à but non lucratif dédiée à la protection, au soin, à la stérilisation et à l'adoption responsable de chats abandonnés à Colpo et dans tout le Morbihan (56).
@@ -329,6 +554,64 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        function getFavoriteIds() {
+            try {
+                return JSON.parse(localStorage.getItem('chat_lheureux_favs') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        window.toggleFavorite = function(catId, event) {
+            if (event) event.stopPropagation();
+            let favs = getFavoriteIds();
+            const index = favs.indexOf(catId);
+            const isAdding = (index === -1);
+
+            if (isAdding) {
+                favs.push(catId);
+                showToast("Coup de cœur ajouté ❤️", "Retrouvez-le sur la page adoption.");
+            } else {
+                favs.splice(index, 1);
+                showToast("Retiré des favoris", "Chat retiré de votre sélection.");
+            }
+
+            try {
+                localStorage.setItem('chat_lheureux_favs', JSON.stringify(favs));
+            } catch(e){}
+
+            // Update heart button on this card
+            const btn = event.currentTarget;
+            if (btn) {
+                if (isAdding) {
+                    btn.className = "absolute top-3 left-3 w-9 h-9 rounded-full bg-pink-500 text-white shadow-lg shadow-pink-500/30 backdrop-blur-md flex items-center justify-center transition-all z-20 text-sm";
+                } else {
+                    btn.className = "absolute top-3 left-3 w-9 h-9 rounded-full bg-slate-900/60 text-white/90 hover:bg-pink-500 hover:text-white backdrop-blur-md flex items-center justify-center transition-all z-20 text-sm";
+                }
+            }
+        };
+
+        function showToast(title, msg) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = "pointer-events-auto flex items-center gap-3 p-4 rounded-2xl shadow-2xl backdrop-blur-md bg-slate-900/95 border border-pink-500/40 text-white transition-all transform duration-300";
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0 text-sm">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div>
+                    <strong class="block text-xs font-bold text-white">${title}</strong>
+                    <span class="text-[11px] text-slate-300 block">${msg}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
         function renderCards(cats) {
             const grid = document.getElementById('featuredCatsGrid');
             const spinner = document.getElementById('loadingSpinner');
@@ -339,6 +622,8 @@
                 grid.innerHTML = `<div class="col-span-full text-center py-8 text-gray-400 font-bold text-xs sm:text-sm">Aucun chat disponible pour le moment.</div>`;
                 return;
             }
+
+            const favIds = getFavoriteIds();
 
             grid.innerHTML = cats.slice(0, 6).map(cat => {
                 const photo = (cat.photos && cat.photos.length > 0) ? cat.photos[0] : (cat.image || 'https://placehold.co/600x400?text=Photo');
@@ -351,6 +636,7 @@
                 const status = cat.status || 'Disponible';
                 const location = cat.location || 'Morbihan (56)';
                 const isAdopted = status === 'Adopté';
+                const isFav = favIds.includes(cat.id);
 
                 let borderClass = 'border-gray-100';
                 if (status === 'Urgence') borderClass = 'border-2 border-rose-200';
@@ -359,14 +645,19 @@
                 return `
                     <div onclick="navigateTo('chat-detail.html?id=${cat.id}')" class="glass-card rounded-[2rem] p-4 hover-lift group cursor-pointer flex flex-col h-full ${borderClass} ${isAdopted ? 'opacity-80' : 'bg-white'}">
                         <div class="relative h-56 sm:h-64 rounded-3xl overflow-hidden mb-5 bg-gray-100">
-                            <img src="${photo}" alt="${name}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isAdopted ? 'grayscale filter blur-[0.5px]' : ''}">
+                            <img src="${photo}" alt="${name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://placehold.co/600x400?text=Photo+en+cours';" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isAdopted ? 'grayscale filter blur-[0.5px]' : ''}">
                             
+                            <!-- Bouton Coup de cœur -->
+                            <button onclick="toggleFavorite('${cat.id}', event)" class="absolute top-3 left-3 w-9 h-9 rounded-full ${isFav ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/30' : 'bg-slate-900/60 text-white/90 hover:bg-pink-500 hover:text-white'} backdrop-blur-md flex items-center justify-center transition-all z-20 text-sm" title="${isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                                <i class="fa-solid fa-heart ${isFav ? 'scale-110' : ''}"></i>
+                            </button>
+
                             <div class="absolute top-3 right-3 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black shadow-sm ${isFemale ? 'bg-pink-100/90 text-pink-700 border border-pink-200' : 'bg-blue-100/90 text-blue-700 border border-blue-200'}">
                                 ${isFemale ? '♀' : '♂'} ${age}
                             </div>
                             
-                            ${status === 'Urgence' ? '<div class="absolute top-3 left-3 bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg animate-pulse uppercase tracking-wider">🚨 Urgence</div>' : ''}
-                            ${isAdopted ? '<div class="absolute top-3 left-3 bg-slate-900/90 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-heart text-pink-400"></i> Adopté 🎉</div>' : ''}
+                            ${status === 'Urgence' ? '<div class="absolute bottom-12 left-3 bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg animate-pulse uppercase tracking-wider">🚨 Urgence</div>' : ''}
+                            ${isAdopted ? '<div class="absolute bottom-12 left-3 bg-slate-900/90 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-heart text-pink-400"></i> Adopté 🎉</div>' : ''}
                             
                             <span class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/20">
                                 <i class="fa-solid fa-location-dot text-pink-400"></i> ${location}
@@ -404,6 +695,18 @@
         }
 
         fetchCatsFromFirebase();
+
+        // Back to top
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 350) {
+                backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+            }
+        });
 
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');

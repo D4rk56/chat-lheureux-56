@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mentions Légales & RGPD - Chat L'Heureux 56</title>
+    <title>Mentions Légales & RGPD — Chat L'Heureux 56</title>
+    <meta name="description" content="Mentions légales, informations juridiques et politique de confidentialité (RGPD) de l'association Chat L'Heureux 56 à Colpo dans le Morbihan (56).">
+    
+    <!-- Favicon officiel -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chat L'Heureux 56">
+    <meta property="og:title" content="Mentions Légales & RGPD — Chat L'Heureux 56">
+    <meta property="og:description" content="Informations légales, SIREN et politique de confidentialité de l'association Chat L'Heureux 56.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
+    <meta property="og:locale" content="fr_FR">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script>
         window.navigateTo = function(url) {
@@ -26,9 +39,10 @@
 </head>
 <body class="antialiased flex flex-col min-h-screen relative overflow-x-hidden w-full max-w-full">
 
-    <div class="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
+    <div class="fixed top-0 left-0 right-0 z-40 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
         <nav class="glass-nav rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center w-full max-w-[calc(100vw-1.5rem)] sm:max-w-5xl pointer-events-auto shadow-lg shadow-gray-200/50">
             <div class="flex items-center gap-2 cursor-pointer group shrink-0" onclick="navigateTo('index.html')">
+                <img src="favicon.svg" alt="Logo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full">
                 <span class="font-title font-black text-lg sm:text-2xl tracking-tight text-brand-gradient">
                     Chat L'Heureux 56
                 </span>
@@ -53,6 +67,7 @@
         </nav>
     </div>
 
+    <!-- Menu Mobile -->
     <div id="mobileMenu" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex-col justify-center items-center gap-6 text-center text-white text-lg font-bold p-6">
         <button id="closeMobileMenuBtn" class="absolute top-6 right-6 text-2xl w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
             <i class="fa-solid fa-xmark"></i>
@@ -98,12 +113,7 @@
                         <p><strong class="text-gray-900">Représentante légale / Présidente :</strong> Marina Loric</p>
                         <p><strong class="text-gray-900">Siège social / Localisation :</strong> Colpo (56390), Morbihan, France</p>
                         <p><strong class="text-gray-900">Contact Téléphonique :</strong> <a href="tel:0661508828" class="text-[#d24de3] hover:underline font-bold">06 61 50 88 28</a></p>
-                        <p><strong class="text-gray-900">Contact E-mail :</strong> <a href="mailto:asso.chatslheureux@gmail.com" class="text-[#d24de3] hover:underline font-bold font-mono">asso.chatslheureux@gmail.com</a></p>
-                        <p class="pt-2">
-                            <a href="https://annuaire-entreprises.data.gouv.fr/entreprise/chat-l-heureux-930923800" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-extrabold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                                <i class="fa-solid fa-shield-check"></i> Fiche officielle annuaire-entreprises.data.gouv.fr
-                            </a>
-                        </p>
+                        <p><strong class="text-gray-900">Courriel :</strong> <a href="mailto:asso.chatslheureux@gmail.com" class="text-[#d24de3] hover:underline font-bold">asso.chatslheureux@gmail.com</a></p>
                     </div>
                 </div>
 
@@ -114,43 +124,50 @@
                         </div>
                         <h2 class="font-title text-lg sm:text-xl font-black text-gray-900">2. Hébergement du site</h2>
                     </div>
-                    <div class="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed space-y-2">
-                        <p>Le site internet de l'association est hébergé par la plateforme de déploiement cloud :</p>
-                        <p><strong class="text-gray-900">Hébergeur :</strong> Netlify Inc.</p>
-                        <p><strong class="text-gray-900">Adresse :</strong> 512 2nd Street, Suite 200, San Francisco, CA 94107, États-Unis</p>
-                        <p><strong class="text-gray-900">Site web :</strong> <a href="https://www.netlify.com" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">www.netlify.com</a></p>
+                    <div class="text-xs sm:text-sm text-gray-600 font-medium space-y-2 leading-relaxed">
+                        <p><strong class="text-gray-900">Hébergeur :</strong> Netlify, Inc.</p>
+                        <p><strong class="text-gray-900">Adresse :</strong> 44 Montgomery Street, Suite 300, San Francisco, California 94104, USA</p>
+                        <p><strong class="text-gray-900">Base de données :</strong> Google Cloud Platform / Firebase (Firestore) - Hébergement sécurisé conforme aux standards internationaux de protection des données.</p>
                     </div>
                 </div>
 
-                <div class="glass-card rounded-[2.2rem] p-5 sm:p-8 border border-pink-100 bg-white shadow-lg">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-brand-gradient text-white flex items-center justify-center text-lg font-bold shadow-md shrink-0">
-                            <i class="fa-solid fa-user-shield text-sm"></i>
+                <div class="glass-card rounded-[2.2rem] p-5 sm:p-8 border border-gray-100 bg-white">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-bold shrink-0">
+                            <i class="fa-solid fa-shield-halved text-sm"></i>
                         </div>
-                        <div>
-                            <h2 class="font-title text-lg sm:text-xl font-black text-gray-900">3. Protection des Données (RGPD)</h2>
-                            <span class="text-[10px] sm:text-[11px] text-gray-400 font-bold uppercase tracking-wider">Conformité Règlement (UE) 2016/679</span>
-                        </div>
+                        <h2 class="font-title text-lg sm:text-xl font-black text-gray-900">3. Protection des Données Personnelles (RGPD)</h2>
                     </div>
+                    <div class="text-xs sm:text-sm text-gray-600 font-medium space-y-3 leading-relaxed">
+                        <p>
+                            L'association <strong>Chat L'Heureux 56</strong> s'engage à ce que la collecte et le traitement de vos données soient conformes au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés.
+                        </p>
+                        <p>
+                            <strong>Finalité des données :</strong> Les informations recueillies via nos formulaires officiels (questionnaires d'adoption, candidatures familles d'accueil, messages de contact) sont exclusivement destinées à la gestion des demandes d'adoption et au suivi des animaux pris en charge.
+                        </p>
+                        <p>
+                            <strong>Non-transmission :</strong> En aucun cas vos données personnelles ne sont vendues, louées ou cédées à des tiers à des fins commerciales.
+                        </p>
+                        <p>
+                            <strong>Vos droits :</strong> Conformément à la réglementation, vous disposez d'un droit d'accès, de rectification, de suppression et d'opposition concernant vos données. Vous pouvez exercer ce droit à tout moment par e-mail à : <a href="mailto:asso.chatslheureux@gmail.com" class="text-[#d24de3] font-bold hover:underline">asso.chatslheureux@gmail.com</a>.
+                        </p>
+                    </div>
+                </div>
 
-                    <div class="space-y-4 text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
-                        <div>
-                            <h3 class="font-bold text-gray-900 text-xs sm:text-sm mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-circle-dot text-[#d24de3] text-[10px]"></i> Responsable du traitement
-                            </h3>
-                            <p>
-                                Le traitement des données personnelles est placé sous la responsabilité du bureau de l'association <strong class="text-gray-900">Chat L'Heureux 56</strong>, représenté par sa Présidente Marina Loric.
-                            </p>
+                <div class="glass-card rounded-[2.2rem] p-5 sm:p-8 border border-gray-100 bg-white">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg font-bold shrink-0">
+                            <i class="fa-solid fa-copyright text-sm"></i>
                         </div>
-
-                        <div>
-                            <h3 class="font-bold text-gray-900 text-xs sm:text-sm mb-1 flex items-center gap-2">
-                                <i class="fa-solid fa-circle-dot text-[#d24de3] text-[10px]"></i> Vos droits (Accès, Rectification, Suppression)
-                            </h3>
-                            <p>
-                                Pour exercer vos droits d'accès, de modification ou de suppression de vos données, contactez-nous simplement par e-mail à : <a href="mailto:asso.chatslheureux@gmail.com" class="text-[#d24de3] font-bold hover:underline font-mono">asso.chatslheureux@gmail.com</a>
-                            </p>
-                        </div>
+                        <h2 class="font-title text-lg sm:text-xl font-black text-gray-900">4. Propriété intellectuelle & Crédits</h2>
+                    </div>
+                    <div class="text-xs sm:text-sm text-gray-600 font-medium space-y-2 leading-relaxed">
+                        <p>
+                            L'ensemble des contenus (textes, logos, photographies des chats, graphismes) présents sur ce site sont la propriété exclusive de l'association <strong>Chat L'Heureux 56</strong> ou font l'objet d'une autorisation d'utilisation par leurs auteurs (bénévoles, adoptants et familles d'accueil).
+                        </p>
+                        <p>
+                            Toute reproduction, représentation, modification ou diffusion, totale ou partielle, sans l'accord préalable écrit de l'association est strictement interdite.
+                        </p>
                     </div>
                 </div>
 
@@ -159,13 +176,21 @@
         </section>
     </main>
 
+    <!-- Bouton flottant retour en haut -->
+    <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-slate-900/90 text-white shadow-xl hover:bg-pink-600 transition-all duration-300 flex items-center justify-center opacity-0 pointer-events-none" title="Retour en haut">
+        <i class="fa-solid fa-arrow-up text-xs"></i>
+    </button>
+
     <footer class="bg-slate-950 text-white border-t border-slate-800/80 pt-12 sm:pt-16 pb-10 mt-auto relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 mb-10">
                 <div class="md:col-span-5">
-                    <div class="mb-4">
-                        <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
-                        <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                    <div class="mb-4 flex items-center gap-3">
+                        <img src="favicon.svg" alt="Logo" class="w-9 h-9 rounded-full">
+                        <div>
+                            <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
+                            <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                        </div>
                     </div>
                     <p class="text-slate-400 font-medium text-xs sm:text-sm mb-4 leading-relaxed max-w-md">
                         Association déclarée à but non lucratif dédiée à la protection, au soin, à la stérilisation et à l'adoption responsable de chats abandonnés dans le Morbihan (56).
@@ -179,7 +204,10 @@
                     </h4>
                     <ul class="space-y-2.5 font-semibold text-xs sm:text-sm">
                         <li><a href="index.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Accueil</a></li>
-                        <li><a href="mentions-legales.html" class="text-pink-400 font-bold flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-pink-400"></i> Mentions Légales & RGPD</a></li>
+                        <li><a href="adoption.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> À l'adoption</a></li>
+                        <li><a href="temoignages.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Ils sont heureux</a></li>
+                        <li><a href="association.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> L'Association</a></li>
+                        <li><a href="don-contact.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Soutenir & Dons</a></li>
                     </ul>
                 </div>
 
@@ -190,6 +218,7 @@
                     <ul class="space-y-3 font-medium text-xs sm:text-sm text-slate-300">
                         <li class="flex items-start gap-3"><i class="fa-solid fa-user-check text-pink-400 mt-1"></i> <div><strong class="block text-white">Marina Loric</strong><span class="text-slate-400 text-xs">Présidente de l'association</span></div></li>
                         <li class="flex items-center gap-3"><i class="fa-solid fa-phone text-[#7db1f9]"></i> <a href="tel:0661508828" class="hover:text-white">06 61 50 88 28</a></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-emerald-400"></i> <span class="text-slate-400">Colpo (56) • Morbihan</span></li>
                     </ul>
                 </div>
             </div>
@@ -204,6 +233,18 @@
     </footer>
 
     <script>
+        // Back to top
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 350) {
+                backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+            }
+        });
+
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
