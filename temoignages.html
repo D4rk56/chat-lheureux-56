@@ -101,7 +101,12 @@
         </header>
 
         <!-- Liste des avis en quinconce -->
-        <div id="testimonialsList" class="flex flex-col gap-8 sm:gap-12 mb-16"></div>
+        <div id="testimonialsList" class="flex flex-col gap-8 sm:gap-12 mb-16">
+            <div id="testimonialsLoading" class="py-12 text-center text-gray-400 font-medium text-xs sm:text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-[#d24de3]"></i>
+                <span>Chargement des témoignages...</span>
+            </div>
+        </div>
 
         <!-- Appel à témoignages -->
         <section class="bg-brand-gradient text-white rounded-3xl p-6 sm:p-10 text-center shadow-xl relative overflow-hidden">
@@ -206,72 +211,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const defaultStories = [
-            {
-                id: 's1',
-                catName: 'Filou',
-                adoptant: 'Élodie & Thomas',
-                location: 'Vannes (56)',
-                photos: ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&fit=crop'],
-                content: "Filou est arrivé chez nous il y a 6 mois et s'est adapté à une vitesse folle ! C'est un vrai pot de colle qui nous accueille dès qu'on passe la porte en ronronnant. Il adore observer les oiseaux par la baie vitrée et partager nos soirées canapé.\n\nUn très grand merci à toute l'équipe et à sa merveilleuse famille d'accueil pour tout l'amour qu'ils lui ont apporté !"
-            },
-            {
-                id: 's2',
-                catName: 'Mimi & Caramel',
-                adoptant: 'Claire B.',
-                location: 'Lorient (56)',
-                photos: ['https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=800&fit=crop'],
-                content: "Nous avons fait le choix d'adopter ce duo inséparable et c'est un pur bonheur au quotidien. Ils sont très complices, dorment toujours collés l'un à l'autre et font rire toute la famille avec leurs petites courses-poursuites du soir.\n\nMerci pour vos conseils avisés et la bienveillance dont vous faites preuve lors de chaque démarche !"
-            },
-            {
-                id: 's3',
-                catName: 'Chaussette',
-                adoptant: 'Marc & Nathalie',
-                location: 'Auray (56)',
-                photos: ['https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=800&fit=crop'],
-                content: "Un petit coucou pour vous donner des nouvelles fraîches de Chaussette ! Autrefois craintive et discrète, elle est métamorphosée : curieuse, gourmande et toujours prête pour une séance de brossage. Une vraie reine de la maison."
-            },
-            {
-                id: 's4',
-                catName: 'Réglisse',
-                adoptant: 'Julien & Sarah',
-                location: 'Pontivy (56)',
-                photos: ['https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=800&fit=crop'],
-                content: "Un an déjà que Réglisse partage nos vies ! Après un début timide, il ne nous quitte plus d'une semelle. Il adore ses siestes au soleil et ses séances de câlins du soir. Merci à l'association pour ce formidable compagnon !"
-            },
-            {
-                id: 's5',
-                catName: 'Nala',
-                adoptant: 'Sophie M.',
-                location: 'Ploërmel (56)',
-                photos: ['https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=800&fit=crop'],
-                content: "Nala est un véritable concentré d'amour et d'énergie. Elle s'entend à merveille avec notre premier chat et a tout de suite trouvé ses repères. Bravo à Chat L'Heureux 56 pour votre bienveillance et votre accompagnement."
-            },
-            {
-                id: 's6',
-                catName: 'Pixel',
-                adoptant: 'Antoine & Camille',
-                location: 'Hennebont (56)',
-                photos: ['https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=800&fit=crop'],
-                content: "Pixel a illuminé notre quotidien ! Très joueur et ultra câlin, il vient se blottir sur nos genoux dès qu'on s'assoit. On ne pourrait plus imaginer notre vie sans lui."
-            },
-            {
-                id: 's7',
-                catName: 'Plume',
-                adoptant: 'Marie & Pierre',
-                location: 'Carnac (56)',
-                photos: ['https://images.unsplash.com/photo-1561948955-570b270e7c36?w=800&fit=crop'],
-                content: "Une boule de tendresse ! Plume a été merveilleusement sociabilisée par sa famille d'accueil avant son arrivée. C'est un amour de minette qui ronronne dès qu'on la regarde."
-            },
-            {
-                id: 's8',
-                catName: 'Simba',
-                adoptant: 'David & Lucie',
-                location: 'Lanester (56)',
-                photos: ['https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800&fit=crop'],
-                content: "Simba est le roi des câlins matinaux. L'adoption s'est déroulée avec beaucoup de sérieux et de gentillesse de la part de l'association. Merci pour tout ce que vous faites pour eux !"
-            }
-        ];
+        function escapeStoryHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
         window.toggleText = function(id) {
             const el = document.getElementById('text_' + id);
@@ -291,14 +239,35 @@
             const container = document.getElementById('testimonialsList');
             if (!container) return;
 
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto border border-pink-100 bg-white shadow-xs">
+                        <div class="w-14 h-14 rounded-2xl bg-pink-50 text-[#d24de3] flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <h3 class="font-title text-xl font-bold text-gray-900 mb-2">Bientôt de nouveaux témoignages</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 font-medium mb-6 leading-relaxed">
+                            Les retours de nos familles adoptantes sont en cours d'ajout. Si vous avez adopté un chat auprès de Chat L'Heureux 56, n'hésitez pas à nous envoyer vos nouvelles !
+                        </p>
+                        <a href="mailto:asso.chatslheureux@gmail.com?subject=T%C3%A9moignage%20adoption" class="inline-flex items-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                            <span>Partager mon témoignage</span>
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
             container.innerHTML = items.map((story, i) => {
                 const isEven = (i % 2 === 0);
                 const photo = (story.photos && story.photos.length > 0) ? story.photos[0] : 'https://placehold.co/800x600?text=Adopt%C3%A9';
-                const catName = story.catName || 'Protégé';
-                const adoptant = story.adoptant || 'Famille adoptante';
-                const location = story.location || 'Morbihan (56)';
-                const content = story.content || '';
+                const catName = escapeStoryHtml(story.catName || 'Protégé');
+                const adoptant = escapeStoryHtml(story.adoptant || 'Famille adoptante');
+                const rawLoc = story.location || 'Morbihan (56)';
+                const location = escapeStoryHtml(rawLoc.includes('(') ? rawLoc : `${rawLoc} (56)`);
+                const content = escapeStoryHtml(story.content || '');
                 const isLong = content.length > 320;
+                const initial = (adoptant.charAt(0) || catName.charAt(0) || 'A').toUpperCase();
 
                 return `
                     <article class="glass-card rounded-[2.5rem] p-5 sm:p-8 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-6 sm:gap-8 items-start hover-lift border border-pink-100/60 bg-white">
@@ -343,7 +312,7 @@
                             <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3 mt-4">
                                 <div class="flex items-center gap-2.5 min-w-0">
                                     <div class="w-9 h-9 rounded-full bg-pink-100 text-[#d24de3] font-black text-xs flex items-center justify-center shrink-0">
-                                        ${(adoptant || 'A').charAt(0).toUpperCase()}
+                                        ${initial}
                                     </div>
                                     <div class="min-w-0">
                                         <p class="text-xs font-bold text-gray-900 truncate">${adoptant}</p>
@@ -361,9 +330,8 @@
             }).join('');
         }
 
-        renderStories(defaultStories);
-
         async function loadFirestoreStories() {
+            const container = document.getElementById('testimonialsList');
             try {
                 const snap = await getDocs(collection(db, "testimonials"));
                 const list = [];
@@ -373,13 +341,12 @@
                         list.push({ id: d.id, ...data });
                     }
                 });
-                if (list.length > 0) {
-                    const dbNames = new Set(list.map(s => (s.catName || '').toLowerCase().trim()));
-                    const filteredDefaults = defaultStories.filter(s => !dbNames.has((s.catName || '').toLowerCase().trim()));
-                    renderStories([...list, ...filteredDefaults]);
-                }
+                renderStories(list);
             } catch (err) {
-                console.warn("Mode local:", err);
+                console.error("Erreur chargement Firestore:", err);
+                if (container) {
+                    container.innerHTML = `<div class="text-center py-12 text-rose-500 font-medium text-xs sm:text-sm">Impossible de charger les témoignages actuellement.</div>`;
+                }
             }
         }
         loadFirestoreStories();

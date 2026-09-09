@@ -355,7 +355,7 @@
                         </h2>
                     </div>
                     <div class="flex items-center gap-3">
-                        <button id="refreshStoriesBtn" class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-[#d24de3] bg-white border border-gray-200 hover:border-pink-200 px-3.5 py-2 rounded-full shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer" title="Afficher 3 autres avis d'adoptants au hasard">
+                        <button id="refreshStoriesBtn" class="hidden inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-[#d24de3] bg-white border border-gray-200 hover:border-pink-200 px-3.5 py-2 rounded-full shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer" title="Afficher 3 autres avis d'adoptants au hasard">
                             <i class="fa-solid fa-arrows-rotate text-[11px] text-[#d24de3]"></i>
                             <span>Autres avis</span>
                         </button>
@@ -367,74 +367,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="homeStoriesGrid">
-                    <!-- Rempli dynamiquement en JavaScript avec 3 avis aléatoires et variés -->
-                    <div class="glass-card rounded-3xl p-6 border border-pink-100 flex flex-col justify-between hover-lift bg-white shadow-xs">
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-4">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-10 h-10 rounded-full bg-pink-100 text-[#d24de3] font-black text-xs flex items-center justify-center shrink-0">É</div>
-                                    <div class="min-w-0">
-                                        <h4 class="font-title text-sm sm:text-base font-bold text-gray-900 truncate">Filou</h4>
-                                        <span class="text-[11px] text-gray-500 block truncate">Adopté par Élodie & Thomas (Vannes)</span>
-                                    </div>
-                                </div>
-                                <div class="flex text-amber-400 text-xs shrink-0 gap-0.5" title="Avis vérifié 5/5">
-                                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                                </div>
-                            </div>
-                            <p class="text-xs sm:text-sm text-gray-600 font-medium italic leading-relaxed mb-4 line-clamp-4">
-                                « Filou s'est adapté à une vitesse folle ! C'est un vrai pot de colle qui nous accueille dès qu'on passe la porte en ronronnant. Merci à toute l'équipe ! »
-                            </p>
-                        </div>
-                        <div class="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 pt-3 border-t border-gray-100">
-                            <i class="fa-solid fa-circle-check text-[10px]"></i> Heureux au foyer depuis 6 mois
-                        </div>
-                    </div>
-
-                    <div class="glass-card rounded-3xl p-6 border border-blue-100 flex flex-col justify-between hover-lift bg-white shadow-xs">
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-4">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-black text-xs flex items-center justify-center shrink-0">C</div>
-                                    <div class="min-w-0">
-                                        <h4 class="font-title text-sm sm:text-base font-bold text-gray-900 truncate">Mimi & Caramel</h4>
-                                        <span class="text-[11px] text-gray-500 block truncate">Adoptés par Claire B. (Lorient)</span>
-                                    </div>
-                                </div>
-                                <div class="flex text-amber-400 text-xs shrink-0 gap-0.5" title="Avis vérifié 5/5">
-                                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                                </div>
-                            </div>
-                            <p class="text-xs sm:text-sm text-gray-600 font-medium italic leading-relaxed mb-4 line-clamp-4">
-                                « Adopter ce duo inséparable a été la meilleure décision. Ils dorment toujours collés l'un à l'autre et font rire toute la famille. »
-                            </p>
-                        </div>
-                        <div class="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 pt-3 border-t border-gray-100">
-                            <i class="fa-solid fa-circle-check text-[10px]"></i> Duo inséparable
-                        </div>
-                    </div>
-
-                    <div class="glass-card rounded-3xl p-6 border border-purple-100 flex flex-col justify-between hover-lift bg-white shadow-xs">
-                        <div>
-                            <div class="flex items-center justify-between gap-3 mb-4">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 font-black text-xs flex items-center justify-center shrink-0">M</div>
-                                    <div class="min-w-0">
-                                        <h4 class="font-title text-sm sm:text-base font-bold text-gray-900 truncate">Chaussette</h4>
-                                        <span class="text-[11px] text-gray-500 block truncate">Adoptée par Marc & Nathalie (Auray)</span>
-                                    </div>
-                                </div>
-                                <div class="flex text-amber-400 text-xs shrink-0 gap-0.5" title="Avis vérifié 5/5">
-                                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                                </div>
-                            </div>
-                            <p class="text-xs sm:text-sm text-gray-600 font-medium italic leading-relaxed mb-4 line-clamp-4">
-                                « Autrefois craintive et discrète, elle est métamorphosée : curieuse, gourmande et toujours prête pour une séance de brossage ! »
-                            </p>
-                        </div>
-                        <div class="text-[11px] text-emerald-600 font-bold flex items-center gap-1.5 pt-3 border-t border-gray-100">
-                            <i class="fa-solid fa-circle-check text-[10px]"></i> Reine de la maison
-                        </div>
+                    <div id="homeStoriesLoading" class="col-span-full py-12 text-center text-gray-400 font-medium text-xs sm:text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-notch fa-spin text-[#d24de3]"></i>
+                        <span>Chargement des témoignages...</span>
                     </div>
                 </div>
             </div>
@@ -712,83 +647,8 @@
 
         fetchCatsFromFirebase();
 
-        // --- Témoignages d'adoptants : Vivier riche & tirage aléatoire de 3 avis distincts ---
-        const defaultHomeStories = [
-            {
-                id: 's1',
-                catName: 'Filou',
-                adoptant: 'Élodie & Thomas',
-                location: 'Vannes (56)',
-                tag: 'Heureux au foyer depuis 6 mois',
-                photos: ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&fit=crop'],
-                content: "Filou s'est adapté à une vitesse folle ! C'est un vrai pot de colle qui nous accueille dès qu'on passe la porte en ronronnant. Merci à toute l'équipe pour cet accompagnement !"
-            },
-            {
-                id: 's2',
-                catName: 'Mimi & Caramel',
-                adoptant: 'Claire B.',
-                location: 'Lorient (56)',
-                tag: 'Duo inséparable',
-                photos: ['https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=800&fit=crop'],
-                content: "Adopter ce duo inséparable a été la meilleure décision. Ils dorment toujours collés l'un à l'autre et font rire toute la famille avec leurs petites courses-poursuites du soir."
-            },
-            {
-                id: 's3',
-                catName: 'Chaussette',
-                adoptant: 'Marc & Nathalie',
-                location: 'Auray (56)',
-                tag: 'Reine de la maison',
-                photos: ['https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=800&fit=crop'],
-                content: "Autrefois craintive et discrète, Chaussette est métamorphosée : curieuse, gourmande et toujours prête pour une séance de brossage ! Une vraie joie au quotidien."
-            },
-            {
-                id: 's4',
-                catName: 'Réglisse',
-                adoptant: 'Julien & Sarah',
-                location: 'Pontivy (56)',
-                tag: '1 an de bonheur au foyer',
-                photos: ['https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=800&fit=crop'],
-                content: "Un an déjà que Réglisse partage nos vies ! Après un début timide, il ne nous quitte plus d'une semelle. Il adore ses siestes au soleil et ses séances de câlins du soir."
-            },
-            {
-                id: 's5',
-                catName: 'Nala',
-                adoptant: 'Sophie M.',
-                location: 'Ploërmel (56)',
-                tag: 'Complicité retrouvée',
-                photos: ['https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=800&fit=crop'],
-                content: "Nala est un véritable concentré d'amour et d'énergie. Elle s'entend à merveille avec notre premier chat et a tout de suite trouvé ses repères. Bravo pour votre bienveillance !"
-            },
-            {
-                id: 's6',
-                catName: 'Pixel',
-                adoptant: 'Antoine & Camille',
-                location: 'Hennebont (56)',
-                tag: 'Machine à ronrons',
-                photos: ['https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=800&fit=crop'],
-                content: "Pixel a illuminé notre quotidien ! Très joueur et ultra câlin, il vient se blottir sur nos genoux dès qu'on s'assoit. On ne pourrait plus imaginer notre vie sans lui."
-            },
-            {
-                id: 's7',
-                catName: 'Plume',
-                adoptant: 'Marie & Pierre',
-                location: 'Carnac (56)',
-                tag: 'Douceur infinie',
-                photos: ['https://images.unsplash.com/photo-1561948955-570b270e7c36?w=800&fit=crop'],
-                content: "Une boule de tendresse ! Plume a été merveilleusement sociabilisée par sa famille d'accueil avant son arrivée. C'est un amour de minette qui ronronne dès qu'on la regarde."
-            },
-            {
-                id: 's8',
-                catName: 'Simba',
-                adoptant: 'David & Lucie',
-                location: 'Lanester (56)',
-                tag: 'Prince du salon',
-                photos: ['https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800&fit=crop'],
-                content: "Simba est le roi des câlins matinaux. L'adoption s'est déroulée avec beaucoup de sérieux et de gentillesse de la part de l'association. Merci pour tout ce que vous faites pour eux !"
-            }
-        ];
-
-        let availableStoriesPool = [...defaultHomeStories];
+        // --- Témoignages d'adoptants : Chargement exclusif depuis la base de données Firestore ---
+        let firestoreStoriesPool = [];
 
         function escapeStoryHtml(str) {
             if (!str) return '';
@@ -800,9 +660,48 @@
                 .replace(/'/g, '&#039;');
         }
 
-        function renderHomeStories(selectedStories) {
+        function renderHomeStories(stories) {
             const grid = document.getElementById('homeStoriesGrid');
+            const refreshBtn = document.getElementById('refreshStoriesBtn');
             if (!grid) return;
+
+            if (!stories || stories.length === 0) {
+                grid.className = "max-w-xl mx-auto w-full";
+                grid.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 text-center border border-pink-100 bg-white shadow-xs">
+                        <div class="w-12 h-12 rounded-2xl bg-pink-50 text-[#d24de3] flex items-center justify-center mx-auto mb-3 text-xl">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <h4 class="font-title text-base font-bold text-gray-900 mb-1">Vous avez adopté chez nous ?</h4>
+                        <p class="text-xs text-gray-600 font-medium mb-4 leading-relaxed">
+                            Partagez des nouvelles et quelques photos de votre protégé dans son nouveau foyer !
+                        </p>
+                        <a href="mailto:asso.chatslheureux@gmail.com?subject=T%C3%A9moignage%20d'adoption" class="inline-flex items-center gap-2 text-xs font-bold text-[#d24de3] hover:underline">
+                            <i class="fa-solid fa-envelope"></i>
+                            <span>asso.chatslheureux@gmail.com</span>
+                        </a>
+                    </div>
+                `;
+                if (refreshBtn) refreshBtn.classList.add('hidden');
+                return;
+            }
+
+            // Adaptation dynamique de la disposition selon le nombre réel d'avis enregistrés
+            if (stories.length === 1) {
+                grid.className = "max-w-xl mx-auto w-full";
+            } else if (stories.length === 2) {
+                grid.className = "grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto";
+            } else {
+                grid.className = "grid grid-cols-1 md:grid-cols-3 gap-6";
+            }
+
+            if (refreshBtn) {
+                if (firestoreStoriesPool.length > 3) {
+                    refreshBtn.classList.remove('hidden');
+                } else {
+                    refreshBtn.classList.add('hidden');
+                }
+            }
 
             const palette = [
                 { bg: 'bg-pink-100', text: 'text-[#d24de3]', border: 'border-pink-100' },
@@ -810,7 +709,7 @@
                 { bg: 'bg-purple-100', text: 'text-purple-600', border: 'border-purple-100' }
             ];
 
-            grid.innerHTML = selectedStories.map((story, idx) => {
+            grid.innerHTML = stories.map((story, idx) => {
                 const style = palette[idx % palette.length];
                 const catName = escapeStoryHtml(story.catName || 'Protégé');
                 const adoptant = escapeStoryHtml(story.adoptant || 'Famille adoptante');
@@ -852,7 +751,7 @@
         }
 
         function pickRandomStories(count = 3) {
-            const arr = [...availableStoriesPool];
+            const arr = [...firestoreStoriesPool];
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -865,46 +764,35 @@
             renderHomeStories(selected);
         }
 
-        async function initHomeStories() {
-            // Affichage initial aléatoire immédiat (aucun temps d'attente)
-            refreshHomeStories();
-
+        async function fetchStoriesFromFirebase() {
             try {
                 const snap = await getDocs(collection(db, "testimonials"));
-                const dbStories = [];
+                firestoreStoriesPool = [];
                 snap.forEach(d => {
                     const data = d.data();
                     if (data && (data.catName || data.content)) {
-                        dbStories.push({
+                        firestoreStoriesPool.push({
                             id: d.id,
                             ...data,
-                            tag: data.tag || 'Famille adoptante'
+                            tag: data.tag || 'Heureux au foyer'
                         });
                     }
                 });
 
-                if (dbStories.length > 0) {
-                    const dbNames = new Set(dbStories.map(s => (s.catName || '').toLowerCase().trim()));
-                    const filteredDefaults = defaultHomeStories.filter(
-                        s => !dbNames.has((s.catName || '').toLowerCase().trim())
-                    );
-                    // Combinaison : les avis Firestore réels + le vivier d'exemples réalistes
-                    availableStoriesPool = [...dbStories, ...filteredDefaults];
-                    // On relance un tirage aléatoire de 3 distincts
-                    refreshHomeStories();
-                }
+                refreshHomeStories();
             } catch (err) {
                 console.warn("Avis Firestore:", err);
+                renderHomeStories([]);
             }
         }
 
-        initHomeStories();
+        fetchStoriesFromFirebase();
 
         const refreshBtn = document.getElementById('refreshStoriesBtn');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
                 refreshHomeStories();
-                showToast("Nouveaux avis 🐾", "3 retours d'adoptants tirés au sort.");
+                showToast("Nouveaux avis 🐾", "Avis d'adoptants tirés au sort.");
             });
         }
 
