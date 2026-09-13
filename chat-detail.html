@@ -213,7 +213,7 @@
                         </div>
 
                         <div id="catActionContainer" class="space-y-3">
-                            <a id="adoptFormBtn" href="questionnaire.html" class="w-full bg-brand-gradient text-white py-4 px-6 rounded-2xl font-extrabold text-center block shadow-lg shadow-pink-500/20 hover:scale-[1.01] transition-all text-xs sm:text-base uppercase tracking-wider">
+                            <a href="https://docs.google.com/forms/d/e/1FAIpQLScNaXx_ZzAWX6_UdybeZK2V77Gbp_FVD304-GuGwi8LGr-7yA/viewform" target="_blank" rel="noopener noreferrer" class="w-full bg-brand-gradient text-white py-4 px-6 rounded-2xl font-extrabold text-center block shadow-lg shadow-pink-500/20 hover:scale-[1.01] transition-all text-xs sm:text-base uppercase tracking-wider">
                                 <i class="fa-solid fa-file-signature mr-2"></i> Remplir le questionnaire d'adoption
                             </a>
                             <a id="askQuestionBtn" href="mailto:asso.chatslheureux@gmail.com" class="text-center block text-xs font-bold text-gray-600 hover:text-[#d24de3] transition-colors py-2 px-4 rounded-xl bg-white border border-gray-200 hover:border-pink-300">
@@ -453,11 +453,6 @@
                 const subject = encodeURIComponent(`Question au sujet de l'adoption de ${catName}`);
                 const body = encodeURIComponent(`Bonjour l'équipe de Chat L'Heureux 56,\n\nJe vous contacte au sujet de ${catName} (vu(e) sur votre site internet).\n\nJ'aimerais avoir plus de renseignements sur : \n\nMerci d'avance pour votre réponse et pour votre engagement associatif !`);
                 askBtn.href = `mailto:asso.chatslheureux@gmail.com?subject=${subject}&body=${body}`;
-            }
-
-            const adoptBtn = document.getElementById('adoptFormBtn');
-            if (adoptBtn) {
-                adoptBtn.href = `questionnaire.html?chat=${encodeURIComponent(catName)}`;
             }
 
             const actionContainer = document.getElementById('catActionContainer');
