@@ -8,6 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -112,11 +113,15 @@
             </div>
             
             <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                <button id="tabBtnCats" onclick="switchTab('cats')" class="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center">
+                <button id="tabBtnCats" onclick="switchTab('cats')" class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center">
                     <i class="fa-solid fa-cat mr-1.5"></i> Chats (<span id="catCounter">0</span>)
                 </button>
-                <button id="tabBtnStories" onclick="switchTab('stories')" class="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center">
+                <button id="tabBtnStories" onclick="switchTab('stories')" class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center">
                     <i class="fa-solid fa-heart mr-1.5"></i> Avis (<span id="storyCounter">0</span>)
+                </button>
+                <button id="tabBtnApplications" onclick="switchTab('applications')" class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center relative">
+                    <i class="fa-solid fa-file-signature mr-1.5"></i> Candidatures (<span id="applicationCounter">0</span>)
+                    <span id="pendingApplicationsBadge" class="hidden absolute -top-1.5 -right-1.5 bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full border border-slate-900 shadow"></span>
                 </button>
             </div>
         </div>
@@ -213,6 +218,76 @@
 
             <div id="noStoriesMessage" class="hidden glass-card p-8 sm:p-12 rounded-2xl sm:rounded-[2rem] text-center text-slate-400 font-bold text-xs">
                 Aucun témoignage enregistré pour le moment.
+            </div>
+        </section>
+
+        <!-- Onglet Candidatures d'Adoption -->
+        <section id="tabContentApplications" class="space-y-4 sm:space-y-6 hidden">
+            <!-- Statistiques Candidatures -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3.5">
+                <div onclick="filterApplicationsByStatus(null)" class="glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 hover:border-pink-500/50 cursor-pointer transition-all">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Toutes</span>
+                    <strong id="statAppTotal" class="text-base sm:text-xl font-black text-white">0</strong>
+                </div>
+                <div onclick="filterApplicationsByStatus('En attente')" class="glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 hover:border-amber-500/50 cursor-pointer transition-all">
+                    <span class="block text-[10px] font-bold text-amber-400 uppercase tracking-wider">⏳ En attente</span>
+                    <strong id="statAppPending" class="text-base sm:text-xl font-black text-amber-300">0</strong>
+                </div>
+                <div onclick="filterApplicationsByStatus('En cours d\'étude')" class="glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 hover:border-blue-500/50 cursor-pointer transition-all">
+                    <span class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider">🔄 En étude</span>
+                    <strong id="statAppReview" class="text-base sm:text-xl font-black text-blue-300">0</strong>
+                </div>
+                <div onclick="filterApplicationsByStatus('Validée')" class="glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-all">
+                    <span class="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider">✅ Validées</span>
+                    <strong id="statAppApproved" class="text-base sm:text-xl font-black text-emerald-300">0</strong>
+                </div>
+                <div onclick="filterApplicationsByStatus('Refusée')" class="glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 hover:border-rose-500/50 cursor-pointer transition-all">
+                    <span class="block text-[10px] font-bold text-rose-400 uppercase tracking-wider">❌ Refusées</span>
+                    <strong id="statAppRejected" class="text-base sm:text-xl font-black text-rose-300">0</strong>
+                </div>
+            </div>
+
+            <!-- Barre d'outils et recherche -->
+            <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="searchApplicationInput" placeholder="Rechercher (candidat, chat, réf, ville, tél...)" class="w-full bg-slate-900 border border-slate-800 text-xs font-semibold text-white rounded-xl sm:rounded-2xl pl-9 pr-4 py-3 focus:outline-none focus:border-pink-500">
+                    </div>
+                    <select id="filterApplicationStatusSelect" onchange="filterApplicationsByStatus(this.value || null)" class="bg-slate-900 border border-slate-800 text-xs font-semibold text-white rounded-xl sm:rounded-2xl px-3.5 py-3 focus:outline-none focus:border-pink-500">
+                        <option value="">Tous les statuts</option>
+                        <option value="En attente">⏳ En attente</option>
+                        <option value="En cours d'étude">🔄 En cours d'étude</option>
+                        <option value="Validée">✅ Validée</option>
+                        <option value="Refusée">❌ Refusée</option>
+                        <option value="Adopté">🐾 Adopté</option>
+                    </select>
+                    <button id="resetAppFilterBtn" onclick="filterApplicationsByStatus(null)" class="hidden text-xs font-bold px-3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl sm:rounded-2xl border border-slate-700 whitespace-nowrap transition-colors">
+                        <i class="fa-solid fa-xmark mr-1"></i> Réinitialiser
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <a href="questionnaire.html" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-3 rounded-xl sm:rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-colors">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-[11px] text-pink-400"></i>
+                        <span>Ouvrir questionnaire</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Chargement -->
+            <div id="applicationsLoading" class="text-center py-12 text-slate-400 font-bold text-xs">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-pink-500 mb-2 block"></i>
+                Chargement des candidatures depuis Firestore...
+            </div>
+
+            <!-- Liste des candidatures -->
+            <div id="applicationsList" class="space-y-3 sm:space-y-4 hidden"></div>
+
+            <!-- État vide -->
+            <div id="noApplicationsMessage" class="hidden glass-card p-8 sm:p-12 rounded-2xl sm:rounded-[2rem] text-center text-slate-400 font-bold text-xs">
+                <i class="fa-solid fa-inbox text-3xl text-slate-600 mb-3 block"></i>
+                Aucune candidature d'adoption enregistrée pour l'instant.
             </div>
         </section>
 
@@ -470,6 +545,204 @@
         </div>
     </div>
 
+    <!-- Modale Détail de Candidature -->
+    <div id="applicationModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="glass-panel w-full max-w-3xl rounded-2xl sm:rounded-[2.5rem] border border-slate-800 my-auto overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            
+            <!-- Header Modale -->
+            <div class="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/80 shrink-0">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="appDetailRef" class="bg-pink-500/20 text-pink-300 font-black px-2.5 py-0.5 rounded-lg text-[11px] font-mono border border-pink-500/30"></span>
+                        <span id="appDetailDate" class="text-slate-400 text-[11px] font-semibold"></span>
+                    </div>
+                    <h2 class="font-title text-base sm:text-xl font-black text-white flex items-center gap-2 truncate">
+                        <span>Candidature pour :</span>
+                        <span id="appDetailCat" class="text-pink-400 font-extrabold"></span>
+                    </h2>
+                </div>
+                <button onclick="closeApplicationModal()" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs sm:text-sm transition-colors shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Barre d'état et actions rapides -->
+            <div class="p-3.5 sm:p-4 bg-slate-900/60 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-bold text-slate-400">Statut dossier :</label>
+                    <select id="appDetailStatusSelect" onchange="updateApplicationStatusFromModal(this.value)" class="bg-slate-950 border border-slate-700 text-white font-bold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:border-pink-500">
+                        <option value="En attente">⏳ En attente</option>
+                        <option value="En cours d'étude">🔄 En cours d'étude</option>
+                        <option value="Validée">✅ Validée</option>
+                        <option value="Refusée">❌ Refusée</option>
+                        <option value="Adopté">🐾 Adopté</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="shareCurrentAppWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow transition-all">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button type="button" onclick="downloadCurrentAppPdf()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 border border-slate-700 transition-colors">
+                        <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                        <span>PDF</span>
+                    </button>
+                    <button type="button" onclick="deleteCurrentApp()" class="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-bold px-2.5 py-1.5 rounded-xl text-xs border border-rose-500/30 transition-colors" title="Supprimer la candidature">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Corps de la modale avec les 6 sections -->
+            <div class="p-4 sm:p-6 space-y-5 overflow-y-auto flex-grow text-xs font-medium text-slate-300">
+                
+                <!-- 1. Coordonnées -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-title text-xs font-black text-pink-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-user"></i> 1. Coordonnées du Candidat
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-200">
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Nom complet</span>
+                            <strong id="appDetailFullName" class="text-white text-sm"></strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Profession</span>
+                            <strong id="appDetailProfession" class="text-white"></strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Téléphone</span>
+                            <a id="appDetailPhoneLink" href="" class="text-pink-400 hover:underline font-bold text-sm"></a>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Adresse e-mail</span>
+                            <a id="appDetailEmailLink" href="" class="text-pink-400 hover:underline font-bold"></a>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <span class="text-slate-400 block text-[11px]">Adresse postale</span>
+                            <span id="appDetailFullAddress" class="text-slate-200 font-semibold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Foyer & Famille -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-title text-xs font-black text-pink-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-people-roof"></i> 2. Foyer & Enfants
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-200">
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Composition foyer</span>
+                            <span id="appDetailHousehold" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Âge des enfants</span>
+                            <span id="appDetailChildrenAges" class="font-bold"></span>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <span class="text-slate-400 block text-[11px]">Contact passé avec les animaux</span>
+                            <span id="appDetailAnimalContact" class="font-bold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Habitation & Sécurité -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-title text-xs font-black text-pink-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-house"></i> 3. Habitation & Sécurisation
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-200">
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Type d'habitation</span>
+                            <span id="appDetailHousingType" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Étage</span>
+                            <span id="appDetailFloor" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Pièce isolée avec fenêtre</span>
+                            <span id="appDetailIsolatedRoom" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Jardin & Superficie</span>
+                            <span id="appDetailGarden" class="font-bold"></span>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <span class="text-slate-400 block text-[11px]">Balcon & Sécurisation</span>
+                            <span id="appDetailBalcony" class="font-bold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Animaux & Rythme de vie -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-title text-xs font-black text-pink-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-paw"></i> 4. Animaux & Rythme de vie
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-200">
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Animaux actuels au foyer</span>
+                            <span id="appDetailCurrentPets" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Si chien (race & âge)</span>
+                            <span id="appDetailDogInfo" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Soins animaux actuels</span>
+                            <span id="appDetailPetCare" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Sociabilité congénères</span>
+                            <span id="appDetailSociability" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Accès à toutes les pièces</span>
+                            <span id="appDetailAccessRooms" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Où dormira l'animal</span>
+                            <span id="appDetailSleepPlace" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Absence journalière</span>
+                            <span id="appDetailAbsenceHours" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Lieu durant les absences</span>
+                            <span id="appDetailAbsencePlace" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Retour le midi</span>
+                            <span id="appDetailLunchReturn" class="font-bold"></span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Restera seul</span>
+                            <span id="appDetailStayAlone" class="font-bold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Motivations & Remarques -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-2">
+                    <h3 class="font-title text-xs font-black text-pink-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-comment-dots"></i> 5. Motivations & Remarques
+                    </h3>
+                    <div id="appDetailAdditionalInfo" class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap min-h-[60px]"></div>
+                </div>
+
+            </div>
+
+            <!-- Footer Modale -->
+            <div class="p-4 border-t border-slate-800 flex justify-end gap-2.5 bg-slate-900/80 shrink-0">
+                <button type="button" onclick="closeApplicationModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
@@ -491,11 +764,14 @@
         // Variables globales
         let allCats = [];
         let allStories = [];
+        let allApplications = [];
         let currentCatPhotos = [];
         let currentStoryPhotos = [];
         let pendingDeleteId = null;
         let pendingDeleteType = null;
         let activeStatusFilter = null;
+        let activeAppStatusFilter = null;
+        let currentDetailApp = null;
         let currentAgeMode = 'birthDate'; // 'birthDate' ou 'freeText'
 
         // Calcul dynamique et naturel de l'âge en français
@@ -658,7 +934,7 @@
         });
 
         async function loadAllData() {
-            await Promise.all([fetchCats(), fetchStories()]);
+            await Promise.all([fetchCats(), fetchStories(), fetchApplications()]);
         }
 
         async function fetchCats() {
@@ -877,6 +1153,424 @@
             }).join('');
         }
 
+        async function fetchApplications() {
+            const spinner = document.getElementById('applicationsLoading');
+            try {
+                const snapshot = await getDocs(collection(db, "candidatures"));
+                allApplications = [];
+                snapshot.forEach(docSnap => {
+                    allApplications.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                allApplications.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                updateAppStatsCounters(allApplications);
+
+                if (spinner) spinner.classList.add('hidden');
+                applyAdminApplicationFilters();
+            } catch (err) {
+                console.error("Erreur Firestore candidatures:", err);
+                if (spinner) spinner.innerText = "Erreur de chargement des candidatures.";
+            }
+        }
+
+        function updateAppStatsCounters(apps) {
+            const total = apps.length;
+            const pending = apps.filter(a => (a.status === 'En attente' || a.status === 'Nouveau' || !a.status)).length;
+            const review = apps.filter(a => a.status === "En cours d'étude").length;
+            const approved = apps.filter(a => a.status === 'Validée').length;
+            const rejected = apps.filter(a => a.status === 'Refusée').length;
+
+            const counterEl = document.getElementById('applicationCounter');
+            if (counterEl) counterEl.innerText = total;
+
+            const pendingBadge = document.getElementById('pendingApplicationsBadge');
+            if (pendingBadge) {
+                if (pending > 0) {
+                    pendingBadge.innerText = pending;
+                    pendingBadge.classList.remove('hidden');
+                } else {
+                    pendingBadge.classList.add('hidden');
+                }
+            }
+
+            const elTotal = document.getElementById('statAppTotal');
+            const elPending = document.getElementById('statAppPending');
+            const elReview = document.getElementById('statAppReview');
+            const elApproved = document.getElementById('statAppApproved');
+            const elRejected = document.getElementById('statAppRejected');
+
+            if (elTotal) elTotal.innerText = total;
+            if (elPending) elPending.innerText = pending;
+            if (elReview) elReview.innerText = review;
+            if (elApproved) elApproved.innerText = approved;
+            if (elRejected) elRejected.innerText = rejected;
+        }
+
+        window.filterApplicationsByStatus = function(status) {
+            activeAppStatusFilter = status;
+            const selectEl = document.getElementById('filterApplicationStatusSelect');
+            if (selectEl) selectEl.value = status || "";
+
+            const resetBtn = document.getElementById('resetAppFilterBtn');
+            if (resetBtn) {
+                resetBtn.classList.toggle('hidden', !status && !document.getElementById('searchApplicationInput')?.value.trim());
+            }
+
+            applyAdminApplicationFilters();
+        };
+
+        function applyAdminApplicationFilters() {
+            const searchVal = document.getElementById('searchApplicationInput')?.value.toLowerCase().trim() || '';
+            const resetBtn = document.getElementById('resetAppFilterBtn');
+
+            if (resetBtn) {
+                resetBtn.classList.toggle('hidden', !activeAppStatusFilter && !searchVal);
+            }
+
+            const filtered = allApplications.filter(app => {
+                const matchesStatus = !activeAppStatusFilter || (activeAppStatusFilter === 'En attente' ? (app.status === 'En attente' || app.status === 'Nouveau' || !app.status) : app.status === activeAppStatusFilter);
+                
+                const matchesSearch = !searchVal || 
+                    (app.fullName && app.fullName.toLowerCase().includes(searchVal)) ||
+                    (app.catName && app.catName.toLowerCase().includes(searchVal)) ||
+                    (app.reference && app.reference.toLowerCase().includes(searchVal)) ||
+                    (app.city && app.city.toLowerCase().includes(searchVal)) ||
+                    (app.phone && app.phone.toLowerCase().includes(searchVal)) ||
+                    (app.email && app.email.toLowerCase().includes(searchVal));
+
+                return matchesStatus && matchesSearch;
+            });
+
+            renderApplicationsList(filtered);
+        }
+
+        document.getElementById('searchApplicationInput')?.addEventListener('input', applyAdminApplicationFilters);
+
+        function renderApplicationsList(apps) {
+            const listContainer = document.getElementById('applicationsList');
+            const emptyMsg = document.getElementById('noApplicationsMessage');
+            if (!listContainer) return;
+
+            if (apps.length === 0) {
+                listContainer.classList.add('hidden');
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            listContainer.classList.remove('hidden');
+
+            const statusStyles = {
+                'En attente': 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+                'Nouveau': 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+                "En cours d'étude": 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+                'Validée': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                'Refusée': 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+                'Adopté': 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+            };
+
+            listContainer.innerHTML = apps.map(app => {
+                const currentStatus = app.status || 'En attente';
+                const statusBadgeStyle = statusStyles[currentStatus] || statusStyles['En attente'];
+                const formattedDate = app.createdAt ? new Date(app.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Date inconnue';
+
+                return `
+                    <div class="glass-card rounded-2xl sm:rounded-[2rem] p-4 sm:p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-700 transition-all">
+                        <div class="space-y-2 flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="bg-pink-500/20 text-pink-300 font-black px-2.5 py-0.5 rounded-lg text-[11px] font-mono border border-pink-500/30">
+                                    ${app.reference || 'CLH-A26-????'}
+                                </span>
+                                <span class="text-slate-400 text-[11px] font-semibold">
+                                    <i class="fa-regular fa-clock mr-1"></i>${formattedDate}
+                                </span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeStyle}">
+                                    ${currentStatus}
+                                </span>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+                                <h3 class="font-title text-base sm:text-lg font-black text-white truncate">
+                                    <span class="text-pink-400">🐾 ${app.catName || 'Non spécifié'}</span>
+                                    <span class="text-slate-500 font-light mx-1">—</span>
+                                    <span>${app.fullName || 'Candidat'}</span>
+                                </h3>
+                                <span class="text-xs text-slate-400 font-semibold">
+                                    <i class="fa-solid fa-location-dot text-[10px] text-pink-400 mr-1"></i>${app.city || 'Morbihan'}
+                                </span>
+                            </div>
+
+                            <div class="text-xs text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+                                <a href="tel:${app.phone || ''}" class="hover:text-pink-400 transition-colors font-medium">
+                                    <i class="fa-solid fa-phone text-[10px] mr-1 text-slate-500"></i>${app.phone || 'Non renseigné'}
+                                </a>
+                                <a href="mailto:${app.email || ''}" class="hover:text-pink-400 transition-colors font-medium">
+                                    <i class="fa-solid fa-envelope text-[10px] mr-1 text-slate-500"></i>${app.email || 'Non renseigné'}
+                                </a>
+                                <span>
+                                    <i class="fa-solid fa-house text-[10px] mr-1 text-slate-500"></i>${app.housingType || 'Logement'} (${app.garden && app.garden !== 'Non' ? 'Jardin' : 'Sans jardin'})
+                                </span>
+                                <span>
+                                    <i class="fa-solid fa-users text-[10px] mr-1 text-slate-500"></i>${app.adults || 1} adulte(s), ${app.children || 0} enfant(s)
+                                </span>
+                            </div>
+
+                            ${app.additionalInfo ? `
+                                <p class="text-[11px] text-slate-400/90 italic bg-slate-900/60 p-2 rounded-xl border border-slate-800/80 line-clamp-1">
+                                    « ${app.additionalInfo} »
+                                </p>
+                            ` : ''}
+                        </div>
+
+                        <!-- Actions Candidature -->
+                        <div class="flex flex-wrap md:flex-col items-center md:items-end justify-end gap-2 pt-3 md:pt-0 border-t md:border-t-0 border-slate-800 shrink-0">
+                            <div class="flex items-center gap-1.5 w-full md:w-auto justify-end">
+                                <select onchange="updateApplicationStatus('${app.id}', this.value)" class="bg-slate-900 border border-slate-700 text-white font-bold text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-pink-500 cursor-pointer">
+                                    <option value="En attente" ${currentStatus === 'En attente' || currentStatus === 'Nouveau' ? 'selected' : ''}>⏳ En attente</option>
+                                    <option value="En cours d'étude" ${currentStatus === "En cours d'étude" ? 'selected' : ''}>🔄 En étude</option>
+                                    <option value="Validée" ${currentStatus === 'Validée' ? 'selected' : ''}>✅ Validée</option>
+                                    <option value="Refusée" ${currentStatus === 'Refusée' ? 'selected' : ''}>❌ Refusée</option>
+                                    <option value="Adopté" ${currentStatus === 'Adopté' ? 'selected' : ''}>🐾 Adopté</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="openApplicationModal('${app.id}')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5" title="Consulter le dossier complet">
+                                    <i class="fa-solid fa-eye text-[11px] text-pink-400"></i> Voir
+                                </button>
+                                <button onclick="shareApplicationWhatsAppAdmin('${app.id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all" title="Partager au groupe WhatsApp">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                                </button>
+                                <button onclick="downloadApplicationPdfAdmin('${app.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors" title="Télécharger le PDF officiel">
+                                    <i class="fa-solid fa-file-pdf text-rose-400 text-xs"></i>
+                                </button>
+                                <button onclick="promptDelete('${app.id}', 'application', 'la candidature de ${(app.fullName || '').replace(/'/g, "\\'")}')" class="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all" title="Supprimer de la base">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.openApplicationModal = function(id) {
+            const app = allApplications.find(a => a.id === id);
+            if (!app) return;
+
+            currentDetailApp = app;
+
+            document.getElementById('appDetailRef').innerText = app.reference || 'CLH-A26-????';
+            document.getElementById('appDetailDate').innerText = app.createdAt ? 'Déposée le ' + new Date(app.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+            document.getElementById('appDetailCat').innerText = app.catName || 'Non spécifié';
+            document.getElementById('appDetailStatusSelect').value = app.status || 'En attente';
+
+            document.getElementById('appDetailFullName').innerText = app.fullName || '—';
+            document.getElementById('appDetailProfession').innerText = app.profession || '—';
+
+            const phoneLink = document.getElementById('appDetailPhoneLink');
+            phoneLink.href = app.phone ? `tel:${app.phone}` : '#';
+            phoneLink.innerText = app.phone || 'Non communiqué';
+
+            const emailLink = document.getElementById('appDetailEmailLink');
+            emailLink.href = app.email ? `mailto:${app.email}` : '#';
+            emailLink.innerText = app.email || 'Non communiqué';
+
+            document.getElementById('appDetailFullAddress').innerText = `${app.address || '—'}, ${app.city || '—'}`;
+
+            document.getElementById('appDetailHousehold').innerText = `${app.adults || 1} adulte(s), ${app.children || 0} enfant(s)`;
+            document.getElementById('appDetailChildrenAges').innerText = app.childrenAges || 'Non spécifié';
+            document.getElementById('appDetailAnimalContact').innerText = app.kidsAnimalContact || 'Non spécifié';
+
+            document.getElementById('appDetailHousingType').innerText = app.housingType || 'Non spécifié';
+            document.getElementById('appDetailFloor').innerText = app.floorLevel || 'RDC';
+            document.getElementById('appDetailIsolatedRoom').innerText = app.isolatedRoom || 'Non';
+            document.getElementById('appDetailGarden').innerText = app.garden || 'Non';
+            document.getElementById('appDetailBalcony').innerText = `${app.hasBalcony || 'Non'} ${app.hasBalcony === 'Oui' ? '(Sécurisé: ' + (app.balconySecured || 'Non') + ')' : ''}`;
+
+            document.getElementById('appDetailCurrentPets').innerText = app.whichPets || app.hasCurrentPets || 'Aucun';
+            document.getElementById('appDetailDogInfo').innerText = app.dogDetails || 'Aucun';
+            document.getElementById('appDetailPetCare').innerText = app.petCare || 'Non spécifié';
+            document.getElementById('appDetailSociability').innerText = app.petsSociable || 'Non spécifié';
+            document.getElementById('appDetailAccessRooms').innerText = app.accessAllRooms || 'Oui';
+            document.getElementById('appDetailSleepPlace').innerText = app.sleepPlace || 'Intérieur';
+            document.getElementById('appDetailAbsenceHours').innerText = app.absenceHours || 'Non spécifié';
+            document.getElementById('appDetailAbsencePlace').innerText = app.absencePlace || 'Intérieur';
+            document.getElementById('appDetailLunchReturn').innerText = app.lunchReturn || 'Non';
+            document.getElementById('appDetailStayAlone').innerText = app.stayAlone || 'Non';
+
+            document.getElementById('appDetailAdditionalInfo').innerText = app.additionalInfo || 'Aucune remarque ou motivation complémentaire formulée par le candidat.';
+
+            document.getElementById('applicationModal').classList.remove('hidden');
+        };
+
+        window.closeApplicationModal = function() {
+            document.getElementById('applicationModal').classList.add('hidden');
+            currentDetailApp = null;
+        };
+
+        window.updateApplicationStatus = async function(id, newStatus) {
+            try {
+                await updateDoc(doc(db, "candidatures", id), { status: newStatus });
+                const app = allApplications.find(a => a.id === id);
+                if (app) app.status = newStatus;
+                updateAppStatsCounters(allApplications);
+                applyAdminApplicationFilters();
+                showToast("Statut mis à jour", `La candidature est désormais '${newStatus}'.`);
+            } catch (err) {
+                console.error("Erreur mise à jour statut:", err);
+                showToast("Erreur", "Impossible de mettre à jour le statut.", "error");
+            }
+        };
+
+        window.updateApplicationStatusFromModal = async function(newStatus) {
+            if (!currentDetailApp) return;
+            await window.updateApplicationStatus(currentDetailApp.id, newStatus);
+        };
+
+        window.shareApplicationWhatsAppAdmin = function(id) {
+            const app = allApplications.find(a => a.id === id);
+            if (!app) return;
+            triggerWhatsAppShare(app);
+        };
+
+        window.shareCurrentAppWhatsApp = function() {
+            if (!currentDetailApp) return;
+            triggerWhatsAppShare(currentDetailApp);
+        };
+
+        function triggerWhatsAppShare(d) {
+            const text = 
+`🐾 *CANDIDATURE D'ADOPTION*
+📋 *Réf :* ${d.reference || 'CLH-A26-????'}
+🐱 *Chat souhaité :* ${d.catName || 'Non spécifié'}
+⏳ *Statut :* ${d.status || 'En attente'}
+
+👤 *Adoptant :* ${d.fullName || 'Non renseigné'}
+📞 *Tél :* ${d.phone || 'Non renseigné'}
+✉️ *E-mail :* ${d.email || 'Non renseigné'}
+📍 *Commune :* ${d.city || 'Morbihan'}
+💼 *Profession :* ${d.profession || 'Non renseigné'}
+
+🏡 *Logement :* ${d.housingType || 'Non renseigné'} (${d.floorLevel || 'RDC'})
+🌳 *Jardin :* ${d.garden || 'Non'}
+🏢 *Balcon :* ${d.hasBalcony || 'Non'} (Sécurisé: ${d.balconySecured || 'Non'})
+👨‍👩‍👧 *Foyer :* ${d.adults || 1} adulte(s), ${d.children || 0} enfant(s)
+
+🐕 *Animaux actuels :* ${d.whichPets || 'Aucun'}
+⏰ *Absence journalière :* ${d.absenceHours || 'Non spécifié'} (Midi: ${d.lunchReturn || 'Non'})
+
+💬 *Motivations :*
+"${(d.additionalInfo || 'Aucune').slice(0, 250)}${(d.additionalInfo || '').length > 250 ? '...' : ''}"
+
+_Consultable sur la console admin Chat L'Heureux 56_`;
+
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        window.downloadApplicationPdfAdmin = function(id) {
+            const app = allApplications.find(a => a.id === id);
+            if (!app) return;
+            generateApplicationPdf(app);
+        };
+
+        window.downloadCurrentAppPdf = function() {
+            if (!currentDetailApp) return;
+            generateApplicationPdf(currentDetailApp);
+        };
+
+        function generateApplicationPdf(d) {
+            const element = document.createElement('div');
+            element.style.padding = '30px';
+            element.style.fontFamily = 'Helvetica, Arial, sans-serif';
+            element.style.color = '#111';
+            element.style.lineHeight = '1.4';
+
+            element.innerHTML = `
+                <div style="text-align: center; border-bottom: 2px solid #d24de3; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h1 style="color: #d24de3; margin: 0 0 5px 0; font-size: 22px;">ASSOCIATION CHAT L'HEUREUX 56</h1>
+                    <p style="margin: 0; font-size: 13px; color: #555;">Dossier Officiel de Candidature d'Adoption — Réf: <strong>${d.reference || 'CLH-A26-????'}</strong></p>
+                    <p style="margin: 3px 0 0 0; font-size: 11px; color: #777;">Date : ${d.createdAt ? new Date(d.createdAt).toLocaleDateString('fr-FR') : 'Non daté'} • Statut : <strong>${d.status || 'En attente'}</strong> • SIRET : 930 923 800 00013</p>
+                </div>
+
+                <div style="background: #fdf4ff; border: 1px solid #f0abfc; padding: 12px 15px; border-radius: 8px; margin-bottom: 18px;">
+                    <h2 style="margin: 0 0 6px 0; font-size: 15px; color: #86198f;">🐾 Chat souhaité : ${d.catName || 'Non spécifié'}</h2>
+                    <p style="margin: 0; font-size: 12px; color: #333;"><strong>Candidat :</strong> ${d.fullName || '—'} • <strong>Tél :</strong> ${d.phone || '—'} • <strong>E-mail :</strong> ${d.email || '—'}</p>
+                </div>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">1. Coordonnées & Foyer</h3>
+                <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Adresse :</strong> ${d.address || '—'}, ${d.city || '—'}</td>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Profession :</strong> ${d.profession || '—'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Composition foyer :</strong> ${d.adults || 1} adulte(s), ${d.children || 0} enfant(s)</td>
+                        <td style="padding: 4px 0;"><strong>Âge enfants :</strong> ${d.childrenAges || 'Non spécifié'} (Contact animaux: ${d.kidsAnimalContact || 'Non spécifié'})</td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">2. Logement & Sécurité</h3>
+                <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Type d'habitation :</strong> ${d.housingType || 'Non spécifié'} (Étage: ${d.floorLevel || 'RDC'})</td>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Pièce isolée avec fenêtre :</strong> ${d.isolatedRoom || 'Non'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Jardin / Extérieur :</strong> ${d.garden || 'Non'}</td>
+                        <td style="padding: 4px 0;"><strong>Balcon :</strong> ${d.hasBalcony || 'Non'} (Sécurisé: ${d.balconySecured || 'Non'})</td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">3. Animaux & Mode de vie</h3>
+                <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Animaux actuels :</strong> ${d.whichPets || d.hasCurrentPets || 'Aucun'}</td>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Si chien (race/âge) :</strong> ${d.dogDetails || 'Aucun'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Soins animaux :</strong> ${d.petCare || 'Non spécifié'}</td>
+                        <td style="padding: 4px 0;"><strong>Sociabilité congénères :</strong> ${d.petsSociable || 'Non spécifié'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Accès pièces :</strong> ${d.accessAllRooms || 'Oui'}</td>
+                        <td style="padding: 4px 0;"><strong>Couchage :</strong> ${d.sleepPlace || 'Intérieur'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Absence par jour :</strong> ${d.absenceHours || 'Non spécifié'} (Lieu: ${d.absencePlace || 'Intérieur'})</td>
+                        <td style="padding: 4px 0;"><strong>Retour le midi :</strong> ${d.lunchReturn || 'Non'} • <strong>Seul :</strong> ${d.stayAlone || 'Non'}</td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">4. Motivations & Remarques</h3>
+                <div style="font-size: 11px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; white-space: pre-wrap; margin-bottom: 15px;">
+                    ${d.additionalInfo || 'Aucune remarque complémentaire.'}
+                </div>
+
+                <div style="font-size: 9px; color: #666; border-top: 1px dashed #ccc; padding-top: 8px; text-align: center;">
+                    Ce document contient des données à caractère personnel protégées par le RGPD. Usage strictement réservé aux bénévoles de Chat L'Heureux 56.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Candidature_${(d.catName || 'Adoption').replace(/\s+/g, '_')}_${(d.fullName || 'Adoptant').replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        window.deleteCurrentApp = function() {
+            if (!currentDetailApp) return;
+            const app = currentDetailApp;
+            closeApplicationModal();
+            promptDelete(app.id, 'application', `la candidature de ${(app.fullName || '').replace(/'/g, "\\'")}`);
+        };
+
         document.getElementById('formPhotoFile').addEventListener('change', (e) => handleFileInput(e, 'cat'));
         document.getElementById('storyPhotoFile').addEventListener('change', (e) => handleFileInput(e, 'story'));
 
@@ -1044,14 +1738,17 @@
 
         document.getElementById('confirmDeleteActionBtn').addEventListener('click', async () => {
             if (!pendingDeleteId || !pendingDeleteType) return;
-            const collectionName = pendingDeleteType === 'cat' ? 'chats' : 'testimonials';
+            let collectionName = 'chats';
+            if (pendingDeleteType === 'story') collectionName = 'testimonials';
+            else if (pendingDeleteType === 'application') collectionName = 'candidatures';
             
             try {
                 await deleteDoc(doc(db, collectionName, pendingDeleteId));
                 showToast('Suppression', 'L\'élément a bien été retiré de la base.');
                 closeDeleteModal();
                 if (pendingDeleteType === 'cat') fetchCats();
-                else fetchStories();
+                else if (pendingDeleteType === 'story') fetchStories();
+                else fetchApplications();
             } catch (err) {
                 console.error(err);
                 showToast('Erreur', 'Impossible de supprimer l\'élément.', 'error');
@@ -1225,11 +1922,24 @@
 
         window.switchTab = function(tab) {
             const isCats = tab === 'cats';
-            document.getElementById('tabContentCats').classList.toggle('hidden', !isCats);
-            document.getElementById('tabContentStories').classList.toggle('hidden', isCats);
+            const isStories = tab === 'stories';
+            const isApps = tab === 'applications';
 
-            document.getElementById('tabBtnCats').className = isCats ? "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center" : "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center";
-            document.getElementById('tabBtnStories').className = !isCats ? "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center" : "flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center";
+            document.getElementById('tabContentCats').classList.toggle('hidden', !isCats);
+            document.getElementById('tabContentStories').classList.toggle('hidden', !isStories);
+            document.getElementById('tabContentApplications').classList.toggle('hidden', !isApps);
+
+            const topStatsGrid = document.getElementById('cardStatDispo')?.parentElement;
+            if (topStatsGrid) {
+                topStatsGrid.classList.toggle('hidden', !isCats);
+            }
+
+            const activeBtn = "flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition-all bg-brand-gradient text-white shadow-md text-center";
+            const inactiveBtn = "flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl font-bold text-xs transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 text-center";
+
+            document.getElementById('tabBtnCats').className = isCats ? activeBtn : inactiveBtn;
+            document.getElementById('tabBtnStories').className = isStories ? activeBtn : inactiveBtn;
+            document.getElementById('tabBtnApplications').className = isApps ? activeBtn + " relative" : inactiveBtn + " relative";
         };
 
         function showToast(title, msg, type = 'success') {

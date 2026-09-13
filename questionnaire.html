@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth overflow-x-hidden w-full max-w-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Questionnaire d'Adoption Officiel — Chat L'Heureux 56</title>
+    <meta name="description" content="Formulaire officiel préalable à l'adoption de l'association Chat L'Heureux 56 (Morbihan). Présentez votre foyer et préparez l'accueil de votre futur compagnon.">
+    
+    <!-- Favicon officiel -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chat L'Heureux 56">
+    <meta property="og:title" content="Questionnaire d'Adoption — Association Chat L'Heureux 56">
+    <meta property="og:description" content="Remplissez directement en ligne le questionnaire d'adoption pour présenter votre foyer à notre équipe bénévole.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop">
+    <meta property="og:locale" content="fr_FR">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Librairie de génération PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Pré-connexion Firestore -->
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+
+    <script>
+        window.navigateTo = function(url) {
+            if (!url) return;
+            try { window.location.href = url; } catch (err) { console.warn("Navigation:", err); }
+        };
+    </script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; overflow-x: hidden; width: 100%; }
+        .font-title { font-family: 'Outfit', sans-serif; }
+        .bg-brand-gradient { background: linear-gradient(135deg, #d24de3 0%, #7db1f9 100%); }
+        .text-brand-gradient { background: linear-gradient(135deg, #d24de3 0%, #7db1f9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.8); }
+        .glass-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border: 1px solid rgba(241, 245, 249, 1); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
+        
+        .step-panel { display: none; }
+        .step-panel.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .custom-radio:checked + label {
+            border-color: #d24de3;
+            background-color: #fdf4ff;
+            color: #86198f;
+        }
+
+        .custom-checkbox:checked + label {
+            border-color: #d24de3;
+            background-color: #fdf4ff;
+            color: #86198f;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+            .glass-card { box-shadow: none !important; border: 1px solid #ccc !important; }
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen relative overflow-x-hidden w-full max-w-full">
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Navigation Bar -->
+    <div class="fixed top-0 left-0 right-0 z-40 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center no-print">
+        <nav class="glass-nav rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center w-full max-w-[calc(100vw-1.5rem)] sm:max-w-5xl pointer-events-auto shadow-lg shadow-gray-200/50">
+            <div class="flex items-center gap-2 cursor-pointer group shrink-0" onclick="navigateTo('index.html')">
+                <img src="favicon.svg" alt="Logo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full">
+                <span class="font-title font-black text-lg sm:text-2xl tracking-tight text-brand-gradient">
+                    Chat L'Heureux 56
+                </span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="index.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">Accueil</a>
+                <a href="adoption.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">À l'adoption</a>
+                <a href="temoignages.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">Ils sont heureux</a>
+                <a href="association.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">L'Association</a>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <a href="don-contact.html" class="hidden sm:inline-flex items-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm px-5 py-2.5 rounded-full font-extrabold hover:shadow-lg transition-all">
+                    <span>Soutenir</span>
+                    <i class="fa-solid fa-heart text-white text-xs"></i>
+                </a>
+                <button id="mobileMenuBtn" class="md:hidden text-gray-800 focus:outline-none bg-gray-100/80 w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-gray-200" aria-label="Menu Mobile">
+                    <i class="fa-solid fa-bars text-base"></i>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex-col justify-center items-center gap-6 text-center text-white text-lg font-bold p-6 no-print">
+        <button id="closeMobileMenuBtn" class="absolute top-6 right-6 text-2xl w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <a href="index.html" class="hover:text-pink-300">Accueil</a>
+        <a href="adoption.html" class="hover:text-pink-300">À l'adoption</a>
+        <a href="temoignages.html" class="hover:text-pink-300">Ils sont heureux</a>
+        <a href="association.html" class="hover:text-pink-300">L'Association</a>
+        <a href="don-contact.html" class="bg-brand-gradient px-6 py-3 rounded-full text-white text-sm font-extrabold shadow-lg">
+            Soutenir l'association <i class="fa-solid fa-heart ml-2"></i>
+        </a>
+    </div>
+
+    <main class="flex-grow pt-28 sm:pt-36 pb-20 max-w-4xl mx-auto px-4 sm:px-6 w-full">
+        
+        <!-- En-tête officiel -->
+        <header class="text-center max-w-2xl mx-auto mb-8 sm:mb-10 no-print">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 text-[#d24de3] border border-pink-100 text-xs font-bold mb-3 shadow-xs">
+                <i class="fa-solid fa-file-signature"></i> Association Chat L'Heureux 56
+            </div>
+            <h1 class="font-title text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight mb-3">
+                Questionnaire <span class="text-brand-gradient">d'adoption</span> 🐾
+            </h1>
+            <p class="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed mb-4">
+                Ce questionnaire préalable permet à notre équipe bénévole de mieux comprendre votre environnement et vos attentes, afin de vérifier la parfaite harmonie avec le chat souhaité.
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-gray-500">
+                <span class="inline-flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-xs">
+                    <i class="fa-solid fa-lock text-emerald-500"></i> Strictement confidentiel
+                </span>
+                <span class="inline-flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-xs">
+                    <i class="fa-solid fa-clock text-blue-500"></i> 4 à 5 minutes
+                </span>
+                <button type="button" onclick="printBlankForm()" class="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-pink-300 text-gray-700 px-3 py-1 rounded-full shadow-xs transition-colors cursor-pointer" title="Imprimer ou enregistrer un exemplaire vierge en PDF">
+                    <i class="fa-solid fa-print text-[#d24de3]"></i> Formulaire vierge (PDF)
+                </button>
+            </div>
+        </header>
+
+        <!-- Barre de progression des 6 étapes -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 mb-8 no-print bg-white border border-pink-100 shadow-sm">
+            <div class="flex items-center justify-between text-xs font-bold text-gray-600 mb-2">
+                <span id="stepProgressLabel" class="text-[#d24de3] font-black uppercase tracking-wider">Étape 1 sur 6 : Le Protégé</span>
+                <span id="stepPercentLabel" class="font-mono text-gray-400">16%</span>
+            </div>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div id="stepProgressBar" class="h-full bg-brand-gradient transition-all duration-500 rounded-full" style="width: 16.66%;"></div>
+            </div>
+            
+            <div class="hidden sm:grid grid-cols-6 gap-2 mt-3 text-[10px] font-bold text-center text-gray-400">
+                <span id="badgeStep1" class="text-[#d24de3] font-extrabold">1. Animal</span>
+                <span id="badgeStep2">2. Coordonnées</span>
+                <span id="badgeStep3">3. Ménage</span>
+                <span id="badgeStep4">4. Logement</span>
+                <span id="badgeStep5">5. Mode de vie</span>
+                <span id="badgeStep6">6. Validation</span>
+            </div>
+        </div>
+
+        <!-- Formulaire Multi-étapes -->
+        <form id="adoptionForm" onsubmit="event.preventDefault();" class="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-pink-100/80 bg-white shadow-xl relative overflow-hidden">
+            
+            <!-- ÉTAPE 1 : Animal & E-mail -->
+            <div id="stepPanel1" class="step-panel active space-y-6">
+                <div class="border-b border-gray-100 pb-4">
+                    <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 1 / 6</span>
+                    <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Pour quel chat postulez-vous ?</h2>
+                    <p class="text-xs text-gray-500 font-medium">Indiquez le nom de l'animal qui fait battre votre cœur.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Nom de l'animal souhaité <span class="text-pink-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-paw absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="catNameField" required placeholder="Ex: Caramel, Nala, Mimi... (ou plusieurs)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div id="catQuickSelect" class="flex flex-wrap gap-1.5 mt-2.5 items-center">
+                        <span class="text-[11px] text-gray-400 font-semibold mr-1">Récemment disponibles :</span>
+                        <div id="catQuickButtons" class="flex flex-wrap gap-1.5">
+                            <span class="text-[11px] text-gray-400 italic">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Votre adresse e-mail de contact <span class="text-pink-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="email" id="emailField" required placeholder="votre.email@exemple.fr" class="w-full bg-slate-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <span class="text-[11px] text-gray-400 mt-1 block">Nous vous enverrons une confirmation et la copie de votre demande par e-mail.</span>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 2 : Données Personnelles -->
+            <div id="stepPanel2" class="step-panel space-y-6">
+                <div class="border-b border-gray-100 pb-4">
+                    <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 2 / 6</span>
+                    <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Données Personnelles</h2>
+                    <p class="text-xs text-gray-500 font-medium">Ces informations sont strictement confidentielles et restent exclusivement dans le cadre de l'association.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Nom & Prénom <span class="text-pink-500">*</span>
+                    </label>
+                    <input type="text" id="fullNameField" required placeholder="Ex: Dupont Marie" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Adresse postale <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="addressField" required placeholder="Numéro et rue..." class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Code Postal & Ville <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="cityField" required placeholder="Ex: 56000 Vannes" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Numéro de téléphone <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="tel" id="phoneField" required placeholder="06 .. .. .. .." class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Profession <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="professionField" required placeholder="Votre activité..." class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 3 : Composition du Ménage -->
+            <div id="stepPanel3" class="step-panel space-y-6">
+                <div class="border-b border-gray-100 pb-4">
+                    <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 3 / 6</span>
+                    <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Composition du Ménage</h2>
+                    <p class="text-xs text-gray-500 font-medium">Pour assurer un environnement adapté au tempérament du chat.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Nombre d'adultes au foyer <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="number" id="adultsField" min="1" max="20" required placeholder="Ex: 2" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Nombre d'enfants au foyer <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="number" id="childrenField" min="0" max="20" required placeholder="Ex: 0" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Âge des enfants <span class="text-gray-400 font-normal">(si concerné)</span>
+                    </label>
+                    <input type="text" id="childrenAgeField" placeholder="Ex: 4 ans et 8 ans (ou aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Ont-ils déjà eu des contacts avec des animaux ?
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="kidsAnimalContact" value="Oui" class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="kidsAnimalContact" value="Non" class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 4 : Habitation -->
+            <div id="stepPanel4" class="step-panel space-y-6">
+                <div class="border-b border-gray-100 pb-4">
+                    <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 4 / 6</span>
+                    <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Votre Habitation</h2>
+                    <p class="text-xs text-gray-500 font-medium">L'espace et la sécurité sont essentiels pour le bien-être du chat.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Type d'habitation <span class="text-pink-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="housingType" value="Maison" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">🏡 Maison</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="housingType" value="Appartement" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">🏢 Appartement</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="housingType" value="Autre" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Autre</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Avez-vous une pièce isolée avec fenêtre ? <span class="text-pink-500">*</span>
+                    </label>
+                    <span class="text-[11px] text-gray-500 block mb-2">Très utile les premiers jours pour une acclimatation en douceur.</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="isolatedRoom" value="Oui" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="isolatedRoom" value="Non" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Avez-vous un jardin ? Si oui, quelle superficie ? <span class="text-pink-500">*</span>
+                    </label>
+                    <input type="text" id="gardenField" required placeholder="Ex: Oui, jardin clos de 300 m² (ou Non)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Avez-vous un balcon ? <span class="text-pink-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="hasBalcony" value="Oui" required class="text-[#d24de3]">
+                                <span class="text-xs font-bold text-gray-800">Oui</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="hasBalcony" value="Non" required class="text-[#d24de3]">
+                                <span class="text-xs font-bold text-gray-800">Non</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Le balcon est-il sécurisé ?
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="balconySecured" value="Oui" class="text-[#d24de3]">
+                                <span class="text-xs font-bold text-gray-800">Oui (filet/grille)</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="balconySecured" value="Non" class="text-[#d24de3]">
+                                <span class="text-xs font-bold text-gray-800">Non</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Quel étage ? <span class="text-pink-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="floorLevel" value="RDC / Maison" required class="sr-only">
+                            <span class="text-xs font-bold text-gray-800 block">RDC</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="floorLevel" value="1er" required class="sr-only">
+                            <span class="text-xs font-bold text-gray-800 block">1er</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="floorLevel" value="2e" required class="sr-only">
+                            <span class="text-xs font-bold text-gray-800 block">2e</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="floorLevel" value="3e" required class="sr-only">
+                            <span class="text-xs font-bold text-gray-800 block">3e</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="floorLevel" value="4e ou +" required class="sr-only">
+                            <span class="text-xs font-bold text-gray-800 block">4e +</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="floorLevel" value="Autre" required class="sr-only">
+                            <span class="text-xs font-bold text-gray-800 block">Autre</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 5 : Animaux actuels & Mode de vie -->
+            <div id="stepPanel5" class="step-panel space-y-6">
+                <div class="border-b border-gray-100 pb-4">
+                    <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 5 / 6</span>
+                    <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Animaux & Mode de vie</h2>
+                    <p class="text-xs text-gray-500 font-medium">Pour assurer la sécurité et l'entente au quotidien.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Possédez-vous des animaux actuellement ? <span class="text-pink-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="hasCurrentPets" value="Oui" required class="text-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300">
+                            <input type="radio" name="hasCurrentPets" value="Non" required class="text-[#d24de3]">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Si oui, lesquels ? <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="whichPetsField" required placeholder="Ex: 1 chat de 5 ans (ou Aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Si chien : quelle race et quel âge ? <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="dogDetailsField" required placeholder="Ex: Berger australien, 3 ans (ou Aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Vos animaux actuels sont-ils : <span class="text-pink-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                            <input type="checkbox" name="petCare" value="Identifiés" class="rounded text-[#d24de3]">
+                            <span class="text-xs font-bold text-gray-800">Identifiés (puce/tatouage)</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                            <input type="checkbox" name="petCare" value="Vaccinés" class="rounded text-[#d24de3]">
+                            <span class="text-xs font-bold text-gray-800">Vaccinés</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                            <input type="checkbox" name="petCare" value="Stérilisés" class="rounded text-[#d24de3]">
+                            <span class="text-xs font-bold text-gray-800">Stérilisés</span>
+                        </label>
+                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
+                            <input type="checkbox" name="petCare" value="Aucun animal / Aucun" class="rounded text-[#d24de3]">
+                            <span class="text-xs font-bold text-gray-800">Aucun animal</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Sont-ils sociables avec leurs congénères ? <span class="text-pink-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="petsSociable" value="Oui" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="petsSociable" value="Non" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Non</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="petsSociable" value="Pas d'autre animal" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">N/A</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Accès à toutes les pièces du foyer ? <span class="text-pink-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="accessAllRooms" value="Oui" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="accessAllRooms" value="Non (préciser)" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Non</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Où dormira l'animal ? <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="sleepPlaceField" required placeholder="Ex: Salon, panier, chambre..." class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Heures d'absence quotidienne du foyer <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="absenceHoursField" required placeholder="Ex: 5 à 6 heures par jour" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-1">
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Durant les absences, où restera-t-il ? <span class="text-pink-500">*</span>
+                        </label>
+                        <input type="text" id="absencePlaceField" required placeholder="Ex: Intérieur libre" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Rentrerez-vous le midi ? <span class="text-pink-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="lunchReturn" value="Oui" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="lunchReturn" value="Non" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Non</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Restera-t-il seul ? <span class="text-pink-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="stayAlone" value="Oui" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
+                            </label>
+                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
+                                <input type="radio" name="stayAlone" value="Non" required class="sr-only">
+                                <span class="text-xs font-bold text-gray-800 block">Non</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 6 : Informations Complémentaires & Consentement -->
+            <div id="stepPanel6" class="step-panel space-y-6">
+                <div class="border-b border-gray-100 pb-4">
+                    <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 6 / 6</span>
+                    <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Informations Complémentaires</h2>
+                    <p class="text-xs text-gray-500 font-medium">Dernière étape avant la transmission sécurisée à l'association.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                        Avez-vous quelque chose à ajouter ? <span class="text-pink-500">*</span>
+                    </label>
+                    <textarea id="additionalInfoField" rows="4" required placeholder="Précisez ici vos motivations, vos questions, vos expériences passées avec les chats ou toute information utile pour l'équipe..." class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 text-xs sm:text-sm font-medium text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all"></textarea>
+                </div>
+
+                <div class="bg-pink-50/70 border border-pink-100 rounded-2xl p-4 sm:p-5 text-xs text-gray-700 space-y-3">
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" id="rgpdConsent" required class="mt-1 rounded text-[#d24de3] focus:ring-[#d24de3]">
+                        <label for="rgpdConsent" class="font-medium cursor-pointer">
+                            Je certifie sur l'honneur l'exactitude des informations fournies et j'accepte que l'association <strong>Chat L'Heureux 56</strong> me recontacte par téléphone ou par e-mail au sujet de cette démarche d'adoption responsable.
+                        </label>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-[11px] text-gray-500">
+                    <i class="fa-solid fa-shield-halved text-emerald-500 mr-1.5"></i>
+                    <strong>Protection des données :</strong> Vos données ne seront jamais vendues, cédées ni utilisées à des fins commerciales. Elles sont réservées aux membres habilités de l'association.
+                </div>
+            </div>
+
+            <!-- Boutons Précédent / Suivant / Envoyer -->
+            <div class="pt-6 border-t border-gray-100 flex items-center justify-between gap-3 mt-8 no-print">
+                <button type="button" id="prevStepBtn" onclick="prevStep()" class="hidden items-center gap-2 px-5 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs sm:text-sm transition-colors cursor-pointer">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span>Précédent</span>
+                </button>
+
+                <div class="ml-auto flex items-center gap-2">
+                    <button type="button" id="nextStepBtn" onclick="nextStep()" class="inline-flex items-center gap-2 bg-brand-gradient text-white px-7 py-3.5 rounded-2xl font-extrabold text-xs sm:text-sm shadow-lg shadow-pink-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+                        <span>Étape suivante</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+
+                    <button type="button" id="submitFormBtn" onclick="submitApplication()" class="hidden items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                        <span>Transmettre ma candidature</span>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+        <!-- Modale de Confirmation & Actions après Soumission -->
+        <div id="successModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-card max-w-lg w-full rounded-[2.5rem] p-6 sm:p-8 bg-white border border-pink-100 shadow-2xl text-center space-y-5 animate-scaleUp">
+                <div class="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-500 text-3xl flex items-center justify-center mx-auto shadow-inner">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+
+                <div>
+                    <span class="inline-block text-[11px] font-bold text-[#d24de3] uppercase tracking-wider mb-1 bg-pink-50 px-3 py-1 rounded-full">Dossier transmis</span>
+                    <h3 class="font-title text-2xl font-black text-gray-900 mb-2">Candidature enregistrée !</h3>
+                    <p class="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
+                        Merci infiniment pour votre démarche. Votre dossier a été enregistré et transmis avec succès à l'équipe de <strong>Chat L'Heureux 56</strong>.
+                    </p>
+                    <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono text-xs text-gray-700 font-bold">
+                        Réf. dossier : <span id="successRefNum" class="text-pink-600">CLH-A26-....</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 pt-2">
+                    <!-- Bouton Télécharger PDF -->
+                    <button id="downloadSubmittedPdfBtn" onclick="downloadApplicationPdf()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                        <span>Télécharger mon dossier (PDF)</span>
+                    </button>
+
+                    <!-- Bouton Partager WhatsApp -->
+                    <button id="shareWhatsAppBtn" onclick="shareOnWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>Transmettre au groupe WhatsApp</span>
+                    </button>
+
+                    <!-- Bouton Retour -->
+                    <a href="adoption.html" class="inline-block text-xs font-bold text-gray-500 hover:text-gray-900 pt-2 transition-colors">
+                        Retourner aux fiches des chats à l'adoption
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Zone invisible pour impression ou export PDF propre -->
+    <div id="pdfExportTemplate" class="hidden p-8 bg-white text-black font-sans max-w-2xl mx-auto"></div>
+
+    <!-- Pied de page -->
+    <footer class="bg-slate-950 text-white border-t border-slate-800/80 pt-12 sm:pt-16 pb-10 mt-auto relative overflow-hidden no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 mb-10">
+                <div class="md:col-span-5">
+                    <div class="mb-4 flex items-center gap-3">
+                        <img src="favicon.svg" alt="Logo" class="w-9 h-9 rounded-full">
+                        <div>
+                            <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
+                            <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 font-medium text-xs sm:text-sm mb-4 leading-relaxed max-w-md">
+                        Association déclarée à but non lucratif dédiée à la protection, au soin, à la stérilisation et à l'adoption responsable de chats abandonnés dans le Morbihan (56).
+                    </p>
+                    <p class="text-[11px] text-slate-500 font-mono mb-6">SIREN : 930 923 800 • SIRET : 930 923 800 00013</p>
+                    <div class="flex items-center gap-3">
+                        <a href="https://www.facebook.com/profile.php?id=61593487828842" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white hover:bg-blue-600 transition-colors">
+                            <i class="fa-brands fa-facebook-f text-sm"></i>
+                        </a>
+                        <a href="https://www.instagram.com/association.chatslheureux" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white hover:bg-pink-600 transition-colors">
+                            <i class="fa-brands fa-instagram text-sm"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="md:col-span-3 md:col-start-7">
+                    <h4 class="font-title font-extrabold text-white text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-compass text-pink-400 text-xs"></i> Navigation
+                    </h4>
+                    <ul class="space-y-2.5 font-semibold text-xs sm:text-sm">
+                        <li><a href="index.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Accueil</a></li>
+                        <li><a href="adoption.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> À l'adoption</a></li>
+                        <li><a href="questionnaire.html" class="text-pink-400 font-bold flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-pink-400"></i> Questionnaire d'adoption</a></li>
+                        <li><a href="temoignages.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Ils sont heureux</a></li>
+                        <li><a href="don-contact.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Soutenir l'association</a></li>
+                    </ul>
+                </div>
+
+                <div class="md:col-span-3">
+                    <h4 class="font-title font-extrabold text-white text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-envelope text-[#7db1f9] text-xs"></i> Contact
+                    </h4>
+                    <ul class="space-y-3 font-medium text-xs sm:text-sm text-slate-300">
+                        <li class="flex items-start gap-3"><i class="fa-solid fa-user-check text-pink-400 mt-1"></i> <div><strong class="block text-white">Marina Loric</strong><span class="text-slate-400 text-xs">Présidente</span></div></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-phone text-[#7db1f9]"></i> <a href="tel:0661508828" class="hover:text-white">06 61 50 88 28</a></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-envelope text-[#7db1f9]"></i> <a href="mailto:asso.chatslheureux@gmail.com" class="hover:text-white truncate">asso.chatslheureux@gmail.com</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500">
+                <p>Fait avec nos petites patounes pleines d'amour 🐾 • &copy; 2026 Chat L'Heureux 56.</p>
+                <div class="flex items-center gap-4">
+                    <a href="mentions-legales.html" class="hover:text-white transition-colors">Mentions Légales & RGPD</a>
+                    <a href="admin.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+                        <i class="fa-solid fa-lock text-[10px] text-pink-400"></i> Espace Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Logique Script Modulaire Firebase & Questionnaire -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
+            authDomain: "chat-lheureux-56.firebaseapp.com",
+            projectId: "chat-lheureux-56",
+            storageBucket: "chat-lheureux-56.firebasestorage.app",
+            messagingSenderId: "238050920889",
+            appId: "1:238050920889:web:08f43e255fd1cb2f9c4e68"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentStep = 1;
+        const totalSteps = 6;
+        let lastSubmittedData = null;
+
+        const stepTitles = [
+            "Le Protégé",
+            "Coordonnées Personnelles",
+            "Composition du Ménage",
+            "Votre Habitation",
+            "Animaux & Mode de vie",
+            "Informations Complémentaires"
+        ];
+
+        // Toast feedback
+        function showToast(title, msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const borderCol = type === 'error' ? 'border-rose-500/60' : 'border-pink-500/40';
+            const iconCol = type === 'error' ? 'text-rose-400' : 'text-pink-400';
+            const icon = type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-check';
+            
+            toast.className = `pointer-events-auto flex items-center gap-3 p-4 rounded-2xl shadow-2xl backdrop-blur-md bg-slate-900/95 border ${borderCol} text-white transition-all transform duration-300`;
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-xl bg-pink-500/20 ${iconCol} flex items-center justify-center shrink-0 text-sm">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div>
+                    <strong class="block text-xs font-bold text-white">${title}</strong>
+                    <span class="text-[11px] text-slate-300 block">${msg}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Pré-remplissage via URL (ex: questionnaire.html?chat=Caramel)
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetCat = urlParams.get('chat') || urlParams.get('cat') || urlParams.get('nom');
+        if (targetCat) {
+            const catField = document.getElementById('catNameField');
+            if (catField) catField.value = decodeURIComponent(targetCat);
+        }
+
+        // Chargement rapide des chats disponibles depuis Firestore pour suggestion
+        async function loadAvailableCatsQuickSelect() {
+            const container = document.getElementById('catQuickButtons');
+            if (!container) return;
+            try {
+                const snap = await getDocs(collection(db, "chats"));
+                const names = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data.name && data.status !== 'Adopté') {
+                        names.push(data.name);
+                    }
+                });
+
+                if (names.length === 0) {
+                    container.innerHTML = `<span class="text-[11px] text-gray-400">Aucun chat listé actuellement</span>`;
+                    return;
+                }
+
+                container.innerHTML = names.slice(0, 8).map(name => `
+                    <button type="button" onclick="selectCatName('${name.replace(/'/g, "\\'")}')" class="text-[11px] font-bold bg-pink-50 text-[#d24de3] hover:bg-pink-100 border border-pink-200/60 px-2.5 py-1 rounded-full transition-colors cursor-pointer">
+                        ${name}
+                    </button>
+                `).join('');
+            } catch(e) {
+                container.innerHTML = '';
+            }
+        }
+        loadAvailableCatsQuickSelect();
+
+        window.selectCatName = function(name) {
+            const catField = document.getElementById('catNameField');
+            if (catField) {
+                catField.value = name;
+                showToast("Chat sélectionné 🐾", name);
+            }
+        };
+
+        // Navigation entre étapes
+        function updateStepUI() {
+            // Affichage panneau
+            for (let i = 1; i <= totalSteps; i++) {
+                const panel = document.getElementById(`stepPanel${i}`);
+                if (panel) {
+                    if (i === currentStep) panel.classList.add('active');
+                    else panel.classList.remove('active');
+                }
+            }
+
+            // Progression
+            const pct = Math.round((currentStep / totalSteps) * 100);
+            const progressBar = document.getElementById('stepProgressBar');
+            const progressLabel = document.getElementById('stepProgressLabel');
+            const percentLabel = document.getElementById('stepPercentLabel');
+
+            if (progressBar) progressBar.style.width = `${pct}%`;
+            if (progressLabel) progressLabel.innerText = `Étape ${currentStep} sur 6 : ${stepTitles[currentStep - 1]}`;
+            if (percentLabel) percentLabel.innerText = `${pct}%`;
+
+            // Badges
+            for (let i = 1; i <= totalSteps; i++) {
+                const b = document.getElementById(`badgeStep${i}`);
+                if (b) {
+                    if (i <= currentStep) {
+                        b.className = "text-[#d24de3] font-extrabold";
+                    } else {
+                        b.className = "text-gray-400";
+                    }
+                }
+            }
+
+            // Boutons
+            const prevBtn = document.getElementById('prevStepBtn');
+            const nextBtn = document.getElementById('nextStepBtn');
+            const submitBtn = document.getElementById('submitFormBtn');
+
+            if (prevBtn) {
+                if (currentStep > 1) prevBtn.classList.remove('hidden');
+                else prevBtn.classList.add('hidden');
+            }
+
+            if (currentStep === totalSteps) {
+                if (nextBtn) nextBtn.classList.add('hidden');
+                if (submitBtn) submitBtn.classList.remove('hidden');
+            } else {
+                if (nextBtn) nextBtn.classList.remove('hidden');
+                if (submitBtn) submitBtn.classList.add('hidden');
+            }
+
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        }
+
+        // Validation de l'étape courante
+        function validateCurrentStep() {
+            const panel = document.getElementById(`stepPanel${currentStep}`);
+            if (!panel) return true;
+
+            const requiredInputs = panel.querySelectorAll('input[required], textarea[required], select[required]');
+            for (const input of requiredInputs) {
+                if (input.type === 'radio') {
+                    const radioGroup = panel.querySelectorAll(`input[name="${input.name}"]`);
+                    const checked = Array.from(radioGroup).some(r => r.checked);
+                    if (!checked) {
+                        showToast("Champ requis", "Veuillez répondre à toutes les questions obligatoires (*).", "error");
+                        radioGroup[0]?.focus();
+                        return false;
+                    }
+                } else if (input.type === 'checkbox') {
+                    if (!input.checked) {
+                        showToast("Consentement requis", "Veuillez cocher la case d'attestation et de consentement.", "error");
+                        input.focus();
+                        return false;
+                    }
+                } else {
+                    if (!input.value.trim()) {
+                        showToast("Champ requis", "Merci de compléter ce champ obligatoire (*).", "error");
+                        input.focus();
+                        return false;
+                    }
+                    if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) {
+                        showToast("Format e-mail invalide", "Veuillez saisir une adresse e-mail valide.", "error");
+                        input.focus();
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        window.nextStep = function() {
+            if (!validateCurrentStep()) return;
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepUI();
+            }
+        };
+
+        window.prevStep = function() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            }
+        };
+
+        // Collecte des données du formulaire
+        function collectFormData() {
+            const petCareChecks = Array.from(document.querySelectorAll('input[name="petCare"]:checked')).map(c => c.value);
+            
+            const getRadioVal = (name, fallback = '') => {
+                const el = document.querySelector(`input[name="${name}"]:checked`);
+                return el ? el.value : fallback;
+            };
+
+            const refId = `CLH-A26-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            return {
+                reference: refId,
+                status: 'Nouveau',
+                createdAt: new Date().toISOString(),
+                // 1. Animal
+                catName: document.getElementById('catNameField')?.value.trim() || '',
+                email: document.getElementById('emailField')?.value.trim() || '',
+                // 2. Coordonnées
+                fullName: document.getElementById('fullNameField')?.value.trim() || '',
+                address: document.getElementById('addressField')?.value.trim() || '',
+                city: document.getElementById('cityField')?.value.trim() || '',
+                phone: document.getElementById('phoneField')?.value.trim() || '',
+                profession: document.getElementById('professionField')?.value.trim() || '',
+                // 3. Ménage
+                adults: document.getElementById('adultsField')?.value || '1',
+                children: document.getElementById('childrenField')?.value || '0',
+                childrenAges: document.getElementById('childrenAgeField')?.value.trim() || 'Non spécifié',
+                kidsAnimalContact: getRadioVal('kidsAnimalContact', 'Non spécifié'),
+                // 4. Habitation
+                housingType: getRadioVal('housingType', 'Non spécifié'),
+                isolatedRoom: getRadioVal('isolatedRoom', 'Non'),
+                garden: document.getElementById('gardenField')?.value.trim() || 'Non',
+                hasBalcony: getRadioVal('hasBalcony', 'Non'),
+                balconySecured: getRadioVal('balconySecured', 'Non'),
+                floorLevel: getRadioVal('floorLevel', 'RDC'),
+                // 5. Animaux & Mode de vie
+                hasCurrentPets: getRadioVal('hasCurrentPets', 'Non'),
+                whichPets: document.getElementById('whichPetsField')?.value.trim() || 'Aucun',
+                dogDetails: document.getElementById('dogDetailsField')?.value.trim() || 'Aucun',
+                petCare: petCareChecks.join(', ') || 'Aucun choix',
+                petsSociable: getRadioVal('petsSociable', 'Non concerné'),
+                accessAllRooms: getRadioVal('accessAllRooms', 'Oui'),
+                sleepPlace: document.getElementById('sleepPlaceField')?.value.trim() || 'Intérieur',
+                absenceHours: document.getElementById('absenceHoursField')?.value.trim() || '',
+                absencePlace: document.getElementById('absencePlaceField')?.value.trim() || 'Intérieur',
+                lunchReturn: getRadioVal('lunchReturn', 'Non'),
+                stayAlone: getRadioVal('stayAlone', 'Non'),
+                // 6. Informations complémentaires
+                additionalInfo: document.getElementById('additionalInfoField')?.value.trim() || ''
+            };
+        }
+
+        // Soumission
+        window.submitApplication = async function() {
+            if (!validateCurrentStep()) return;
+
+            const submitBtn = document.getElementById('submitFormBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Envoi en cours...`;
+            }
+
+            const data = collectFormData();
+            lastSubmittedData = data;
+
+            try {
+                // Enregistrement dans Firestore
+                await addDoc(collection(db, "candidatures"), data);
+                
+                // Affichage modale de succès
+                document.getElementById('successRefNum').innerText = data.reference;
+                document.getElementById('successModal').classList.remove('hidden');
+                showToast("Succès !", "Votre candidature a été transmise à l'association.");
+            } catch (err) {
+                console.error("Erreur Firestore candidatures:", err);
+                showToast("Erreur d'envoi", "Un problème est survenu. Veuillez réessayer ou nous contacter.", "error");
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Réessayer l'envoi`;
+                }
+            }
+        };
+
+        // Téléchargement du PDF avec html2pdf.js
+        window.downloadApplicationPdf = function() {
+            if (!lastSubmittedData) return;
+            const d = lastSubmittedData;
+
+            const element = document.createElement('div');
+            element.style.padding = '30px';
+            element.style.fontFamily = 'Helvetica, Arial, sans-serif';
+            element.style.color = '#111';
+            element.style.lineHeight = '1.4';
+
+            element.innerHTML = `
+                <div style="text-align: center; border-bottom: 2px solid #d24de3; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h1 style="color: #d24de3; margin: 0 0 5px 0; font-size: 22px;">ASSOCIATION CHAT L'HEUREUX 56</h1>
+                    <p style="margin: 0; font-size: 13px; color: #555;">Dossier Officiel de Candidature d'Adoption — Réf: <strong>${d.reference}</strong></p>
+                    <p style="margin: 3px 0 0 0; font-size: 11px; color: #777;">Date : ${new Date(d.createdAt).toLocaleDateString('fr-FR')} • SIRET : 930 923 800 00013</p>
+                </div>
+
+                <div style="background: #fdf4ff; border: 1px solid #f0abfc; padding: 12px 15px; border-radius: 8px; margin-bottom: 18px;">
+                    <h2 style="margin: 0 0 6px 0; font-size: 15px; color: #86198f;">🐾 Chat souhaité : ${d.catName}</h2>
+                    <p style="margin: 0; font-size: 12px; color: #333;"><strong>Candidat :</strong> ${d.fullName} • <strong>Tél :</strong> ${d.phone} • <strong>E-mail :</strong> ${d.email}</p>
+                </div>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">1. Coordonnées & Foyer</h3>
+                <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Adresse :</strong> ${d.address}, ${d.city}</td>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Profession :</strong> ${d.profession}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Composition foyer :</strong> ${d.adults} adulte(s), ${d.children} enfant(s)</td>
+                        <td style="padding: 4px 0;"><strong>Âge enfants :</strong> ${d.childrenAges} (Contact animaux: ${d.kidsAnimalContact})</td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">2. Logement & Sécurité</h3>
+                <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Type d'habitation :</strong> ${d.housingType} (Étage: ${d.floorLevel})</td>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Pièce isolée avec fenêtre :</strong> ${d.isolatedRoom}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Jardin / Extérieur :</strong> ${d.garden}</td>
+                        <td style="padding: 4px 0;"><strong>Balcon :</strong> ${d.hasBalcony} (Sécurisé: ${d.balconySecured})</td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">3. Animaux & Mode de vie</h3>
+                <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                    <tr>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Animaux actuels :</strong> ${d.whichPets}</td>
+                        <td style="padding: 4px 0; width: 50%;"><strong>Si chien (race/âge) :</strong> ${d.dogDetails}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Soins animaux :</strong> ${d.petCare}</td>
+                        <td style="padding: 4px 0;"><strong>Sociabilité congénères :</strong> ${d.petsSociable}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Accès pièces :</strong> ${d.accessAllRooms}</td>
+                        <td style="padding: 4px 0;"><strong>Couchage :</strong> ${d.sleepPlace}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Absence par jour :</strong> ${d.absenceHours} (Lieu: ${d.absencePlace})</td>
+                        <td style="padding: 4px 0;"><strong>Retour le midi :</strong> ${d.lunchReturn} • <strong>Seul :</strong> ${d.stayAlone}</td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-top: 15px; color: #333;">4. Motivations & Remarques</h3>
+                <div style="font-size: 11px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; white-space: pre-wrap; margin-bottom: 15px;">
+                    ${d.additionalInfo}
+                </div>
+
+                <div style="font-size: 9px; color: #666; border-top: 1px dashed #ccc; padding-top: 8px; text-align: center;">
+                    Ce document contient des données à caractère personnel protégées par le RGPD. Usage strictement réservé aux bénévoles de Chat L'Heureux 56.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Candidature_${(d.catName || 'Adoption').replace(/\s+/g, '_')}_${(d.fullName || 'Adoptant').replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        };
+
+        // Partage WhatsApp automatique avec formatage optimisé pour la communauté
+        window.shareOnWhatsApp = function() {
+            if (!lastSubmittedData) return;
+            const d = lastSubmittedData;
+
+            const text = 
+`🐾 *NOUVELLE CANDIDATURE D'ADOPTION*
+📋 *Réf :* ${d.reference}
+🐱 *Chat souhaité :* ${d.catName}
+
+👤 *Adoptant :* ${d.fullName}
+📞 *Tél :* ${d.phone}
+✉️ *E-mail :* ${d.email}
+📍 *Commune :* ${d.city}
+💼 *Profession :* ${d.profession}
+
+🏡 *Logement :* ${d.housingType} (${d.floorLevel})
+🌳 *Jardin :* ${d.garden}
+🏢 *Balcon :* ${d.hasBalcony} (Sécurisé: ${d.balconySecured})
+👨‍👩‍👧 *Foyer :* ${d.adults} adulte(s), ${d.children} enfant(s)
+
+🐕 *Animaux actuels :* ${d.whichPets}
+⏰ *Absence journalière :* ${d.absenceHours} (Midi: ${d.lunchReturn})
+
+💬 *Motivations :*
+"${d.additionalInfo.slice(0, 250)}${d.additionalInfo.length > 250 ? '...' : ''}"
+
+_Transmis via le formulaire officiel Chat L'Heureux 56_`;
+
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+        };
+
+        // Impression du formulaire vierge
+        window.printBlankForm = function() {
+            window.print();
+        };
+
+        // Menu Mobile & back to top
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenuBtn = document.getElementById('closeMobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        if (mobileMenuBtn && mobileMenu && closeMobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => { mobileMenu.classList.remove('hidden'); mobileMenu.classList.add('flex'); });
+            closeMobileMenuBtn.addEventListener('click', () => { mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex'); });
+        }
+    </script>
+</body>
+</html>
