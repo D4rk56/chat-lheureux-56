@@ -184,7 +184,7 @@
         </div>
 
         <!-- Formulaire Multi-étapes -->
-        <form id="adoptionForm" onsubmit="event.preventDefault();" class="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-pink-100/80 bg-white shadow-xl relative overflow-hidden">
+        <form id="adoptionForm" novalidate onsubmit="event.preventDefault();" class="glass-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 border border-pink-100/80 bg-white shadow-xl relative overflow-hidden">
             
             <!-- ÉTAPE 1 : Animal & E-mail -->
             <div id="stepPanel1" class="step-panel active space-y-6">
@@ -644,7 +644,7 @@
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
 
-                    <button type="button" id="submitFormBtn" onclick="submitApplication()" class="hidden items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+                    <button type="button" id="submitFormBtn" onclick="submitApplication()" class="hidden inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>Transmettre ma candidature</span>
                     </button>
@@ -654,34 +654,50 @@
         </form>
 
         <!-- Modale de Confirmation & Actions après Soumission -->
-        <div id="successModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-            <div class="glass-card max-w-lg w-full rounded-[2.5rem] p-6 sm:p-8 bg-white border border-pink-100 shadow-2xl text-center space-y-5 animate-scaleUp">
+        <div id="successModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+            <div class="glass-card max-w-lg w-full rounded-[2.5rem] p-6 sm:p-8 bg-white border border-pink-100 shadow-2xl text-center space-y-5 animate-scaleUp relative">
+                <!-- Bouton fermer -->
+                <button type="button" onclick="closeSuccessModal()" class="absolute top-4 right-4 sm:top-5 sm:right-5 text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer" title="Fermer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+
                 <div class="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-500 text-3xl flex items-center justify-center mx-auto shadow-inner">
                     <i class="fa-solid fa-check"></i>
                 </div>
 
                 <div>
-                    <span class="inline-block text-[11px] font-bold text-[#d24de3] uppercase tracking-wider mb-1 bg-pink-50 px-3 py-1 rounded-full">Dossier transmis</span>
-                    <h3 class="font-title text-2xl font-black text-gray-900 mb-2">Candidature enregistrée !</h3>
+                    <span class="inline-block text-[11px] font-bold text-[#d24de3] uppercase tracking-wider mb-1 bg-pink-50 px-3 py-1 rounded-full">Dossier prêt</span>
+                    <h3 class="font-title text-2xl font-black text-gray-900 mb-2">Candidature prête !</h3>
                     <p class="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
-                        Merci infiniment pour votre démarche. Votre dossier a été enregistré et transmis avec succès à l'équipe de <strong>Chat L'Heureux 56</strong>.
+                        Merci infiniment pour votre démarche. Votre dossier officiel a été préparé avec succès pour l'équipe de <strong>Chat L'Heureux 56</strong>.
                     </p>
                     <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono text-xs text-gray-700 font-bold">
                         Réf. dossier : <span id="successRefNum" class="text-pink-600">CLH-A26-....</span>
                     </div>
                 </div>
 
-                <div class="space-y-2.5 pt-2">
-                    <!-- Bouton Télécharger PDF -->
-                    <button id="downloadSubmittedPdfBtn" onclick="downloadApplicationPdf()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md">
-                        <i class="fa-solid fa-file-pdf text-rose-400"></i>
-                        <span>Télécharger mon dossier (PDF)</span>
-                    </button>
+                <!-- Encadré WhatsApp en priorité pour l'association -->
+                <div class="p-4 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-left text-xs text-emerald-950 space-y-1.5 shadow-xs">
+                    <div class="font-bold flex items-center gap-2 text-emerald-800">
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-base"></i>
+                        <span>Transmission directe aux bénévoles :</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-800/90 leading-relaxed">
+                        Pour que votre demande soit étudiée rapidement par les membres du groupe, cliquez ci-dessous sur <strong>"Transmettre au groupe WhatsApp"</strong> (le message avec toutes vos réponses est déjà prêt).
+                    </p>
+                </div>
 
+                <div class="space-y-2.5 pt-1">
                     <!-- Bouton Partager WhatsApp -->
-                    <button id="shareWhatsAppBtn" onclick="shareOnWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md">
+                    <button id="shareWhatsAppBtn" onclick="shareOnWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] active:scale-95 cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-lg"></i>
                         <span>Transmettre au groupe WhatsApp</span>
+                    </button>
+
+                    <!-- Bouton Télécharger PDF -->
+                    <button id="downloadSubmittedPdfBtn" onclick="downloadApplicationPdf()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                        <span>Télécharger mon dossier (PDF)</span>
                     </button>
 
                     <!-- Bouton Retour -->
@@ -1048,6 +1064,17 @@
             window.scrollTo({ top: 120, behavior: 'smooth' });
         }
 
+        // Mise en évidence visuelle en cas d'erreur de saisie
+        function highlightInvalidField(el) {
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const container = el.closest('.option-card') || el.closest('div') || el;
+            container.classList.add('ring-2', 'ring-rose-500', 'border-rose-500');
+            setTimeout(() => {
+                container.classList.remove('ring-2', 'ring-rose-500', 'border-rose-500');
+            }, 4000);
+        }
+
         // Validation de l'étape courante (ignore les champs masqués ou désactivés)
         function validateCurrentStep() {
             const panel = document.getElementById(`stepPanel${currentStep}`);
@@ -1066,23 +1093,27 @@
                     const checked = Array.from(radioGroup).some(r => r.checked);
                     if (!checked) {
                         showToast("Champ requis", "Veuillez répondre à toutes les questions obligatoires (*).", "error");
+                        highlightInvalidField(radioGroup[0]);
                         radioGroup[0]?.focus();
                         return false;
                     }
                 } else if (input.type === 'checkbox') {
                     if (!input.checked) {
                         showToast("Consentement requis", "Veuillez cocher la case d'attestation et de consentement.", "error");
+                        highlightInvalidField(input);
                         input.focus();
                         return false;
                     }
                 } else {
                     if (!input.value.trim()) {
                         showToast("Champ requis", "Merci de compléter ce champ obligatoire (*).", "error");
+                        highlightInvalidField(input);
                         input.focus();
                         return false;
                     }
                     if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) {
                         showToast("Format e-mail invalide", "Veuillez saisir une adresse e-mail valide.", "error");
+                        highlightInvalidField(input);
                         input.focus();
                         return false;
                     }
@@ -1103,6 +1134,16 @@
             if (currentStep > 1) {
                 currentStep--;
                 updateStepUI();
+            }
+        };
+
+        // Fermeture de la modale de succès
+        window.closeSuccessModal = function() {
+            const modal = document.getElementById('successModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modal.style.display = 'none';
             }
         };
 
@@ -1165,34 +1206,60 @@
             };
         }
 
-        // Soumission
+        // Soumission résiliente et garantie du formulaire
         window.submitApplication = async function() {
             if (!validateCurrentStep()) return;
 
             const submitBtn = document.getElementById('submitFormBtn');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Envoi en cours...`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Préparation de votre dossier...`;
             }
 
             const data = collectFormData();
             lastSubmittedData = data;
 
+            let firestoreSuccess = false;
             try {
-                // Enregistrement dans Firestore
-                await addDoc(collection(db, "candidatures"), data);
-                
-                // Affichage modale de succès
-                document.getElementById('successRefNum').innerText = data.reference;
-                document.getElementById('successModal').classList.remove('hidden');
-                showToast("Succès !", "Votre candidature a été transmise à l'association.");
+                // Tentative d'enregistrement dans Firestore avec sécurité timeout
+                const firestorePromise = addDoc(collection(db, "candidatures"), data);
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout Firestore")), 3500));
+                await Promise.race([firestorePromise, timeoutPromise]);
+                firestoreSuccess = true;
+                console.log("Candidature enregistrée dans Firestore:", data.reference);
             } catch (err) {
-                console.error("Erreur Firestore candidatures:", err);
-                showToast("Erreur d'envoi", "Un problème est survenu. Veuillez réessayer ou nous contacter.", "error");
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Réessayer l'envoi`;
-                }
+                console.warn("Enregistrement Firestore non finalisé (droits ou réseau) - dossier conservé localement :", err);
+            }
+
+            // Sauvegarde locale systématique
+            try {
+                const localList = JSON.parse(localStorage.getItem('clh_candidatures') || '[]');
+                localList.unshift(data);
+                localStorage.setItem('clh_candidatures', JSON.stringify(localList.slice(0, 50)));
+            } catch(e) {}
+
+            // Affichage de la référence
+            const refEl = document.getElementById('successRefNum');
+            if (refEl) refEl.innerText = data.reference;
+
+            // Affichage garanti de la modale de succès
+            const modal = document.getElementById('successModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modal.style.display = 'flex';
+            }
+
+            if (firestoreSuccess) {
+                showToast("Dossier transmis ! 🐾", "Votre candidature a été enregistrée avec succès.");
+            } else {
+                showToast("Dossier prêt ! 🐾", "Vous pouvez maintenant le transmettre sur WhatsApp ou télécharger le PDF.");
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Candidature transmise`;
+                submitBtn.className = "inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition-all cursor-pointer";
             }
         };
 

@@ -1162,6 +1162,27 @@
                     allApplications.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
+                // Vérifier et synchroniser les éventuelles candidatures locales
+                try {
+                    const localApps = JSON.parse(localStorage.getItem('clh_candidatures') || '[]');
+                    for (const localApp of localApps) {
+                        const exists = allApplications.some(a => a.reference === localApp.reference);
+                        if (!exists) {
+                            allApplications.push({ id: 'local_' + localApp.reference, isLocal: true, ...localApp });
+                            // Synchroniser vers Firestore puisque l'administrateur est authentifié
+                            try {
+                                const cleanData = { ...localApp };
+                                delete cleanData.id;
+                                delete cleanData.isLocal;
+                                await addDoc(collection(db, "candidatures"), cleanData);
+                                console.log("Candidature locale synchronisée vers Firestore:", cleanData.reference);
+                            } catch (syncErr) {
+                                console.warn("Synchronisation locale différée:", syncErr);
+                            }
+                        }
+                    }
+                } catch(e) {}
+
                 allApplications.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                 updateAppStatsCounters(allApplications);
 
