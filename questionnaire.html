@@ -62,6 +62,27 @@
             color: #86198f;
         }
 
+        /* Styles dynamiques des cartes d'options */
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .option-card:hover:not(.disabled) {
+            border-color: #f472b6;
+            background-color: #fdf2f8;
+        }
+        .option-card:has(input:checked), .option-card.selected-card {
+            border-color: #d24de3 !important;
+            background-color: rgba(210, 77, 227, 0.08) !important;
+            box-shadow: 0 0 0 1.5px #d24de3 !important;
+        }
+        .option-card.disabled, .option-card[data-disabled="true"] {
+            opacity: 0.4 !important;
+            pointer-events: none !important;
+            cursor: not-allowed !important;
+            background-color: #f8fafc !important;
+        }
+
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -139,9 +160,6 @@
                 <span class="inline-flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-xs">
                     <i class="fa-solid fa-clock text-blue-500"></i> 4 à 5 minutes
                 </span>
-                <button type="button" onclick="printBlankForm()" class="inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 border border-gray-200 hover:border-pink-300 text-gray-700 px-3 py-1 rounded-full shadow-xs transition-colors cursor-pointer" title="Imprimer ou enregistrer un exemplaire vierge en PDF">
-                    <i class="fa-solid fa-print text-[#d24de3]"></i> Formulaire vierge (PDF)
-                </button>
             </div>
         </header>
 
@@ -263,36 +281,39 @@
                         <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
                             Nombre d'adultes au foyer <span class="text-pink-500">*</span>
                         </label>
-                        <input type="number" id="adultsField" min="1" max="20" required placeholder="Ex: 2" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                        <input type="number" id="adultsField" min="1" max="20" required value="1" placeholder="Ex: 2" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
                     </div>
                     <div>
                         <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
                             Nombre d'enfants au foyer <span class="text-pink-500">*</span>
                         </label>
-                        <input type="number" id="childrenField" min="0" max="20" required placeholder="Ex: 0" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                        <input type="number" id="childrenField" min="0" max="20" required value="0" oninput="handleChildrenCountChange(this.value)" placeholder="Ex: 0" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                        Âge des enfants <span class="text-gray-400 font-normal">(si concerné)</span>
-                    </label>
-                    <input type="text" id="childrenAgeField" placeholder="Ex: 4 ans et 8 ans (ou aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
-                </div>
+                <!-- Détails enfants (actifs si au moins 1 enfant) -->
+                <div id="childrenDetailsBlock" class="space-y-4 opacity-40 pointer-events-none transition-all duration-300">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Âge des enfants <span class="text-gray-400 font-normal text-xs">(si enfants au foyer)</span>
+                        </label>
+                        <input type="text" id="childrenAgeField" disabled placeholder="Ex: 4 ans et 8 ans" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    </div>
 
-                <div>
-                    <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                        Ont-ils déjà eu des contacts avec des animaux ?
-                    </label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="kidsAnimalContact" value="Oui" class="text-[#d24de3] focus:ring-[#d24de3]">
-                            <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Ont-ils déjà eu des contacts avec des animaux ? <span class="text-gray-400 font-normal text-xs">(si enfants au foyer)</span>
                         </label>
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="kidsAnimalContact" value="Non" class="text-[#d24de3] focus:ring-[#d24de3]">
-                            <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
-                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="kidsAnimalContact" value="Oui" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
+                            </label>
+                            <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="kidsAnimalContact" value="Non" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -310,16 +331,16 @@
                         Type d'habitation <span class="text-pink-500">*</span>
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="housingType" value="Maison" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="housingType" value="Maison" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">🏡 Maison</span>
                         </label>
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="housingType" value="Appartement" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="housingType" value="Appartement" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">🏢 Appartement</span>
                         </label>
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="housingType" value="Autre" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="housingType" value="Autre" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">Autre</span>
                         </label>
                     </div>
@@ -329,14 +350,14 @@
                     <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
                         Avez-vous une pièce isolée avec fenêtre ? <span class="text-pink-500">*</span>
                     </label>
-                    <span class="text-[11px] text-gray-500 block mb-2">Très utile les premiers jours pour une acclimatation en douceur.</span>
+                    <span class="text-[11px] text-gray-500 block mb-2">Très utile les premiers jours pour une acclimatation en douceur du chat.</span>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="isolatedRoom" value="Oui" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="isolatedRoom" value="Oui" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
                         </label>
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
-                            <input type="radio" name="isolatedRoom" value="Non" required class="text-[#d24de3] focus:ring-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="isolatedRoom" value="Non" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
                         </label>
                     </div>
@@ -344,9 +365,9 @@
 
                 <div>
                     <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                        Avez-vous un jardin ? Si oui, quelle superficie ? <span class="text-pink-500">*</span>
+                        Avez-vous un jardin ? Si oui, quelle superficie ? <span class="text-gray-400 font-normal text-xs">(Facultatif si pas de jardin)</span>
                     </label>
-                    <input type="text" id="gardenField" required placeholder="Ex: Oui, jardin clos de 300 m² (ou Non)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                    <input type="text" id="gardenField" placeholder="Ex: Oui, jardin clos de 300 m² (ou Non / Aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -355,27 +376,27 @@
                             Avez-vous un balcon ? <span class="text-pink-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="hasBalcony" value="Oui" required class="text-[#d24de3]">
+                            <label class="option-card border border-gray-200 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="hasBalcony" value="Oui" required onchange="handleBalconyToggle(true)" class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                                 <span class="text-xs font-bold text-gray-800">Oui</span>
                             </label>
-                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="hasBalcony" value="Non" required class="text-[#d24de3]">
+                            <label class="option-card border border-gray-200 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="hasBalcony" value="Non" required onchange="handleBalconyToggle(false)" class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                                 <span class="text-xs font-bold text-gray-800">Non</span>
                             </label>
                         </div>
                     </div>
-                    <div>
+                    <div id="balconySecuredBlock" class="opacity-40 pointer-events-none transition-all duration-300">
                         <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                            Le balcon est-il sécurisé ?
+                            Le balcon est-il sécurisé ? <span class="text-gray-400 font-normal text-xs">(si balcon)</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="balconySecured" value="Oui" class="text-[#d24de3]">
+                            <label class="option-card border border-gray-200 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="balconySecured" value="Oui" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                                 <span class="text-xs font-bold text-gray-800">Oui (filet/grille)</span>
                             </label>
-                            <label class="border border-gray-200 rounded-2xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="balconySecured" value="Non" class="text-[#d24de3]">
+                            <label class="option-card border border-gray-200 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="balconySecured" value="Non" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                                 <span class="text-xs font-bold text-gray-800">Non</span>
                             </label>
                         </div>
@@ -386,30 +407,30 @@
                     <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
                         Quel étage ? <span class="text-pink-500">*</span>
                     </label>
-                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="floorLevel" value="RDC / Maison" required class="sr-only">
-                            <span class="text-xs font-bold text-gray-800 block">RDC</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                        <label class="option-card border border-gray-200 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="floorLevel" value="RDC / Maison" required class="accent-[#d24de3] w-3.5 h-3.5 cursor-pointer">
+                            <span class="text-xs font-bold text-gray-800">RDC</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="floorLevel" value="1er" required class="sr-only">
-                            <span class="text-xs font-bold text-gray-800 block">1er</span>
+                        <label class="option-card border border-gray-200 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="floorLevel" value="1er" required class="accent-[#d24de3] w-3.5 h-3.5 cursor-pointer">
+                            <span class="text-xs font-bold text-gray-800">1er</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="floorLevel" value="2e" required class="sr-only">
-                            <span class="text-xs font-bold text-gray-800 block">2e</span>
+                        <label class="option-card border border-gray-200 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="floorLevel" value="2e" required class="accent-[#d24de3] w-3.5 h-3.5 cursor-pointer">
+                            <span class="text-xs font-bold text-gray-800">2e</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="floorLevel" value="3e" required class="sr-only">
-                            <span class="text-xs font-bold text-gray-800 block">3e</span>
+                        <label class="option-card border border-gray-200 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="floorLevel" value="3e" required class="accent-[#d24de3] w-3.5 h-3.5 cursor-pointer">
+                            <span class="text-xs font-bold text-gray-800">3e</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="floorLevel" value="4e ou +" required class="sr-only">
-                            <span class="text-xs font-bold text-gray-800 block">4e +</span>
+                        <label class="option-card border border-gray-200 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="floorLevel" value="4e ou +" required class="accent-[#d24de3] w-3.5 h-3.5 cursor-pointer">
+                            <span class="text-xs font-bold text-gray-800">4e +</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="floorLevel" value="Autre" required class="sr-only">
-                            <span class="text-xs font-bold text-gray-800 block">Autre</span>
+                        <label class="option-card border border-gray-200 rounded-xl p-2.5 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="floorLevel" value="Autre" required class="accent-[#d24de3] w-3.5 h-3.5 cursor-pointer">
+                            <span class="text-xs font-bold text-gray-800">Autre</span>
                         </label>
                     </div>
                 </div>
@@ -420,99 +441,108 @@
                 <div class="border-b border-gray-100 pb-4">
                     <span class="text-xs font-bold text-[#d24de3] uppercase tracking-wider block mb-1">Section 5 / 6</span>
                     <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900">Animaux & Mode de vie</h2>
-                    <p class="text-xs text-gray-500 font-medium">Pour assurer la sécurité et l'entente au quotidien.</p>
+                    <p class="text-xs text-gray-500 font-medium">Pour assurer la sécurité et la bonne entente au quotidien.</p>
                 </div>
 
+                <!-- 1. Question pivot : Animaux actuels -->
                 <div>
                     <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
                         Possédez-vous des animaux actuellement ? <span class="text-pink-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="hasCurrentPets" value="Oui" required class="text-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="hasCurrentPets" value="Oui" required onchange="handleCurrentPetsToggle(true)" class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
                         </label>
-                        <label class="border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300">
-                            <input type="radio" name="hasCurrentPets" value="Non" required class="text-[#d24de3]">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="hasCurrentPets" value="Non" required onchange="handleCurrentPetsToggle(false)" class="accent-[#d24de3] w-4 h-4 cursor-pointer">
                             <span class="text-xs sm:text-sm font-bold text-gray-800">Non</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                            Si oui, lesquels ? <span class="text-pink-500">*</span>
-                        </label>
-                        <input type="text" id="whichPetsField" required placeholder="Ex: 1 chat de 5 ans (ou Aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                <!-- Message informatif si "Non" -->
+                <div id="noPetsNotice" class="hidden p-3.5 rounded-2xl bg-blue-50/80 border border-blue-100 text-xs text-blue-700 flex items-center gap-2.5">
+                    <i class="fa-solid fa-circle-info text-blue-500 text-base shrink-0"></i>
+                    <span>Vous avez indiqué ne posséder aucun animal actuellement : les questions spécifiques aux animaux actuels sont grisées et ne sont pas obligatoires.</span>
+                </div>
+
+                <!-- Bloc conditionnel : sous-questions animaux actuels -->
+                <div id="currentPetsQuestionsBlock" class="space-y-4 p-4 sm:p-5 rounded-2xl bg-gray-50/80 border border-gray-200 opacity-40 pointer-events-none transition-all duration-300" data-disabled="true">
+                    <div class="flex items-center gap-2 text-xs font-black text-[#d24de3] uppercase tracking-wider">
+                        <i class="fa-solid fa-paw"></i> Détails sur vos animaux actuels
                     </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                                Si oui, lesquels ? <span id="whichPetsRequiredStar" class="text-pink-500 hidden">*</span>
+                            </label>
+                            <input type="text" id="whichPetsField" disabled placeholder="Ex: 1 chat de 5 ans (laisser vide si aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                                Si chien : quelle race et quel âge ? <span class="text-gray-400 font-normal text-xs">(Optionnel)</span>
+                            </label>
+                            <input type="text" id="dogDetailsField" disabled placeholder="Ex: Berger australien, 3 ans" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                            Si chien : quelle race et quel âge ? <span class="text-pink-500">*</span>
+                            Vos animaux actuels sont-ils : <span class="text-gray-400 font-normal text-xs">(Cocher ce qui s'applique)</span>
                         </label>
-                        <input type="text" id="dogDetailsField" required placeholder="Ex: Berger australien, 3 ans (ou Aucun)" class="w-full bg-slate-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="checkbox" name="petCare" value="Identifiés" disabled class="accent-[#d24de3] rounded w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Identifiés (puce/tatouage)</span>
+                            </label>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="checkbox" name="petCare" value="Vaccinés" disabled class="accent-[#d24de3] rounded w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Vaccinés</span>
+                            </label>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="checkbox" name="petCare" value="Stérilisés" disabled class="accent-[#d24de3] rounded w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Stérilisés</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                            Sont-ils sociables avec leurs congénères chats ? <span class="text-gray-400 font-normal text-xs">(Facultatif)</span>
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="petsSociable" value="Oui" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Oui, sociables</span>
+                            </label>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="petsSociable" value="Non" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Non, pas sociables</span>
+                            </label>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="petsSociable" value="À voir / Inconnu" disabled class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">À voir / Inconnu</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
+                <!-- 2. Questions mode de vie (concernant le futur chat - pour tous les adoptants) -->
                 <div>
                     <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                        Vos animaux actuels sont-ils : <span class="text-pink-500">*</span>
+                        Accès à toutes les pièces du foyer pour le chat ? <span class="text-pink-500">*</span>
                     </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                            <input type="checkbox" name="petCare" value="Identifiés" class="rounded text-[#d24de3]">
-                            <span class="text-xs font-bold text-gray-800">Identifiés (puce/tatouage)</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="accessAllRooms" value="Oui" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Oui</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                            <input type="checkbox" name="petCare" value="Vaccinés" class="rounded text-[#d24de3]">
-                            <span class="text-xs font-bold text-gray-800">Vaccinés</span>
+                        <label class="option-card border border-gray-200 rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer hover:border-pink-300 transition-all">
+                            <input type="radio" name="accessAllRooms" value="Non (préciser)" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                            <span class="text-xs sm:text-sm font-bold text-gray-800">Non (certaines pièces fermées)</span>
                         </label>
-                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                            <input type="checkbox" name="petCare" value="Stérilisés" class="rounded text-[#d24de3]">
-                            <span class="text-xs font-bold text-gray-800">Stérilisés</span>
-                        </label>
-                        <label class="border border-gray-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:border-pink-300">
-                            <input type="checkbox" name="petCare" value="Aucun animal / Aucun" class="rounded text-[#d24de3]">
-                            <span class="text-xs font-bold text-gray-800">Aucun animal</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                            Sont-ils sociables avec leurs congénères ? <span class="text-pink-500">*</span>
-                        </label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="petsSociable" value="Oui" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
-                            </label>
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="petsSociable" value="Non" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Non</span>
-                            </label>
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="petsSociable" value="Pas d'autre animal" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">N/A</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                            Accès à toutes les pièces du foyer ? <span class="text-pink-500">*</span>
-                        </label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="accessAllRooms" value="Oui" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
-                            </label>
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="accessAllRooms" value="Non (préciser)" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Non</span>
-                            </label>
-                        </div>
                     </div>
                 </div>
 
@@ -543,13 +573,13 @@
                             Rentrerez-vous le midi ? <span class="text-pink-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="lunchReturn" value="Oui" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="lunchReturn" value="Oui" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Oui</span>
                             </label>
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="lunchReturn" value="Non" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Non</span>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="lunchReturn" value="Non" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Non</span>
                             </label>
                         </div>
                     </div>
@@ -558,13 +588,13 @@
                             Restera-t-il seul ? <span class="text-pink-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 gap-2">
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="stayAlone" value="Oui" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Oui</span>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="stayAlone" value="Oui" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Oui</span>
                             </label>
-                            <label class="border border-gray-200 rounded-xl p-2.5 text-center cursor-pointer hover:border-pink-300">
-                                <input type="radio" name="stayAlone" value="Non" required class="sr-only">
-                                <span class="text-xs font-bold text-gray-800 block">Non</span>
+                            <label class="option-card border border-gray-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-pink-300 transition-all">
+                                <input type="radio" name="stayAlone" value="Non" required class="accent-[#d24de3] w-4 h-4 cursor-pointer">
+                                <span class="text-xs font-bold text-gray-800">Non</span>
                             </label>
                         </div>
                     </div>
@@ -581,9 +611,9 @@
 
                 <div>
                     <label class="block text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                        Avez-vous quelque chose à ajouter ? <span class="text-pink-500">*</span>
+                        Avez-vous quelque chose à ajouter ? <span class="text-gray-400 font-normal text-xs">(Facultatif)</span>
                     </label>
-                    <textarea id="additionalInfoField" rows="4" required placeholder="Précisez ici vos motivations, vos questions, vos expériences passées avec les chats ou toute information utile pour l'équipe..." class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 text-xs sm:text-sm font-medium text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all"></textarea>
+                    <textarea id="additionalInfoField" rows="4" placeholder="Précisez ici vos motivations, vos questions, vos expériences passées avec les chats ou toute information utile pour l'équipe..." class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 text-xs sm:text-sm font-medium text-gray-900 focus:outline-none focus:border-[#d24de3] focus:bg-white transition-all"></textarea>
                 </div>
 
                 <div class="bg-pink-50/70 border border-pink-100 rounded-2xl p-4 sm:p-5 text-xs text-gray-700 space-y-3">
@@ -832,6 +862,137 @@
             }
         };
 
+        // Gestion dynamique des blocs conditionnels
+        window.handleChildrenCountChange = function(val) {
+            const count = parseInt(val, 10);
+            const block = document.getElementById('childrenDetailsBlock');
+            const ageField = document.getElementById('childrenAgeField');
+            const contactRadios = document.querySelectorAll('input[name="kidsAnimalContact"]');
+
+            if (!isNaN(count) && count > 0) {
+                if (block) {
+                    block.classList.remove('opacity-40', 'pointer-events-none');
+                    block.setAttribute('data-disabled', 'false');
+                }
+                if (ageField) ageField.disabled = false;
+                contactRadios.forEach(r => r.disabled = false);
+            } else {
+                if (block) {
+                    block.classList.add('opacity-40', 'pointer-events-none');
+                    block.setAttribute('data-disabled', 'true');
+                }
+                if (ageField) {
+                    ageField.disabled = true;
+                    ageField.value = '';
+                }
+                contactRadios.forEach(r => {
+                    r.disabled = true;
+                    r.checked = false;
+                });
+            }
+            refreshOptionCards();
+        };
+
+        window.handleBalconyToggle = function(hasBalcony) {
+            const block = document.getElementById('balconySecuredBlock');
+            const securedRadios = document.querySelectorAll('input[name="balconySecured"]');
+
+            if (hasBalcony) {
+                if (block) {
+                    block.classList.remove('opacity-40', 'pointer-events-none');
+                    block.setAttribute('data-disabled', 'false');
+                }
+                securedRadios.forEach(r => r.disabled = false);
+            } else {
+                if (block) {
+                    block.classList.add('opacity-40', 'pointer-events-none');
+                    block.setAttribute('data-disabled', 'true');
+                }
+                securedRadios.forEach(r => {
+                    r.disabled = true;
+                    r.checked = false;
+                });
+            }
+            refreshOptionCards();
+        };
+
+        window.handleCurrentPetsToggle = function(hasPets) {
+            const block = document.getElementById('currentPetsQuestionsBlock');
+            const notice = document.getElementById('noPetsNotice');
+            const whichPets = document.getElementById('whichPetsField');
+            const star = document.getElementById('whichPetsRequiredStar');
+            const dogDetails = document.getElementById('dogDetailsField');
+            const petCareInputs = document.querySelectorAll('input[name="petCare"]');
+            const petsSociableInputs = document.querySelectorAll('input[name="petsSociable"]');
+
+            if (hasPets) {
+                if (notice) notice.classList.add('hidden');
+                if (block) {
+                    block.classList.remove('opacity-40', 'pointer-events-none');
+                    block.setAttribute('data-disabled', 'false');
+                }
+                if (whichPets) {
+                    whichPets.disabled = false;
+                    whichPets.required = true;
+                }
+                if (star) star.classList.remove('hidden');
+                if (dogDetails) dogDetails.disabled = false;
+                petCareInputs.forEach(i => i.disabled = false);
+                petsSociableInputs.forEach(i => i.disabled = false);
+            } else {
+                if (notice) notice.classList.remove('hidden');
+                if (block) {
+                    block.classList.add('opacity-40', 'pointer-events-none');
+                    block.setAttribute('data-disabled', 'true');
+                }
+                if (whichPets) {
+                    whichPets.disabled = true;
+                    whichPets.required = false;
+                    whichPets.value = '';
+                }
+                if (star) star.classList.add('hidden');
+                if (dogDetails) {
+                    dogDetails.disabled = true;
+                    dogDetails.value = '';
+                }
+                petCareInputs.forEach(i => {
+                    i.disabled = true;
+                    i.checked = false;
+                });
+                petsSociableInputs.forEach(i => {
+                    i.disabled = true;
+                    i.checked = false;
+                });
+            }
+            refreshOptionCards();
+        };
+
+        // Mise à jour visuelle des boutons et cartes d'option
+        function refreshOptionCards() {
+            document.querySelectorAll('.option-card').forEach(card => {
+                const input = card.querySelector('input[type="radio"], input[type="checkbox"]');
+                if (input) {
+                    if (input.checked) {
+                        card.classList.add('selected-card');
+                    } else {
+                        card.classList.remove('selected-card');
+                    }
+                    if (input.disabled) {
+                        card.classList.add('disabled');
+                    } else {
+                        card.classList.remove('disabled');
+                    }
+                }
+            });
+        }
+
+        // Détection globale des sélections
+        document.addEventListener('change', (e) => {
+            if (e.target && (e.target.matches('.option-card input') || e.target.type === 'radio' || e.target.type === 'checkbox')) {
+                refreshOptionCards();
+            }
+        });
+
         // Navigation entre étapes
         function updateStepUI() {
             // Affichage panneau
@@ -883,18 +1044,25 @@
                 if (submitBtn) submitBtn.classList.add('hidden');
             }
 
+            refreshOptionCards();
             window.scrollTo({ top: 120, behavior: 'smooth' });
         }
 
-        // Validation de l'étape courante
+        // Validation de l'étape courante (ignore les champs masqués ou désactivés)
         function validateCurrentStep() {
             const panel = document.getElementById(`stepPanel${currentStep}`);
             if (!panel) return true;
 
-            const requiredInputs = panel.querySelectorAll('input[required], textarea[required], select[required]');
-            for (const input of requiredInputs) {
+            const allRequired = panel.querySelectorAll('input[required], textarea[required], select[required]');
+            for (const input of allRequired) {
+                // Ignore si l'élément ou son conteneur est désactivé
+                if (input.disabled || input.closest('.pointer-events-none') || input.closest('[data-disabled="true"]')) {
+                    continue;
+                }
+
                 if (input.type === 'radio') {
-                    const radioGroup = panel.querySelectorAll(`input[name="${input.name}"]`);
+                    const radioGroup = panel.querySelectorAll(`input[name="${input.name}"]:not([disabled])`);
+                    if (radioGroup.length === 0) continue;
                     const checked = Array.from(radioGroup).some(r => r.checked);
                     if (!checked) {
                         showToast("Champ requis", "Veuillez répondre à toutes les questions obligatoires (*).", "error");
@@ -940,12 +1108,18 @@
 
         // Collecte des données du formulaire
         function collectFormData() {
-            const petCareChecks = Array.from(document.querySelectorAll('input[name="petCare"]:checked')).map(c => c.value);
-            
             const getRadioVal = (name, fallback = '') => {
                 const el = document.querySelector(`input[name="${name}"]:checked`);
                 return el ? el.value : fallback;
             };
+
+            const hasPetsVal = getRadioVal('hasCurrentPets', 'Non');
+            const hasBalconyVal = getRadioVal('hasBalcony', 'Non');
+            const childrenVal = parseInt(document.getElementById('childrenField')?.value || '0', 10);
+
+            const petCareChecks = hasPetsVal === 'Oui'
+                ? Array.from(document.querySelectorAll('input[name="petCare"]:checked')).map(c => c.value)
+                : [];
 
             const refId = `CLH-A26-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -964,22 +1138,22 @@
                 profession: document.getElementById('professionField')?.value.trim() || '',
                 // 3. Ménage
                 adults: document.getElementById('adultsField')?.value || '1',
-                children: document.getElementById('childrenField')?.value || '0',
-                childrenAges: document.getElementById('childrenAgeField')?.value.trim() || 'Non spécifié',
-                kidsAnimalContact: getRadioVal('kidsAnimalContact', 'Non spécifié'),
+                children: childrenVal.toString(),
+                childrenAges: childrenVal > 0 ? (document.getElementById('childrenAgeField')?.value.trim() || 'Non spécifié') : 'Aucun enfant',
+                kidsAnimalContact: childrenVal > 0 ? getRadioVal('kidsAnimalContact', 'Non spécifié') : 'Non concerné',
                 // 4. Habitation
                 housingType: getRadioVal('housingType', 'Non spécifié'),
                 isolatedRoom: getRadioVal('isolatedRoom', 'Non'),
-                garden: document.getElementById('gardenField')?.value.trim() || 'Non',
-                hasBalcony: getRadioVal('hasBalcony', 'Non'),
-                balconySecured: getRadioVal('balconySecured', 'Non'),
+                garden: document.getElementById('gardenField')?.value.trim() || 'Non / Pas de jardin',
+                hasBalcony: hasBalconyVal,
+                balconySecured: hasBalconyVal === 'Oui' ? getRadioVal('balconySecured', 'Non') : 'Pas de balcon',
                 floorLevel: getRadioVal('floorLevel', 'RDC'),
                 // 5. Animaux & Mode de vie
-                hasCurrentPets: getRadioVal('hasCurrentPets', 'Non'),
-                whichPets: document.getElementById('whichPetsField')?.value.trim() || 'Aucun',
-                dogDetails: document.getElementById('dogDetailsField')?.value.trim() || 'Aucun',
-                petCare: petCareChecks.join(', ') || 'Aucun choix',
-                petsSociable: getRadioVal('petsSociable', 'Non concerné'),
+                hasCurrentPets: hasPetsVal,
+                whichPets: hasPetsVal === 'Oui' ? (document.getElementById('whichPetsField')?.value.trim() || 'Non précisé') : 'Aucun',
+                dogDetails: hasPetsVal === 'Oui' ? (document.getElementById('dogDetailsField')?.value.trim() || 'Aucun') : 'Non concerné',
+                petCare: hasPetsVal === 'Oui' ? (petCareChecks.join(', ') || 'Non renseigné') : 'Non concerné',
+                petsSociable: hasPetsVal === 'Oui' ? getRadioVal('petsSociable', 'Non renseigné') : 'Non concerné',
                 accessAllRooms: getRadioVal('accessAllRooms', 'Oui'),
                 sleepPlace: document.getElementById('sleepPlaceField')?.value.trim() || 'Intérieur',
                 absenceHours: document.getElementById('absenceHoursField')?.value.trim() || '',
@@ -1143,10 +1317,7 @@ _Transmis via le formulaire officiel Chat L'Heureux 56_`;
             window.open(waUrl, '_blank');
         };
 
-        // Impression du formulaire vierge
-        window.printBlankForm = function() {
-            window.print();
-        };
+
 
         // Menu Mobile & back to top
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
