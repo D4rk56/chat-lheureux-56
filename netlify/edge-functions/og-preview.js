@@ -104,6 +104,21 @@ export default async (request, context) => {
   const location = catData?.location?.stringValue || "Morbihan (56)";
   const rawDesc = catData?.description?.stringValue || "Découvrez nos protégés à l'adoption chez Chat L'Heureux 56 dans le Morbihan.";
 
+  const status = catData?.status?.stringValue || "Disponible";
+  const adoptedAtStr = catData?.adoptedAt?.stringValue || catData?.updatedAt?.stringValue || catData?.createdAt?.stringValue;
+  let isExpiredAdopted = false;
+  let daysAdopted = 0;
+
+  if (status === "Adopté" && adoptedAtStr) {
+    const adoptDate = new Date(adoptedAtStr);
+    if (!isNaN(adoptDate.getTime())) {
+      daysAdopted = Math.max(0, Math.floor((Date.now() - adoptDate.getTime()) / (1000 * 60 * 60 * 24)));
+      if (daysAdopted >= 60) {
+        isExpiredAdopted = true;
+      }
+    }
+  }
+
   let photoData = "";
   if (catData?.photos?.arrayValue?.values?.length > 0) {
     photoData = catData.photos.arrayValue.values[0].stringValue || "";
@@ -118,8 +133,17 @@ export default async (request, context) => {
     photoUrl = photoData;
   }
 
-  const dynamicTitle = `🐾 ${name} (${sex}${age}) — À l'adoption à ${location}`;
-  const dynamicDesc = rawDesc.length > 160 ? rawDesc.substring(0, 157) + "..." : rawDesc;
+  let dynamicTitle = `🐾 ${name} (${sex}${age}) — À l'adoption à ${location}`;
+  let dynamicDesc = rawDesc.length > 160 ? rawDesc.substring(0, 157) + "..." : rawDesc;
+
+  if (isExpiredAdopted) {
+    dynamicTitle = `🎉 ${name} coule des jours heureux ! — Chat L'Heureux 56`;
+    dynamicDesc = `${name} a été adopté(e) il y a plus de 60 jours grâce à l'association Chat L'Heureux 56. Découvrez tous nos protégés actuellement à l'adoption dans le Morbihan !`;
+  } else if (status === "Adopté") {
+    const daysLabel = daysAdopted === 0 ? "aujourd'hui" : (daysAdopted === 1 ? "hier" : `il y a ${daysAdopted}j`);
+    dynamicTitle = `🎉 ${name} a été adopté(e) (${daysLabel}) — Chat L'Heureux 56`;
+    dynamicDesc = `${name} coule désormais des jours heureux dans sa famille pour la vie. Découvrez tous nos chats à l'adoption chez Chat L'Heureux 56 dans le Morbihan !`;
+  }
   
   // Utilisation systématique de l'URL complète demandée avec ses paramètres
   const currentUrl = url.href;

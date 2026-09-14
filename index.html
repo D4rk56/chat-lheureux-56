@@ -589,6 +589,20 @@
                 const isAdopted = status === 'Adopté';
                 const isFav = favIds.includes(cat.id);
 
+                let daysSinceAdoption = null;
+                if (isAdopted) {
+                    const dateStr = cat.adoptedAt || cat.updatedAt || cat.createdAt;
+                    if (dateStr) {
+                        const d = new Date(dateStr);
+                        if (!isNaN(d.getTime())) {
+                            daysSinceAdoption = Math.max(0, Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)));
+                        }
+                    }
+                }
+                const adoptedLabel = isAdopted 
+                    ? (daysSinceAdoption !== null ? (daysSinceAdoption === 0 ? "Adopté aujourd'hui 🎉" : (daysSinceAdoption === 1 ? "Adopté hier 🎉" : `Adopté il y a ${daysSinceAdoption}j 🎉`)) : "Adopté 🎉")
+                    : "";
+
                 let borderClass = 'border-gray-100';
                 if (status === 'Urgence') borderClass = 'border-2 border-rose-200';
                 if (isAdopted) borderClass = 'border-gray-200 bg-gray-50/80';
@@ -608,7 +622,7 @@
                             </div>
                             
                             ${status === 'Urgence' ? '<div class="absolute bottom-12 left-3 bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg animate-pulse uppercase tracking-wider">🚨 Urgence</div>' : ''}
-                            ${isAdopted ? '<div class="absolute bottom-12 left-3 bg-slate-900/90 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-heart text-pink-400"></i> Adopté 🎉</div>' : ''}
+                            ${isAdopted ? `<div class="absolute bottom-12 left-3 bg-slate-900/90 text-white px-3 py-1 rounded-full text-[11px] font-black shadow-lg uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-heart text-pink-400"></i> ${adoptedLabel}</div>` : ''}
                             
                             <span class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/20">
                                 <i class="fa-solid fa-location-dot text-pink-400"></i> ${location}
@@ -631,12 +645,28 @@
             }).join('');
         }
 
+        const ADOPTED_EXPIRATION_DAYS = 60;
+
+        function isAdoptedCatExpired(cat) {
+            if (!cat || cat.status !== 'Adopté') return false;
+            const dateStr = cat.adoptedAt || cat.updatedAt || cat.createdAt;
+            if (!dateStr) return false;
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return false;
+            const diffMs = Date.now() - date.getTime();
+            const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+            return days >= ADOPTED_EXPIRATION_DAYS;
+        }
+
         async function fetchCatsFromFirebase() {
             try {
                 const snapshot = await getDocs(collection(db, "chats"));
                 const fetched = [];
                 snapshot.forEach(doc => {
-                    fetched.push({ id: doc.id, ...doc.data() });
+                    const cat = { id: doc.id, ...doc.data() };
+                    if (!isAdoptedCatExpired(cat)) {
+                        fetched.push(cat);
+                    }
                 });
                 renderCards(fetched);
             } catch (e) {

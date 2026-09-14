@@ -344,6 +344,29 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        const ADOPTED_EXPIRATION_DAYS = 60;
+
+        function getAdoptedCatAge(cat) {
+            if (!cat || cat.status !== 'Adopté') {
+                return { isAdopted: false, days: 0, isExpired: false };
+            }
+            const dateStr = cat.adoptedAt || cat.updatedAt || cat.createdAt;
+            if (!dateStr) {
+                return { isAdopted: true, days: 0, isExpired: false };
+            }
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) {
+                return { isAdopted: true, days: 0, isExpired: false };
+            }
+            const diffMs = Date.now() - date.getTime();
+            const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+            return {
+                isAdopted: true,
+                days: days,
+                isExpired: days >= ADOPTED_EXPIRATION_DAYS
+            };
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const catId = urlParams.get('id');
 
@@ -370,7 +393,15 @@
                 }
 
                 loadedCat = { id: docSnap.id, ...docSnap.data() };
-                renderCatDetail(loadedCat);
+                const adoptedInfo = getAdoptedCatAge(loadedCat);
+
+                if (adoptedInfo.isExpired) {
+                    renderExpiredAdoptedCat(loadedCat, adoptedInfo.days);
+                    if (spinner) spinner.classList.add('hidden');
+                    return;
+                }
+
+                renderCatDetail(loadedCat, adoptedInfo);
 
                 if (spinner) spinner.classList.add('hidden');
                 if (content) content.classList.remove('hidden');
@@ -381,8 +412,49 @@
             }
         }
 
-        function renderCatDetail(cat) {
+        function renderExpiredAdoptedCat(cat, days) {
+            const catName = cat.name || 'Ce chat';
+            document.title = `🎉 ${catName} a été adopté(e) ! - Chat L'Heureux 56`;
+            const breadcrumbEl = document.getElementById('breadcrumbCatName');
+            if (breadcrumbEl) breadcrumbEl.innerText = `${catName} (Adopté)`;
+
+            const content = document.getElementById('detailContent');
+            if (content) content.classList.add('hidden');
+
+            const spinner = document.getElementById('loadingDetail');
+            if (spinner) {
+                spinner.classList.remove('hidden');
+                spinner.className = "max-w-2xl mx-auto text-center py-14 px-6 sm:px-10 glass-card rounded-[2.5rem] border border-pink-100 bg-white shadow-xl my-6";
+                spinner.innerHTML = `
+                    <div class="w-20 h-20 bg-gradient-to-tr from-pink-500 to-rose-400 text-white rounded-3xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-pink-500/30 animate-bounce">
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                    <span class="inline-block bg-pink-50 text-[#d24de3] border border-pink-200 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
+                        🎉 Adoption réussie (+${days} jours)
+                    </span>
+                    <h1 class="font-title text-2xl sm:text-4xl font-black text-gray-900 tracking-tight mb-3">
+                        ${catName} coule des jours heureux !
+                    </h1>
+                    <p class="text-sm sm:text-base text-gray-600 font-medium max-w-lg mx-auto mb-8 leading-relaxed">
+                        Ce moustachu a trouvé son foyer pour la vie il y a plus de 60 jours. Sa fiche individuelle a donc été retirée automatiquement.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+                        <a href="adoption.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm font-extrabold px-6 py-3.5 rounded-xl shadow-md hover:scale-105 transition-all">
+                            <i class="fa-solid fa-paw"></i>
+                            <span>Voir nos chats à l'adoption</span>
+                        </a>
+                        <a href="temoignages.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-pink-50 text-gray-700 hover:text-[#d24de3] text-xs sm:text-sm font-bold px-6 py-3.5 rounded-xl transition-all">
+                            <i class="fa-solid fa-comments"></i>
+                            <span>Découvrir les témoignages</span>
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCatDetail(cat, adoptedInfo = null) {
             const isAdopted = (cat.status === 'Adopté');
+            const catAdoptedAge = adoptedInfo || getAdoptedCatAge(cat);
             const catName = cat.name || 'Chat';
             const catAge = cat.age ? `, ${cat.age}` : '';
             const catSex = cat.sex || cat.gender || 'Femelle';
@@ -423,8 +495,9 @@
                     statusBadge.className = "absolute top-4 left-4 bg-amber-500 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2";
                     statusBadge.innerHTML = '<span>Réservé</span>';
                 } else if (isAdopted) {
+                    const daysLabel = catAdoptedAge.days === 0 ? "aujourd'hui" : (catAdoptedAge.days === 1 ? "hier" : `il y a ${catAdoptedAge.days}j`);
                     statusBadge.className = "absolute top-4 left-4 bg-pink-500 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2";
-                    statusBadge.innerHTML = '<span>🎉 Adopté</span>';
+                    statusBadge.innerHTML = `<span>🎉 Adopté (${daysLabel})</span>`;
                 } else {
                     statusBadge.className = "absolute top-4 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2";
                     statusBadge.innerHTML = '<span>Disponible</span>';
@@ -440,7 +513,8 @@
 
             const catTitleEl = document.getElementById('catTitle');
             if (isAdopted) {
-                catTitleEl.innerHTML = `<span class="line-through text-gray-400">${catName}</span> <span class="text-sm font-bold text-pink-500 font-sans tracking-normal ml-2">Adopté(e) 🎉</span>`;
+                const daysLabel = catAdoptedAge.days === 0 ? "aujourd'hui" : (catAdoptedAge.days === 1 ? "hier" : `il y a ${catAdoptedAge.days} jours`);
+                catTitleEl.innerHTML = `<span class="line-through text-gray-400">${catName}</span> <span class="text-sm font-bold text-pink-500 font-sans tracking-normal ml-2">Adopté(e) (${daysLabel}) 🎉</span>`;
             } else {
                 catTitleEl.innerText = catName;
             }
@@ -458,10 +532,11 @@
             const actionContainer = document.getElementById('catActionContainer');
             if (isAdopted) {
                 if (actionContainer) {
+                    const daysLabel = catAdoptedAge.days === 0 ? "aujourd'hui" : (catAdoptedAge.days === 1 ? "hier" : `il y a ${catAdoptedAge.days} jours`);
                     actionContainer.innerHTML = `
                         <div class="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 text-center shadow-lg">
                             <p class="font-title text-xl font-black text-pink-400 mb-1">🎉 ${catName} a été adopté !</p>
-                            <p class="text-xs text-slate-300 font-medium mb-4 leading-relaxed">Ce moustachu coule désormais des jours heureux dans sa famille pour la vie.</p>
+                            <p class="text-xs text-slate-300 font-medium mb-4 leading-relaxed">Ce moustachu coule désormais des jours heureux dans sa famille pour la vie (adopté ${daysLabel}).</p>
                             <a href="adoption.html" class="inline-flex items-center gap-2 bg-brand-gradient text-white text-xs font-extrabold px-6 py-3 rounded-xl shadow-md hover:scale-105 transition-all">
                                 <i class="fa-solid fa-paw"></i> Voir tous nos moustachus à l'adoption
                             </a>
