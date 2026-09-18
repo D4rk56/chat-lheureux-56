@@ -181,9 +181,21 @@
                                 <h1 id="catTitle" class="font-title text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">Nom Chat</h1>
                             </div>
 
-                            <p id="catLocationText" class="text-gray-600 font-bold text-xs sm:text-sm mb-6 flex items-center gap-2">
-                                <i class="fa-solid fa-location-dot text-pink-500"></i> Colpo (56)
-                            </p>
+                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                <p id="catLocationText" class="text-gray-600 font-bold text-xs sm:text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-location-dot text-pink-500"></i> Colpo (56)
+                                </p>
+                                <div id="catDatesContainer" class="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-500">
+                                    <span id="catPublishedBadge" class="hidden inline-flex items-center gap-1.5 bg-white border border-slate-200/80 px-3 py-1 rounded-full text-slate-600 shadow-xs">
+                                        <i class="fa-regular fa-calendar-plus text-pink-500 text-xs"></i>
+                                        <span>Fiche créée le <strong id="publishedDateText" class="text-slate-800 font-bold">-</strong></span>
+                                    </span>
+                                    <span id="catUpdatedBadge" class="hidden inline-flex items-center gap-1.5 bg-white border border-slate-200/80 px-3 py-1 rounded-full text-slate-600 shadow-xs">
+                                        <i class="fa-solid fa-pen-to-square text-[#7db1f9] text-xs"></i>
+                                        <span>Modifiée le <strong id="updatedDateText" class="text-slate-800 font-bold">-</strong></span>
+                                    </span>
+                                </div>
+                            </div>
 
                             <div id="catTagsContainer" class="flex flex-wrap gap-2 mb-6"></div>
 
@@ -520,6 +532,44 @@
             }
 
             document.getElementById('catLocationText').innerHTML = `<i class="fa-solid fa-location-dot text-pink-500"></i> ${catLocation}`;
+
+            // Affichage des dates de publication et de modification
+            const pubDateStr = cat.createdAt || cat.updatedAt;
+            const pubEl = document.getElementById('catPublishedBadge');
+            const pubTextEl = document.getElementById('publishedDateText');
+            if (pubEl && pubTextEl) {
+                if (pubDateStr) {
+                    const pDate = new Date(pubDateStr);
+                    if (!isNaN(pDate.getTime())) {
+                        pubTextEl.innerText = pDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                        pubEl.classList.remove('hidden');
+                    } else {
+                        pubEl.classList.add('hidden');
+                    }
+                } else {
+                    pubEl.classList.add('hidden');
+                }
+            }
+
+            const updDateStr = cat.updatedAt;
+            const updEl = document.getElementById('catUpdatedBadge');
+            const updTextEl = document.getElementById('updatedDateText');
+            if (updEl && updTextEl) {
+                // Afficher si updatedAt existe et est significativement différent de createdAt (plus d'1 heure)
+                if (cat.createdAt && updDateStr) {
+                    const cTime = new Date(cat.createdAt).getTime();
+                    const uDate = new Date(updDateStr);
+                    const uTime = uDate.getTime();
+                    if (!isNaN(uTime) && (uTime - cTime > 3600000)) {
+                        updTextEl.innerText = uDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                        updEl.classList.remove('hidden');
+                    } else {
+                        updEl.classList.add('hidden');
+                    }
+                } else {
+                    updEl.classList.add('hidden');
+                }
+            }
             
             // Lien email personnalisé pré-rempli
             const askBtn = document.getElementById('askQuestionBtn');

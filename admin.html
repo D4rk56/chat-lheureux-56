@@ -235,6 +235,34 @@
                 </button>
             </div>
 
+            <!-- Bandeau d'audit des dates & auteur -->
+            <div id="modalAuditInfo" class="hidden px-4 sm:px-6 py-2.5 bg-slate-950/90 border-b border-slate-800 text-[11px] font-semibold text-slate-400 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span id="modalCreatedAt"><i class="fa-regular fa-calendar text-pink-400 mr-1"></i> Fiche créée le <strong id="modalCreatedAtText" class="text-white">-</strong></span>
+                    <span id="modalUpdatedAt" class="hidden"><i class="fa-solid fa-pen text-[#7db1f9] mr-1"></i> Modifiée le <strong id="modalUpdatedAtText" class="text-white">-</strong></span>
+                </div>
+                <div id="modalUpdatedBy" class="hidden text-slate-400">
+                    <i class="fa-solid fa-user-pen text-teal-400 mr-1"></i> Par <strong id="modalUpdatedByText" class="text-teal-300">-</strong>
+                </div>
+            </div>
+
+            <!-- Bandeau d'alerte conflit temps réel -->
+            <div id="modalConcurrentAlert" class="hidden px-4 sm:px-6 py-3 bg-amber-500/20 border-b border-amber-500/40 text-amber-200 text-xs font-bold flex items-center justify-between gap-3 animate-pulse">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm shrink-0"></i>
+                    <span id="modalConcurrentAlertText">Attention : Cette fiche vient d'être enregistrée par un autre utilisateur.</span>
+                </div>
+                <button type="button" onclick="reloadCurrentCatFromFirebase()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider shrink-0 transition-colors">
+                    Recharger
+                </button>
+            </div>
+
+            <!-- Bandeau Mode Lecture Seule -->
+            <div id="modalReadOnlyBanner" class="hidden px-4 sm:px-6 py-2.5 bg-blue-500/10 border-b border-blue-500/30 text-blue-300 text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-eye text-blue-400"></i>
+                <span>Mode consultation seule (une autre personne édite cette fiche) — L'enregistrement est désactivé.</span>
+            </div>
+
             <form id="catForm" class="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto flex-grow text-xs font-semibold">
                 <input type="hidden" id="catId">
 
@@ -511,10 +539,54 @@
         </div>
     </div>
 
+    <!-- Modale d'Avertissement : Fiche déjà en cours d'édition par un autre utilisateur -->
+    <div id="lockConflictModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-6 text-center border border-amber-500/40 shadow-2xl">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <h3 class="font-title text-lg sm:text-xl font-black text-white mb-2">Fiche en cours de modification !</h3>
+            <div id="lockConflictModalMsg" class="text-xs text-slate-300 font-medium mb-6 leading-relaxed bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-left"></div>
+            <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
+                <button onclick="closeLockConflictModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors">
+                    Annuler
+                </button>
+                <button id="lockReadOnlyBtn" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-eye"></i> Mode lecture seule
+                </button>
+                <button id="lockForceBtn" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-bolt"></i> Prendre la main
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale de Conflit d'Enregistrement -->
+    <div id="saveConflictModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-6 text-center border border-rose-500/40 shadow-2xl">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg shadow-rose-500/20">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-title text-lg sm:text-xl font-black text-white mb-2">Conflit de modification détecté !</h3>
+            <div id="saveConflictModalMsg" class="text-xs text-slate-300 font-medium mb-6 leading-relaxed bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-left"></div>
+            <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
+                <button onclick="closeSaveConflictModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors">
+                    Annuler
+                </button>
+                <button onclick="resolveSaveConflict(false)" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate"></i> Recharger
+                </button>
+                <button onclick="resolveSaveConflict(true)" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i> Écraser
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
@@ -538,6 +610,54 @@
         let pendingDeleteType = null;
         let activeStatusFilter = null;
         let currentAgeMode = 'birthDate'; // 'birthDate' ou 'freeText'
+
+        // Verrouillage & Anti-conflit d'édition
+        let activeEditingCatId = null;
+        let activeEditingInitialUpdatedAt = null;
+        let lockHeartbeatInterval = null;
+        let catSnapshotUnsubscribe = null;
+        let isReadOnlyMode = false;
+        let pendingCatDataToForce = null;
+        const LOCK_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
+
+        function isCatLockedByOther(cat) {
+            if (!cat || !cat.editingLock) return false;
+            const currentUserEmail = auth.currentUser?.email || '';
+            const lock = cat.editingLock;
+            if (!lock.email || lock.email === currentUserEmail) return false;
+            const lockAge = Date.now() - (lock.lockedAt || 0);
+            return lockAge < LOCK_EXPIRATION_MS;
+        }
+
+        async function acquireCatLock(catId) {
+            if (!catId || !auth.currentUser) return;
+            try {
+                await updateDoc(doc(db, "chats", catId), {
+                    editingLock: {
+                        email: auth.currentUser.email || 'Admin',
+                        lockedAt: Date.now()
+                    }
+                });
+            } catch (e) {
+                console.warn("Impossible d'acquérir le verrou :", e);
+            }
+        }
+
+        async function releaseCatLock(catId) {
+            if (!catId || !auth.currentUser) return;
+            try {
+                const catRef = doc(db, "chats", catId);
+                const snap = await getDoc(catRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.editingLock && data.editingLock.email === auth.currentUser.email) {
+                        await updateDoc(catRef, { editingLock: null });
+                    }
+                }
+            } catch (e) {
+                console.warn("Impossible de libérer le verrou :", e);
+            }
+        }
 
         // Calcul dynamique et naturel de l'âge en français
         function calculateAgeFromBirthDate(birthDateStr) {
@@ -903,6 +1023,7 @@
                 const location = cat.location || 'Colpo (56)';
                 const isAdopted = (status === 'Adopté');
                 const adoptionInfo = getCatAdoptionInfo(cat);
+                const isLocked = isCatLockedByOther(cat);
 
                 let badgeBg = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
                 let statusLabel = status;
@@ -919,8 +1040,30 @@
                     }
                 }
 
+                // Dates de création et mise à jour
+                const createdDateStr = cat.createdAt || cat.updatedAt;
+                let formattedCreated = "";
+                if (createdDateStr) {
+                    try {
+                        formattedCreated = new Date(createdDateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    } catch (e) {
+                        formattedCreated = createdDateStr.slice(0, 10);
+                    }
+                }
+
+                let formattedUpdated = "";
+                if (cat.updatedAt && cat.createdAt) {
+                    const cTime = new Date(cat.createdAt).getTime();
+                    const uTime = new Date(cat.updatedAt).getTime();
+                    if (!isNaN(cTime) && !isNaN(uTime) && (uTime - cTime > 3600000)) {
+                        try {
+                            formattedUpdated = new Date(cat.updatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        } catch (e) {}
+                    }
+                }
+
                 return `
-                    <div class="glass-card rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-4 flex flex-col justify-between border ${isAdopted && adoptionInfo.isExpired ? 'border-rose-500/40 bg-rose-950/20' : 'border-slate-800'}">
+                    <div class="glass-card rounded-2xl sm:rounded-[2rem] p-3.5 sm:p-4 flex flex-col justify-between border ${isAdopted && adoptionInfo.isExpired ? 'border-rose-500/40 bg-rose-950/20' : (isLocked ? 'border-amber-500/50 ring-1 ring-amber-500/30 bg-amber-950/10' : 'border-slate-800')}">
                         <div>
                             <div class="relative h-44 sm:h-52 rounded-xl sm:rounded-2xl overflow-hidden mb-3 bg-slate-900">
                                 <img src="${photo}" onerror="this.onerror=null;this.src='https://placehold.co/600x400?text=Photo';" class="w-full h-full object-cover ${isAdopted ? 'grayscale filter' : ''}">
@@ -934,6 +1077,13 @@
                             <h3 class="font-title text-lg sm:text-xl font-black text-white mb-0.5 ${isAdopted ? 'line-through text-slate-400' : ''}">${cat.name || 'Chat'}</h3>
                             <p class="text-xs text-slate-400 font-semibold mb-2"><i class="fa-solid fa-location-dot text-pink-400 mr-1"></i> ${location}</p>
                             
+                            ${isLocked ? `
+                                <div class="mb-2.5 p-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-bold flex items-center justify-between gap-1">
+                                    <span><i class="fa-solid fa-user-lock animate-pulse text-amber-400 mr-1"></i> En édition</span>
+                                    <span class="text-amber-200 truncate max-w-[130px]" title="${cat.editingLock.email}">${cat.editingLock.email}</span>
+                                </div>
+                            ` : ''}
+
                             ${isAdopted ? `
                                 <div class="mb-3 p-2.5 rounded-xl ${adoptionInfo.isExpired ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300' : 'bg-pink-500/10 border border-pink-500/30 text-pink-300'} text-[11px] font-bold flex items-center justify-between">
                                     <span><i class="fa-solid fa-heart mr-1.5 text-pink-400"></i> ${adoptionInfo.dateStr ? `Adopté le ${adoptionInfo.dateStr}` : 'Adopté'}</span>
@@ -943,16 +1093,21 @@
                                 </div>
                             ` : ''}
 
-                            <p class="text-slate-300 text-xs line-clamp-2 mb-3 font-medium">${cat.description || 'Pas de description.'}</p>
+                            <p class="text-slate-300 text-xs line-clamp-2 mb-2 font-medium">${cat.description || 'Pas de description.'}</p>
+
+                            <div class="my-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1 text-[10px] text-slate-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-pink-400 mr-1"></i> Créé le ${formattedCreated || 'N/A'}</span>
+                                ${formattedUpdated ? `<span><i class="fa-solid fa-pen text-[#7db1f9] mr-1"></i> Modifié le ${formattedUpdated}</span>` : ''}
+                            </div>
                         </div>
 
-                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <div class="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
                             <a href="chat-detail.html?id=${cat.id}" target="_blank" class="text-xs font-bold text-pink-400 hover:text-pink-300 flex items-center gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 px-2.5 py-1.5 rounded-xl transition-all">
                                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Voir la fiche
                             </a>
                             <div class="flex items-center gap-2">
-                                <button onclick="editCat('${cat.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors">
-                                    <i class="fa-solid fa-pen text-[10px] mr-1"></i> Modifier
+                                <button onclick="editCat('${cat.id}')" class="${isLocked ? 'bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/30' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'} px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+                                    <i class="fa-solid ${isLocked ? 'fa-lock text-amber-400' : 'fa-pen text-[10px]'} mr-0.5"></i> Modifier
                                 </button>
                                 <button onclick="promptDelete('${cat.id}', 'cat', '${(cat.name || 'ce chat').replace(/'/g, "\\'")}')" class="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
                                     <i class="fa-solid fa-trash text-[10px]"></i>
@@ -1192,6 +1347,34 @@
         }
 
         window.openCatModal = function() {
+            if (activeEditingCatId && !isReadOnlyMode) {
+                releaseCatLock(activeEditingCatId);
+            }
+            if (lockHeartbeatInterval) {
+                clearInterval(lockHeartbeatInterval);
+                lockHeartbeatInterval = null;
+            }
+            if (catSnapshotUnsubscribe) {
+                catSnapshotUnsubscribe();
+                catSnapshotUnsubscribe = null;
+            }
+            activeEditingCatId = null;
+            activeEditingInitialUpdatedAt = null;
+            isReadOnlyMode = false;
+            pendingCatDataToForce = null;
+
+            const auditInfo = document.getElementById('modalAuditInfo');
+            if (auditInfo) auditInfo.classList.add('hidden');
+            const alertEl = document.getElementById('modalConcurrentAlert');
+            if (alertEl) alertEl.classList.add('hidden');
+            const readOnlyBanner = document.getElementById('modalReadOnlyBanner');
+            if (readOnlyBanner) readOnlyBanner.classList.add('hidden');
+            const saveBtn = document.getElementById('saveCatBtn');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('hidden');
+            }
+
             document.getElementById('catModalTitle').innerText = "Ajouter un chat";
             document.getElementById('catForm').reset();
             document.getElementById('catId').value = "";
@@ -1210,7 +1393,89 @@
         };
 
         window.closeCatModal = function() {
+            if (activeEditingCatId && !isReadOnlyMode) {
+                releaseCatLock(activeEditingCatId);
+            }
+            if (lockHeartbeatInterval) {
+                clearInterval(lockHeartbeatInterval);
+                lockHeartbeatInterval = null;
+            }
+            if (catSnapshotUnsubscribe) {
+                catSnapshotUnsubscribe();
+                catSnapshotUnsubscribe = null;
+            }
+            activeEditingCatId = null;
+            activeEditingInitialUpdatedAt = null;
+            isReadOnlyMode = false;
+            pendingCatDataToForce = null;
+
+            const alertEl = document.getElementById('modalConcurrentAlert');
+            if (alertEl) alertEl.classList.add('hidden');
+            const readOnlyBanner = document.getElementById('modalReadOnlyBanner');
+            if (readOnlyBanner) readOnlyBanner.classList.add('hidden');
+            const auditInfo = document.getElementById('modalAuditInfo');
+            if (auditInfo) auditInfo.classList.add('hidden');
+
             document.getElementById('catModal').classList.add('hidden');
+        };
+
+        window.closeLockConflictModal = function() {
+            document.getElementById('lockConflictModal').classList.add('hidden');
+        };
+
+        window.closeSaveConflictModal = function() {
+            document.getElementById('saveConflictModal').classList.add('hidden');
+            pendingCatDataToForce = null;
+        };
+
+        window.reloadCurrentCatFromFirebase = async function() {
+            if (!activeEditingCatId) return;
+            const catId = activeEditingCatId;
+            const readOnly = isReadOnlyMode;
+            closeSaveConflictModal();
+            const alertEl = document.getElementById('modalConcurrentAlert');
+            if (alertEl) alertEl.classList.add('hidden');
+            await editCat(catId, { readOnly: readOnly, force: true });
+            showToast("Fiche rechargée", "Les dernières données ont été rechargées.", "info");
+        };
+
+        window.resolveSaveConflict = async function(forceOverwrite) {
+            if (!forceOverwrite) {
+                reloadCurrentCatFromFirebase();
+                return;
+            }
+            if (!pendingCatDataToForce || !activeEditingCatId) {
+                closeSaveConflictModal();
+                return;
+            }
+            const dataToSave = { ...pendingCatDataToForce };
+            const catId = activeEditingCatId;
+            closeSaveConflictModal();
+
+            const btn = document.getElementById('saveCatBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "Écrasement...";
+            }
+
+            try {
+                dataToSave.updatedAt = new Date().toISOString();
+                dataToSave.updatedBy = auth.currentUser?.email || 'Admin';
+                dataToSave.editingLock = null;
+
+                await updateDoc(doc(db, "chats", catId), dataToSave);
+                showToast('Mise à jour forcée', `${dataToSave.name} a été enregistré.`);
+                closeCatModal();
+                fetchCats();
+            } catch (err) {
+                console.error("Erreur force save :", err);
+                showToast('Erreur', 'Impossible d\'écraser la fiche.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "Enregistrer";
+                }
+            }
         };
 
         window.openStoryModal = function() {
@@ -1258,6 +1523,11 @@
 
         document.getElementById('catForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (isReadOnlyMode) {
+                showToast("Mode lecture seule", "L'enregistrement est désactivé en mode consultation.", "error");
+                return;
+            }
+
             const id = document.getElementById('catId').value;
             const btn = document.getElementById('saveCatBtn');
             btn.disabled = true;
@@ -1291,6 +1561,9 @@
                 }
             }
 
+            const nowIso = new Date().toISOString();
+            const userEmail = auth.currentUser?.email || 'Admin';
+
             const catData = {
                 name: document.getElementById('formName').value,
                 status: statusVal,
@@ -1317,14 +1590,46 @@
                 },
                 photos: currentCatPhotos,
                 image: currentCatPhotos[0] || "https://placehold.co/600x400?text=Pas+de+photo",
-                updatedAt: new Date().toISOString()
+                updatedAt: nowIso,
+                updatedBy: userEmail,
+                editingLock: null
             };
 
             try {
                 if (id) {
+                    // Vérifier si un autre utilisateur a sauvegardé entre temps
+                    const freshDocSnap = await getDoc(doc(db, "chats", id));
+                    if (freshDocSnap.exists()) {
+                        const freshData = freshDocSnap.data();
+                        if (freshData.updatedAt && activeEditingInitialUpdatedAt && freshData.updatedAt !== activeEditingInitialUpdatedAt) {
+                            pendingCatDataToForce = catData;
+                            const updater = freshData.updatedBy || "un autre utilisateur";
+                            let updTime = "";
+                            try {
+                                updTime = new Date(freshData.updatedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                            } catch (e) {
+                                updTime = freshData.updatedAt;
+                            }
+                            const conflictModalMsg = document.getElementById('saveConflictModalMsg');
+                            if (conflictModalMsg) {
+                                conflictModalMsg.innerHTML = `
+                                    Cette fiche a été enregistrée par <strong>${updater}</strong> à ${updTime} pendant que vous étiez en train de la modifier.<br><br>
+                                    Voulez-vous <strong>écraser</strong> ses modifications avec les vôtres, ou <strong>recharger</strong> la fiche pour voir ce qu'il a changé ?
+                                `;
+                            }
+                            document.getElementById('saveConflictModal').classList.remove('hidden');
+                            btn.disabled = false;
+                            btn.innerText = "Enregistrer";
+                            return;
+                        }
+                        // Préserver createdAt s'il existe déjà
+                        catData.createdAt = freshData.createdAt || freshData.updatedAt || nowIso;
+                    }
+
                     await updateDoc(doc(db, "chats", id), catData);
                     showToast('Mise à jour', `${catData.name} a bien été modifié.`);
                 } else {
+                    catData.createdAt = nowIso;
                     await addDoc(collection(db, "chats"), catData);
                     showToast('Nouveau chat', `${catData.name} est en ligne.`);
                 }
@@ -1374,11 +1679,167 @@
             }
         });
 
-        window.editCat = function(id) {
-            const cat = allCats.find(c => c.id === id);
+        window.editCat = async function(id, options = {}) {
+            let cat = allCats.find(c => c.id === id);
+            try {
+                const snap = await getDoc(doc(db, "chats", id));
+                if (snap.exists()) {
+                    cat = { id: snap.id, ...snap.data() };
+                    const idx = allCats.findIndex(c => c.id === id);
+                    if (idx !== -1) allCats[idx] = cat;
+                }
+            } catch (err) {
+                console.warn("Erreur fetch doc chat frais:", err);
+            }
+
             if (!cat) return;
 
-            document.getElementById('catModalTitle').innerText = `Modifier ${cat.name}`;
+            // Vérification du verrou si un autre admin est en train d'éditer
+            if (!options.readOnly && !options.force && isCatLockedByOther(cat)) {
+                const lockHolder = cat.editingLock.email || 'Un autre administrateur';
+                const lockTimeMinutes = Math.max(1, Math.round((Date.now() - (cat.editingLock.lockedAt || Date.now())) / 60000));
+                
+                const msgEl = document.getElementById('lockConflictModalMsg');
+                if (msgEl) {
+                    msgEl.innerHTML = `
+                        La fiche de <strong>« ${cat.name} »</strong> est actuellement en cours d'édition par <strong>${lockHolder}</strong> (depuis environ ${lockTimeMinutes} min).<br><br>
+                        Pour éviter d'écraser son travail, vous pouvez :<br>
+                        • <strong>Consulter en lecture seule</strong> sans risquer d'écraser ses modifications.<br>
+                        • <strong>Prendre la main</strong> si vous savez que la personne a terminé ou est absente.
+                    `;
+                }
+
+                const readOnlyBtn = document.getElementById('lockReadOnlyBtn');
+                const forceBtn = document.getElementById('lockForceBtn');
+                if (readOnlyBtn) {
+                    readOnlyBtn.onclick = () => {
+                        closeLockConflictModal();
+                        editCat(id, { readOnly: true });
+                    };
+                }
+                if (forceBtn) {
+                    forceBtn.onclick = () => {
+                        closeLockConflictModal();
+                        editCat(id, { force: true });
+                    };
+                }
+
+                document.getElementById('lockConflictModal').classList.remove('hidden');
+                return;
+            }
+
+            // Nettoyer toute ancienne session d'édition
+            if (activeEditingCatId && activeEditingCatId !== id && !isReadOnlyMode) {
+                releaseCatLock(activeEditingCatId);
+            }
+            if (lockHeartbeatInterval) {
+                clearInterval(lockHeartbeatInterval);
+                lockHeartbeatInterval = null;
+            }
+            if (catSnapshotUnsubscribe) {
+                catSnapshotUnsubscribe();
+                catSnapshotUnsubscribe = null;
+            }
+
+            activeEditingCatId = id;
+            activeEditingInitialUpdatedAt = cat.updatedAt || null;
+            isReadOnlyMode = !!options.readOnly;
+
+            // Poser le verrou si mode normal (non lecture seule)
+            if (!isReadOnlyMode) {
+                await acquireCatLock(id);
+                lockHeartbeatInterval = setInterval(() => {
+                    if (activeEditingCatId && !isReadOnlyMode) {
+                        acquireCatLock(activeEditingCatId);
+                    }
+                }, 60000);
+            }
+
+            // Écouter les modifications en direct sur la fiche Firestore
+            catSnapshotUnsubscribe = onSnapshot(doc(db, "chats", id), (snap) => {
+                if (!snap.exists()) return;
+                const freshData = snap.data();
+                if (freshData.updatedAt && activeEditingInitialUpdatedAt && freshData.updatedAt !== activeEditingInitialUpdatedAt) {
+                    const updater = freshData.updatedBy || "un autre utilisateur";
+                    let timeStr = "";
+                    try {
+                        timeStr = new Date(freshData.updatedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                        timeStr = freshData.updatedAt;
+                    }
+                    const alertEl = document.getElementById('modalConcurrentAlert');
+                    const alertTxt = document.getElementById('modalConcurrentAlertText');
+                    if (alertEl && alertTxt) {
+                        alertTxt.innerHTML = `Attention : Cette fiche a été enregistrée par <strong>${updater}</strong> à ${timeStr}.`;
+                        alertEl.classList.remove('hidden');
+                    }
+                }
+            });
+
+            // Affichage bandeau lecture seule et bouton Enregistrer
+            const readOnlyBanner = document.getElementById('modalReadOnlyBanner');
+            const saveBtn = document.getElementById('saveCatBtn');
+            const concurrentAlert = document.getElementById('modalConcurrentAlert');
+            if (readOnlyBanner) readOnlyBanner.classList.toggle('hidden', !isReadOnlyMode);
+            if (concurrentAlert) concurrentAlert.classList.add('hidden');
+            if (saveBtn) {
+                saveBtn.disabled = isReadOnlyMode;
+                saveBtn.classList.toggle('hidden', isReadOnlyMode);
+            }
+
+            // Bandeau d'audit des dates & auteur
+            const auditInfo = document.getElementById('modalAuditInfo');
+            const createdAtEl = document.getElementById('modalCreatedAt');
+            const createdAtText = document.getElementById('modalCreatedAtText');
+            const updatedAtEl = document.getElementById('modalUpdatedAt');
+            const updatedAtText = document.getElementById('modalUpdatedAtText');
+            const updatedByEl = document.getElementById('modalUpdatedBy');
+            const updatedByText = document.getElementById('modalUpdatedByText');
+
+            if (auditInfo) {
+                auditInfo.classList.remove('hidden');
+                
+                const createdDateStr = cat.createdAt || cat.updatedAt;
+                let formattedCreated = "-";
+                if (createdDateStr) {
+                    try {
+                        formattedCreated = new Date(createdDateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                    } catch (e) {
+                        formattedCreated = createdDateStr.slice(0, 10);
+                    }
+                }
+                if (createdAtText) createdAtText.innerText = formattedCreated;
+
+                let showUpdate = false;
+                if (cat.updatedAt && cat.createdAt) {
+                    const cTime = new Date(cat.createdAt).getTime();
+                    const uTime = new Date(cat.updatedAt).getTime();
+                    if (!isNaN(cTime) && !isNaN(uTime) && (uTime - cTime > 3600000)) {
+                        showUpdate = true;
+                    }
+                }
+
+                if (showUpdate && updatedAtEl && updatedAtText) {
+                    updatedAtEl.classList.remove('hidden');
+                    try {
+                        updatedAtText.innerText = new Date(cat.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                        updatedAtText.innerText = cat.updatedAt;
+                    }
+                } else if (updatedAtEl) {
+                    updatedAtEl.classList.add('hidden');
+                }
+
+                if (cat.updatedBy && updatedByEl && updatedByText) {
+                    updatedByEl.classList.remove('hidden');
+                    updatedByText.innerText = cat.updatedBy;
+                } else if (updatedByEl) {
+                    updatedByEl.classList.add('hidden');
+                }
+            }
+
+            // Remplissage formulaire
+            document.getElementById('catModalTitle').innerText = isReadOnlyMode ? `Consultation : ${cat.name}` : `Modifier ${cat.name}`;
             document.getElementById('catId').value = cat.id;
             document.getElementById('formName').value = cat.name || '';
             document.getElementById('formStatus').value = cat.status || 'Disponible';
@@ -1483,6 +1944,12 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3500);
         }
+
+        window.addEventListener('beforeunload', () => {
+            if (activeEditingCatId && !isReadOnlyMode && auth.currentUser) {
+                releaseCatLock(activeEditingCatId);
+            }
+        });
     </script>
 </body>
 </html>
