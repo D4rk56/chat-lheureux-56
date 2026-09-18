@@ -14,6 +14,13 @@
     <!-- Favicon officiel -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Optimisation : Pré-connexion et préchargement Firebase -->
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -597,7 +604,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
@@ -610,7 +617,14 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (e) {
+            db = getFirestore(app);
+        }
 
         // Variables globales
         let allCats = [];
@@ -633,9 +647,10 @@
 
         function isCatLockedByOther(cat) {
             if (!cat || !cat.editingLock) return false;
-            const currentUserEmail = auth.currentUser?.email || '';
+            const currentUserEmail = (auth.currentUser?.email || '').trim().toLowerCase();
             const lock = cat.editingLock;
-            if (!lock.email || lock.email === currentUserEmail) return false;
+            const lockEmail = (lock.email || '').trim().toLowerCase();
+            if (!lockEmail || lockEmail === currentUserEmail) return false;
             const lockAge = Date.now() - (lock.lockedAt || 0);
             return lockAge < LOCK_EXPIRATION_MS;
         }
@@ -645,7 +660,7 @@
             try {
                 await updateDoc(doc(db, "chats", catId), {
                     editingLock: {
-                        email: auth.currentUser.email || 'Admin',
+                        email: (auth.currentUser.email || 'Admin').trim().toLowerCase(),
                         lockedAt: Date.now()
                     }
                 });
@@ -657,14 +672,7 @@
         async function releaseCatLock(catId) {
             if (!catId || !auth.currentUser) return;
             try {
-                const catRef = doc(db, "chats", catId);
-                const snap = await getDoc(catRef);
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (data.editingLock && data.editingLock.email === auth.currentUser.email) {
-                        await updateDoc(catRef, { editingLock: null });
-                    }
-                }
+                await updateDoc(doc(db, "chats", catId), { editingLock: null });
             } catch (e) {
                 console.warn("Impossible de libérer le verrou :", e);
             }
@@ -1250,7 +1258,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const maxDim = 1000;
+                        const maxDim = 800;
                         let w = img.width, h = img.height;
                         if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
                         else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
@@ -1259,7 +1267,7 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
 
-                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
                         targetArray.push(compressedBase64);
                         renderPhotoThumbs(targetType);
                     };
@@ -1608,11 +1616,21 @@
 
             try {
                 if (id) {
+                    // Désabonner immédiatement l'écouteur temps réel avant l'écriture pour éviter de s'auto-alerter
+                    if (catSnapshotUnsubscribe) {
+                        catSnapshotUnsubscribe();
+                        catSnapshotUnsubscribe = null;
+                    }
+
                     // Vérifier si un autre utilisateur a sauvegardé entre temps
                     const freshDocSnap = await getDoc(doc(db, "chats", id));
                     if (freshDocSnap.exists()) {
                         const freshData = freshDocSnap.data();
-                        if (freshData.updatedAt && activeEditingInitialUpdatedAt && freshData.updatedAt !== activeEditingInitialUpdatedAt) {
+                        const freshUpdater = (freshData.updatedBy || '').trim().toLowerCase();
+                        const myEmail = userEmail.trim().toLowerCase();
+                        const isModifiedByOther = freshUpdater && freshUpdater !== myEmail;
+
+                        if (isModifiedByOther && freshData.updatedAt && activeEditingInitialUpdatedAt && freshData.updatedAt !== activeEditingInitialUpdatedAt) {
                             pendingCatDataToForce = catData;
                             const updater = freshData.updatedBy || "un autre utilisateur";
                             let updTime = "";
@@ -1770,6 +1788,10 @@
             catSnapshotUnsubscribe = onSnapshot(doc(db, "chats", id), (snap) => {
                 if (!snap.exists()) return;
                 const freshData = snap.data();
+                const myEmail = (auth.currentUser?.email || '').trim().toLowerCase();
+                const freshUpdater = (freshData.updatedBy || '').trim().toLowerCase();
+                if (freshUpdater && freshUpdater === myEmail) return;
+
                 if (freshData.updatedAt && activeEditingInitialUpdatedAt && freshData.updatedAt !== activeEditingInitialUpdatedAt) {
                     const updater = freshData.updatedBy || "un autre utilisateur";
                     let timeStr = "";

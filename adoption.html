@@ -28,12 +28,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Optimisation : Pré-connexion à Firebase -->
+    <!-- Optimisation : Pré-connexion et préchargement Firebase -->
     <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js">
 
     <script>
         window.navigateTo = function(url) {
             if (!url) return;
+            try {
+                const match = url.match(/chat-detail\.html\?id=([^&]+)/);
+                if (match && match[1] && window._allCatsMap) {
+                    const catId = decodeURIComponent(match[1]);
+                    const cat = window._allCatsMap.get(catId);
+                    if (cat) {
+                        sessionStorage.setItem('current_cat_detail', JSON.stringify(cat));
+                        sessionStorage.setItem('cached_cat_' + catId, JSON.stringify(cat));
+                    }
+                }
+            } catch (err) {}
             try { window.location.href = url; } catch (err) { console.warn("Navigation:", err); }
         };
     </script>
@@ -263,7 +277,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
@@ -275,9 +289,17 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (e) {
+            db = getFirestore(app);
+        }
 
         let allCats = [];
+        window._allCatsMap = new Map();
         let currentFilter = 'all';
         let compatFilters = {
             cats: false,
@@ -469,18 +491,45 @@
         async function fetchCats() {
             try {
                 const snapshot = await getDocs(collection(db, "chats"));
-                allCats = [];
+                const freshCats = [];
                 snapshot.forEach(doc => {
                     const cat = { id: doc.id, ...doc.data() };
                     if (!isAdoptedCatExpired(cat)) {
-                        allCats.push(cat);
+                        freshCats.push(cat);
                     }
                 });
+                if (freshCats.length > 0) {
+                    allCats = freshCats;
+                    window._allCatsMap = new Map(allCats.map(c => [c.id, c]));
+                    try {
+                        localStorage.setItem('cached_cats_catalog', JSON.stringify(allCats));
+                    } catch(e) {}
+                    applyFilters();
+                } else if (allCats.length === 0) {
+                    allCats = [];
+                    applyFilters();
+                }
             } catch (e) {
                 console.warn("Erreur Firestore :", e);
-                allCats = [];
+                if (allCats.length === 0) {
+                    applyFilters();
+                }
             }
-            applyFilters();
+        }
+
+        // Hydratation immédiate (0ms) depuis le cache localStorage s'il existe
+        try {
+            const cachedCats = localStorage.getItem('cached_cats_catalog');
+            if (cachedCats) {
+                const parsed = JSON.parse(cachedCats);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    allCats = parsed.filter(c => !isAdoptedCatExpired(c));
+                    window._allCatsMap = new Map(allCats.map(c => [c.id, c]));
+                    applyFilters();
+                }
+            }
+        } catch (e) {
+            console.warn("Cache local indisponible :", e);
         }
 
         const searchInput = document.getElementById('searchInput');

@@ -37,8 +37,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Optimisation : Pré-connexion à Firebase -->
+    <!-- Optimisation : Pré-connexion et préchargement Firebase -->
     <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js">
 
     <script>
         window.navigateTo = function(url) {
@@ -353,7 +356,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
@@ -365,7 +368,9 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
 
         const ADOPTED_EXPIRATION_DAYS = 60;
 
@@ -397,6 +402,29 @@
         let currentPhotoIndex = 0;
         let allCatPhotos = [];
 
+        // Rendu immédiat (0ms) depuis le cache de session s'il existe
+        if (catId) {
+            try {
+                const cachedRaw = sessionStorage.getItem('cached_cat_' + catId) || sessionStorage.getItem('current_cat_detail');
+                if (cachedRaw) {
+                    const cachedCat = JSON.parse(cachedRaw);
+                    if (cachedCat && cachedCat.id === catId) {
+                        loadedCat = cachedCat;
+                        const adoptedInfo = getAdoptedCatAge(cachedCat);
+                        if (!adoptedInfo.isExpired) {
+                            renderCatDetail(cachedCat, adoptedInfo);
+                            const spinner = document.getElementById('loadingDetail');
+                            const content = document.getElementById('detailContent');
+                            if (spinner) spinner.classList.add('hidden');
+                            if (content) content.classList.remove('hidden');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("Lecture cache local :", e);
+            }
+        }
+
         async function loadCatData() {
             const spinner = document.getElementById('loadingDetail');
             const content = document.getElementById('detailContent');
@@ -416,6 +444,10 @@
                 }
 
                 loadedCat = { id: docSnap.id, ...docSnap.data() };
+                try {
+                    sessionStorage.setItem('cached_cat_' + catId, JSON.stringify(loadedCat));
+                } catch (e) {}
+
                 const adoptedInfo = getAdoptedCatAge(loadedCat);
 
                 if (adoptedInfo.isExpired) {

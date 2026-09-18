@@ -56,12 +56,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Optimisation : Pré-connexion à Firebase pour accélérer la récupération des données -->
+    <!-- Optimisation : Pré-connexion et préchargement Firebase pour accélérer la récupération des données -->
     <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js">
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js">
 
     <script>
         window.navigateTo = function(url) {
             if (!url) return;
+            try {
+                const match = url.match(/chat-detail\.html\?id=([^&]+)/);
+                if (match && match[1] && window._allCatsMap) {
+                    const catId = decodeURIComponent(match[1]);
+                    const cat = window._allCatsMap.get(catId);
+                    if (cat) {
+                        sessionStorage.setItem('current_cat_detail', JSON.stringify(cat));
+                        sessionStorage.setItem('cached_cat_' + catId, JSON.stringify(cat));
+                    }
+                }
+            } catch (err) {}
             try { window.location.href = url; } catch (err) { console.warn("Navigation:", err); }
         };
     </script>
@@ -502,7 +516,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
@@ -514,7 +528,16 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (e) {
+            db = getFirestore(app);
+        }
+
+        window._allCatsMap = new Map();
 
         function getFavoriteIds() {
             try {
@@ -679,11 +702,36 @@
                         fetched.push(cat);
                     }
                 });
-                renderCards(fetched);
+                if (fetched.length > 0) {
+                    window._allCatsMap = new Map(fetched.map(c => [c.id, c]));
+                    try {
+                        localStorage.setItem('cached_cats_catalog', JSON.stringify(fetched));
+                    } catch (e) {}
+                    renderCards(fetched);
+                } else if (!window._allCatsMap || window._allCatsMap.size === 0) {
+                    renderCards([]);
+                }
             } catch (e) {
                 console.warn("Erreur chargement Firestore:", e);
-                renderCards([]);
+                if (!window._allCatsMap || window._allCatsMap.size === 0) {
+                    renderCards([]);
+                }
             }
+        }
+
+        // Hydratation immédiate (0ms) des chats depuis le cache localStorage
+        try {
+            const cachedCats = localStorage.getItem('cached_cats_catalog');
+            if (cachedCats) {
+                const parsed = JSON.parse(cachedCats);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    const valid = parsed.filter(c => !isAdoptedCatExpired(c));
+                    window._allCatsMap = new Map(valid.map(c => [c.id, c]));
+                    renderCards(valid);
+                }
+            }
+        } catch (e) {
+            console.warn("Cache local indisponible :", e);
         }
 
         fetchCatsFromFirebase();
@@ -805,25 +853,46 @@
             renderHomeStories(selected);
         }
 
+        // Hydratation immédiate des avis (0ms) depuis le cache localStorage s'il existe
+        try {
+            const cachedStories = localStorage.getItem('cached_testimonials');
+            if (cachedStories) {
+                const parsed = JSON.parse(cachedStories);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    firestoreStoriesPool = parsed;
+                    refreshHomeStories();
+                }
+            }
+        } catch (e) {}
+
         async function fetchStoriesFromFirebase() {
             try {
                 const snap = await getDocs(collection(db, "testimonials"));
-                firestoreStoriesPool = [];
+                const freshStories = [];
                 snap.forEach(d => {
                     const data = d.data();
                     if (data && (data.catName || data.content)) {
-                        firestoreStoriesPool.push({
+                        freshStories.push({
                             id: d.id,
                             ...data,
                             tag: data.tag || 'Heureux au foyer'
                         });
                     }
                 });
-
-                refreshHomeStories();
+                if (freshStories.length > 0) {
+                    firestoreStoriesPool = freshStories;
+                    try {
+                        localStorage.setItem('cached_testimonials', JSON.stringify(firestoreStoriesPool));
+                    } catch (e) {}
+                    refreshHomeStories();
+                } else if (firestoreStoriesPool.length === 0) {
+                    renderHomeStories([]);
+                }
             } catch (err) {
                 console.warn("Avis Firestore:", err);
-                renderHomeStories([]);
+                if (firestoreStoriesPool.length === 0) {
+                    renderHomeStories([]);
+                }
             }
         }
 
