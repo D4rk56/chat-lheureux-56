@@ -548,14 +548,14 @@
                     statusBadge.innerHTML = '<span>🚨 Urgence</span>';
                 } else if (cat.status === 'Réservé') {
                     statusBadge.className = "absolute top-4 left-4 bg-amber-500 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2";
-                    statusBadge.innerHTML = '<span>Réservé</span>';
+                    statusBadge.innerHTML = '<span><i class="fa-solid fa-clock"></i> Réservé</span>';
                 } else if (isAdopted) {
                     const daysLabel = catAdoptedAge.days === 0 ? "aujourd'hui" : (catAdoptedAge.days === 1 ? "hier" : `il y a ${catAdoptedAge.days}j`);
                     statusBadge.className = "absolute top-4 left-4 bg-pink-500 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2";
                     statusBadge.innerHTML = `<span>🎉 Adopté (${daysLabel})</span>`;
                 } else {
                     statusBadge.className = "absolute top-4 left-4 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2";
-                    statusBadge.innerHTML = '<span>Disponible</span>';
+                    statusBadge.innerHTML = '<span><i class="fa-solid fa-circle-check"></i> Disponible</span>';
                 }
             }
 
@@ -635,6 +635,33 @@
                             </a>
                         </div>
                     `;
+                }
+            } else if (cat.status === 'Réservé') {
+                if (actionContainer) {
+                    actionContainer.innerHTML = `
+                        <div class="bg-amber-500/10 text-slate-800 p-6 rounded-2xl border border-amber-500/30 text-center shadow-sm space-y-3">
+                            <p class="font-title text-lg sm:text-xl font-black text-amber-600 mb-1 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-clock"></i> ${catName} est actuellement réservé(e)
+                            </p>
+                            <p class="text-xs text-gray-600 font-medium leading-relaxed max-w-md mx-auto">
+                                Une famille a posé une option sur ce protégé. Vous pouvez toujours nous poser une question en cas de désistement ou découvrir nos autres chats disponibles.
+                            </p>
+                            <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
+                                <a href="adoption.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-xs font-extrabold px-5 py-3 rounded-xl shadow-md hover:scale-105 transition-all">
+                                    <i class="fa-solid fa-paw"></i> Voir les chats disponibles
+                                </a>
+                                <a id="askQuestionReservedBtn" href="mailto:asso.chatslheureux@gmail.com" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-amber-50 text-gray-700 text-xs font-bold px-5 py-3 rounded-xl border border-gray-200 transition-all">
+                                    <i class="fa-solid fa-envelope text-amber-500"></i> Nous poser une question
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    const askResBtn = actionContainer.querySelector('#askQuestionReservedBtn');
+                    if (askResBtn) {
+                        const subject = encodeURIComponent(`Question au sujet de ${catName} (Réservé)`);
+                        const body = encodeURIComponent(`Bonjour l'équipe de Chat L'Heureux 56,\n\nJe vous contacte au sujet de ${catName} qui est actuellement affiché(e) comme réservé(e).\nJ'aimerais savoir s'il est possible d'être informé(e) en cas de désistement, ou si vous avez un autre protégé au profil similaire.\n\nMerci pour votre engagement !`);
+                        askResBtn.href = `mailto:asso.chatslheureux@gmail.com?subject=${subject}&body=${body}`;
+                    }
                 }
             }
 
