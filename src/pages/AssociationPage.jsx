@@ -165,46 +165,51 @@ export default function AssociationPage() {
         </div>
       </section>
 
-      {/* Équipe & Contact */}
-      <section className="glass-card rounded-3xl p-8 bg-slate-900 text-white mb-16 shadow-xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div>
-            <span className="text-xs font-bold text-pink-400 uppercase tracking-wider block mb-1">
-              Direction de l'association
-            </span>
-            <h3 className="font-title text-2xl font-black mb-2">
-              Marina Loric
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-md">
-              Présidente et fondatrice de Chat L'Heureux 56. À votre écoute pour toute question sur l'adoption, les dons ou pour devenir famille d'accueil.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto">
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSe2_gn8dq66LJu-AWQ90dI-DRc2FP5NdD88cNcgoAyEX7IHfA/viewform"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-md hover:opacity-95"
-            >
-              <Home className="w-4 h-4" />
-              <span>Devenir Famille d'Accueil</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-            <a
-              href="tel:0661508828"
-              className="inline-flex items-center justify-center gap-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all"
-            >
-              <Phone className="w-4 h-4" />
-              <span>06 61 50 88 28</span>
-            </a>
-            <a
-              href="mailto:asso.chatslheureux@gmail.com"
-              className="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all border border-slate-700"
-            >
-              <Mail className="w-4 h-4 text-pink-400" />
-              <span>Nous écrire</span>
-            </a>
+      {/* L'équipe & Présidente (Direction de l'association) */}
+      <section className="max-w-5xl mx-auto mb-16 sm:mb-24">
+        <div className="bg-slate-900 rounded-[2.5rem] p-6 sm:p-12 text-white relative overflow-hidden shadow-2xl border border-slate-800">
+          <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+            <div className="w-full md:w-1/3 text-center">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto rounded-full border-4 border-[#d24de3] p-1 mb-4 shadow-lg shadow-pink-500/10">
+                <div className="w-full h-full rounded-full bg-slate-800 flex items-center justify-center text-3xl sm:text-4xl text-[#d24de3]">
+                  <Users className="w-10 h-10 sm:w-12 sm:h-12 text-[#d24de3]" />
+                </div>
+              </div>
+              <h3 className="font-title text-xl sm:text-2xl font-black mb-1 text-white">Marina Loric</h3>
+              <p className="text-pink-400 font-bold text-xs uppercase tracking-wider">Présidente Fondatrice</p>
+            </div>
+            <div className="w-full md:w-2/3">
+              <h2 className="font-title text-2xl sm:text-3xl font-extrabold mb-4 text-white">Une équipe de passionnés 🐾</h2>
+              <p className="text-slate-300 font-medium text-xs sm:text-sm leading-relaxed mb-6">
+                &laquo; L'association ne serait rien sans le dévouement quotidien de nos bénévoles et de nos Familles d'Accueil (FA). Nous n'avons pas de refuge physique : cela signifie que chaque chat sauvé est placé dans un foyer chaleureux en attendant son adoption définitive. &raquo;
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSe2_gn8dq66LJu-AWQ90dI-DRc2FP5NdD88cNcgoAyEX7IHfA/viewform"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-brand-gradient hover:opacity-95 text-white font-bold px-5 py-3 rounded-xl transition-all text-xs shadow-md"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Devenir Famille d'Accueil</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <Link
+                  to="/soutenir"
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 py-3 rounded-xl transition-all text-xs"
+                >
+                  <Heart className="w-4 h-4 text-pink-400" />
+                  <span>Nous soutenir</span>
+                </Link>
+                <a
+                  href="tel:0661508828"
+                  className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-4 py-3 rounded-xl transition-all text-xs"
+                >
+                  <Phone className="w-3.5 h-3.5 text-blue-400" />
+                  <span>06 61 50 88 28</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>

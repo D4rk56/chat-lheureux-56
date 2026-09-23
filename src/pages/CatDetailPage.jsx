@@ -15,7 +15,10 @@ import {
   Clock, 
   AlertCircle,
   MessageCircle,
-  ExternalLink
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2
 } from 'lucide-react';
 import { fetchCatById, fetchCats, getCachedCats } from '../firebase/catsService';
 import { getCatAdoptionInfo } from '../utils/age';
@@ -34,6 +37,9 @@ export default function CatDetailPage() {
   const [error, setError] = useState(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [similarCats, setSimilarCats] = useState([]);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const { isFavorite, toggleFavorite } = useFavorites();
   const { showToast } = useToast();
@@ -124,6 +130,65 @@ export default function CatDetailPage() {
     }
   };
 
+  const photos = (cat?.photos && cat.photos.length > 0)
+    ? cat.photos
+    : [cat?.image || 'https://placehold.co/800x600?text=Photo+en+cours'];
+
+  const nextPhoto = () => {
+    if (photos.length > 1) {
+      setSelectedPhotoIndex((prev) => (prev + 1) % photos.length);
+    }
+  };
+
+  const prevPhoto = () => {
+    if (photos.length > 1) {
+      setSelectedPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    }
+  };
+
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsLightboxOpen(false);
+      if (e.key === 'ArrowRight') nextPhoto();
+      if (e.key === 'ArrowLeft') prevPhoto();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, photos.length]);
+
+  useEffect(() => {
+    if (isLightboxOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isLightboxOpen]);
+
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    if (isLeftSwipe && photos.length > 1) {
+      nextPhoto();
+    } else if (isRightSwipe && photos.length > 1) {
+      prevPhoto();
+    }
+  };
+
   if (loading) {
     return (
       <main className="flex-grow pt-28 pb-20 px-4 text-center">
@@ -155,10 +220,6 @@ export default function CatDetailPage() {
       </main>
     );
   }
-
-  const photos = (cat.photos && cat.photos.length > 0)
-    ? cat.photos
-    : [cat.image || 'https://placehold.co/800x600?text=Photo+en+cours'];
 
   const adoptionInfo = getCatAdoptionInfo(cat);
   const isAdopted = cat.status === 'Adopté';
@@ -239,16 +300,24 @@ export default function CatDetailPage() {
         {/* Colonne Galerie Photo */}
         <div className="lg:col-span-7 flex flex-col gap-4">
           {/* Photo Principale */}
-          <div className="relative h-80 sm:h-[420px] rounded-3xl overflow-hidden bg-gray-100 shadow-md">
+          <div 
+            onClick={() => setIsLightboxOpen(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsLightboxOpen(true); }}
+            role="button"
+            tabIndex={0}
+            aria-label="Cliquer ou toucher pour agrandir la photo en plein écran"
+            className="relative h-80 sm:h-[420px] rounded-3xl overflow-hidden bg-gray-100 shadow-md cursor-zoom-in group select-none focus:outline-none focus:ring-2 focus:ring-[#d24de3]"
+          >
             <img
               src={photos[selectedPhotoIndex] || photos[0]}
               alt={cat.name}
-              className={`w-full h-full object-cover transition-all duration-300 ${
+              className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${
                 isAdopted ? 'grayscale filter' : ''
               }`}
             />
+
             {/* Statut Badge Flottant */}
-            <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+            <div className="absolute top-4 left-4 flex flex-wrap gap-2 pointer-events-none">
               {cat.status === 'Urgence' && (
                 <span className="bg-rose-500 text-white px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-lg animate-pulse flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5" /> 🚨 Urgence
@@ -264,6 +333,12 @@ export default function CatDetailPage() {
                   <CheckCircle2 className="w-3.5 h-3.5" /> Disponible à l'adoption
                 </span>
               )}
+            </div>
+
+            {/* Badge Agrandir / Zoom */}
+            <div className="absolute bottom-3 right-3 bg-slate-900/75 hover:bg-slate-900/90 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-all shadow-md group-hover:scale-105 pointer-events-none">
+              <Maximize2 className="w-3.5 h-3.5 text-pink-400" />
+              <span>Agrandir</span>
             </div>
           </div>
 
@@ -475,6 +550,100 @@ export default function CatDetailPage() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Lightbox / Zoom Modal Plein Écran */}
+      {isLightboxOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between items-center p-3 sm:p-6 animate-in fade-in duration-200 select-none"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          {/* Barre supérieure : Nom du chat + Compteur + Bouton Fermer */}
+          <div 
+            className="w-full max-w-5xl flex items-center justify-between z-20 py-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-white">
+              <h3 className="font-title font-bold text-base sm:text-lg">
+                {cat.name}
+              </h3>
+              {photos.length > 1 && (
+                <p className="text-xs text-gray-400">
+                  Photo {selectedPhotoIndex + 1} sur {photos.length}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsLightboxOpen(false)}
+              className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-all shadow-lg"
+              aria-label="Fermer la vue agrandie"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Zone Centrale : Image et flèches de navigation */}
+          <div 
+            className="relative w-full flex-grow flex items-center justify-center overflow-hidden my-2"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {photos.length > 1 && (
+              <button
+                type="button"
+                onClick={prevPhoto}
+                className="absolute left-2 sm:left-4 z-30 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-xl"
+                aria-label="Photo précédente"
+              >
+                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+              </button>
+            )}
+
+            <img
+              src={photos[selectedPhotoIndex] || photos[0]}
+              alt={`${cat.name} - photo ${selectedPhotoIndex + 1}`}
+              className="max-w-[95vw] max-h-[75vh] sm:max-h-[82vh] object-contain rounded-2xl shadow-2xl transition-all duration-200"
+            />
+
+            {photos.length > 1 && (
+              <button
+                type="button"
+                onClick={nextPhoto}
+                className="absolute right-2 sm:right-4 z-30 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-black/60 hover:bg-black/90 active:scale-95 text-white flex items-center justify-center transition-all border border-white/10 shadow-xl"
+                aria-label="Photo suivante"
+              >
+                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+              </button>
+            )}
+          </div>
+
+          {/* Barre inférieure : Miniatures cliquables */}
+          {photos.length > 1 && (
+            <div 
+              className="w-full max-w-xl flex justify-center items-center gap-2 overflow-x-auto py-2 z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {photos.map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedPhotoIndex(idx)}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 transition-all border-2 ${
+                    selectedPhotoIndex === idx
+                      ? 'border-[#d24de3] scale-105 shadow-md'
+                      : 'border-transparent opacity-50 hover:opacity-100'
+                  }`}
+                >
+                  <img src={p} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
     </main>

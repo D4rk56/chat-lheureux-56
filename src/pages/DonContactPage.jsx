@@ -291,35 +291,41 @@ export default function DonContactPage() {
 
         {/* Coordonnées directes */}
         <div className="md:col-span-5 space-y-4">
-          <div className="glass-card rounded-3xl p-6 bg-slate-900 text-white shadow-lg">
-            <h3 className="font-title text-lg font-bold mb-4 flex items-center gap-2">
+          <div className="rounded-3xl p-6 sm:p-7 bg-slate-900 text-white shadow-xl border border-slate-800">
+            <h3 className="font-title text-lg font-bold mb-5 flex items-center gap-2 text-white">
               <Sparkles className="w-4 h-4 text-pink-400" />
               <span>Contact direct</span>
             </h3>
             <ul className="space-y-4 text-xs sm:text-sm">
               <li className="flex items-start gap-3">
-                <Phone className="w-4 h-4 text-[#7db1f9] mt-0.5 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Phone className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-slate-400 text-[11px]">Téléphone / Urgences</span>
-                  <a href="tel:0661508828" className="font-bold hover:text-pink-400 transition-colors">
+                  <span className="block text-slate-400 text-[11px] font-medium">Téléphone / Urgences</span>
+                  <a href="tel:0661508828" className="font-bold text-white hover:text-pink-400 transition-colors text-sm sm:text-base">
                     06 61 50 88 28
                   </a>
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <Mail className="w-4 h-4 text-pink-400 mt-0.5 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-pink-500/15 text-pink-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Mail className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-slate-400 text-[11px]">Adresse e-mail officielle</span>
-                  <a href="mailto:asso.chatslheureux@gmail.com" className="font-bold hover:text-pink-400 transition-colors">
+                  <span className="block text-slate-400 text-[11px] font-medium">Adresse e-mail officielle</span>
+                  <a href="mailto:asso.chatslheureux@gmail.com" className="font-bold text-white hover:text-pink-400 transition-colors break-all">
                     asso.chatslheureux@gmail.com
                   </a>
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-slate-400 text-[11px]">Siège social</span>
-                  <span className="font-medium text-slate-200">
+                  <span className="block text-slate-400 text-[11px] font-medium">Siège social</span>
+                  <span className="font-semibold text-slate-200">
                     Colpo (56390) • Morbihan, Bretagne
                   </span>
                 </div>
