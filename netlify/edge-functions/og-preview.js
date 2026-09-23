@@ -54,14 +54,6 @@ export default async (request, context) => {
               "Access-Control-Allow-Origin": "*",
             };
 
-            // Support des requêtes HEAD (souvent envoyées en premier par le robot Facebook)
-            if (request.method === "HEAD") {
-              return new Response(null, {
-                status: 200,
-                headers: responseHeaders,
-              });
-            }
-
             return new Response(bytes, {
               status: 200,
               headers: responseHeaders,
@@ -234,4 +226,5 @@ export default async (request, context) => {
 
 export const config = {
   path: ["/chat-detail*", "/chat/*", "/api/cat-image*"],
+  onError: "bypass",
 };

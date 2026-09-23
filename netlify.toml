@@ -2,6 +2,9 @@
   publish = "dist"
   command = "npm run build"
 
+[build.environment]
+  NODE_VERSION = "20"
+
 # Edge functions pour réseaux sociaux & images dynamiques
 [[edge_functions]]
   path = "/chat-detail*"
