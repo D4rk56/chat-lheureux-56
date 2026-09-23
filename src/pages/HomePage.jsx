@@ -140,12 +140,35 @@ export default function HomePage() {
         {/* Chiffres clés / Engagements */}
         <div className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
           {[
-            { label: "100% en Familles d'Accueil", sub: "Pas de box ni cage" },
-            { label: "Soins Vétérinaires complets", sub: "Stérilisés, identifiés & soignés" },
-            { label: "Adoptions Responsables", sub: "Suivi personnalisé pour la vie" },
-            { label: "Association Déclarée", sub: "Loi 1901 à but non lucratif" }
+            { 
+              icon: <Home className="w-5 h-5 text-pink-500" />,
+              bgIcon: "bg-pink-50",
+              label: "100% Familles d'Accueil", 
+              sub: "Zéro box, zéro cage" 
+            },
+            { 
+              icon: <Stethoscope className="w-5 h-5 text-[#7db1f9]" />,
+              bgIcon: "bg-blue-50",
+              label: "Parcours Santé Complet", 
+              sub: "Stérilisés, identifiés & soignés" 
+            },
+            { 
+              icon: <Heart className="w-5 h-5 text-emerald-500" />,
+              bgIcon: "bg-emerald-50",
+              label: "Adoptions Responsables", 
+              sub: "Accompagnement bienveillant" 
+            },
+            { 
+              icon: <ShieldCheck className="w-5 h-5 text-purple-500" />,
+              bgIcon: "bg-purple-50",
+              label: "Association Reconnue", 
+              sub: "Loi 1901 Morbihan (56)" 
+            }
           ].map((item, i) => (
-            <div key={i} className="glass-card rounded-2xl p-4 text-center border border-pink-100/60 bg-white/80">
+            <div key={i} className="glass-card rounded-2xl p-4 sm:p-5 text-center flex flex-col items-center border border-slate-100 hover-lift">
+              <div className={`w-10 h-10 rounded-xl ${item.bgIcon} flex items-center justify-center mb-3 shadow-xs`}>
+                {item.icon}
+              </div>
               <strong className="block text-xs sm:text-sm font-black text-gray-900 mb-0.5">{item.label}</strong>
               <span className="text-[11px] text-gray-500 font-semibold">{item.sub}</span>
             </div>

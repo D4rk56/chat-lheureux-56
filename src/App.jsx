@@ -33,7 +33,11 @@ function AppLayout() {
   const isAdmin = location.pathname.startsWith('/admin');
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden">
+      {/* Lueur d'ambiance d'arrière-plan moderne et légère */}
+      <div className="fixed -top-24 left-1/4 w-96 h-96 bg-[#d24de3]/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+      <div className="fixed top-1/3 -right-20 w-[28rem] h-[28rem] bg-[#7db1f9]/6 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
       <ScrollToTop />
       {!isAdmin && <Header />}
       

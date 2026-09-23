@@ -100,30 +100,30 @@ export default function CatCard({ cat }) {
           {isFemale ? '♀' : '♂'} {age}
         </div>
 
-        {/* Badge Statut */}
+        {/* Badge Statut (Bas gauche) */}
         {status === 'Urgence' && (
-          <span className="absolute bottom-12 left-3 bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse flex items-center gap-1.5 border border-white/20">
+          <span className="absolute bottom-3 left-3 bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse flex items-center gap-1.5 border border-white/20 z-10">
             <AlertCircle className="w-3.5 h-3.5" /> 🚨 Urgence
           </span>
         )}
         {status === 'Réservé' && (
-          <span className="absolute bottom-12 left-3 bg-amber-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20">
+          <span className="absolute bottom-3 left-3 bg-amber-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20 z-10">
             <Clock className="w-3.5 h-3.5" /> Réservé
           </span>
         )}
         {isAdopted && (
-          <span className="absolute bottom-12 left-3 bg-slate-950/90 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20">
+          <span className="absolute bottom-3 left-3 bg-slate-950/90 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20 z-10">
             <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" /> {adoptedLabel}
           </span>
         )}
         {status === 'Disponible' && (
-          <span className="absolute bottom-12 left-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20">
+          <span className="absolute bottom-3 left-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20 z-10">
             <CheckCircle2 className="w-3.5 h-3.5" /> Disponible
           </span>
         )}
 
-        {/* Badge Localisation */}
-        <span className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-extrabold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/20">
+        {/* Badge Localisation (Bas droite) */}
+        <span className="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1.5 border border-white/20 z-10">
           <MapPin className="w-3 h-3 text-pink-400" /> {location}
         </span>
       </div>

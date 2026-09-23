@@ -3,15 +3,21 @@ export default async (request, context) => {
     const url = new URL(request.url);
     const apiKey = "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE";
 
-    // Route API pour convertir et servir l'image binaire du chat à Facebook/WhatsApp
+    // 1. Route API pour convertir et servir l'image binaire du chat à Facebook/WhatsApp
     if (url.pathname === "/api/cat-image" || url.pathname.startsWith("/api/cat-image")) {
       let catId = url.searchParams.get("id");
       if (!catId && url.pathname.startsWith("/api/cat-image/")) {
         const segs = url.pathname.replace(/^\/api\/cat-image\//, "").split("/");
-        if (segs[0]) catId = decodeURIComponent(segs[0]);
+        if (segs[0]) {
+          catId = decodeURIComponent(segs[0]);
+        }
       }
+      if (catId) {
+        // Supprimer toute extension éventuelle (.jpg, .jpeg, etc.) pour retrouver l'ID Firestore exact
+        catId = catId.replace(/\.(jpg|jpeg|png|webp)$/i, "");
+      }
+
       const fallbackImg = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop";
-      
       if (!catId) return Response.redirect(fallbackImg, 302);
 
       try {
@@ -40,12 +46,25 @@ export default async (request, context) => {
               bytes[i] = binaryString.charCodeAt(i);
             }
 
+            const responseHeaders = {
+              "Content-Type": mimeType,
+              "Content-Length": String(bytes.length),
+              "Accept-Ranges": "bytes",
+              "Cache-Control": "public, max-age=86400, s-maxage=86400",
+              "Access-Control-Allow-Origin": "*",
+            };
+
+            // Support des requêtes HEAD (souvent envoyées en premier par le robot Facebook)
+            if (request.method === "HEAD") {
+              return new Response(null, {
+                status: 200,
+                headers: responseHeaders,
+              });
+            }
+
             return new Response(bytes, {
               status: 200,
-              headers: {
-                "content-type": mimeType,
-                "cache-control": "public, max-age=86400, s-maxage=86400",
-              },
+              headers: responseHeaders,
             });
           } else if (photoData.startsWith("http")) {
             return Response.redirect(photoData, 302);
@@ -58,7 +77,7 @@ export default async (request, context) => {
       return Response.redirect(fallbackImg, 302);
     }
 
-    // Interception des robots de réseaux sociaux
+    // 2. Interception des robots de réseaux sociaux
     const userAgent = request.headers.get("user-agent") || "";
     const isSocialBot = /facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Pinterest|Slackbot|vkShare|W3C_Validator|redditbot|Applebot/i.test(userAgent);
 
@@ -141,7 +160,8 @@ export default async (request, context) => {
     const secureOrigin = url.origin.replace(/^http:\/\//i, "https://");
     let photoUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop";
     if (photoData.startsWith("data:image")) {
-      photoUrl = `${secureOrigin}/api/cat-image?id=${resolvedCatId || catId}`;
+      // Fournir une URL explicite avec extension .jpg pour que le scraper Facebook la valide immédiatement
+      photoUrl = `${secureOrigin}/api/cat-image/${resolvedCatId || catId}.jpg`;
     } else if (photoData.startsWith("http")) {
       photoUrl = photoData;
     }
@@ -202,8 +222,8 @@ export default async (request, context) => {
     return new Response(botHtml, {
       status: 200,
       headers: {
-        "content-type": "text/html; charset=utf-8",
-        "cache-control": "public, max-age=300, s-maxage=300",
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300, s-maxage=300",
       },
     });
   } catch (err) {
