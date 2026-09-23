@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isValidCat(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100
+        && (data.status in ['Disponible', 'Urgence', 'Réservé', 'Adopté'])
+        && (data.gender in ['Femelle', 'Mâle'] || data.sex in ['Femelle', 'Mâle'])
+        && (!('photos' in data) || (data.photos is list && data.photos.size() <= 10));
+    }
+    
+    function isValidTestimonial(data) {
+      return data.catName is string && data.catName.size() > 0
+        && data.content is string && data.content.size() > 0
+        && (!('photos' in data) || (data.photos is list && data.photos.size() <= 10));
+    }
+
+    // Collection des chats
+    match /chats/{catId} {
+      // Lecture publique autorisée pour le site vitrine et l'edge function
+      allow read: if true;
+      
+      // Seuls les administrateurs connectés peuvent créer, modifier ou supprimer
+      allow create: if isAuthenticated() && isValidCat(request.resource.data);
+      allow update: if isAuthenticated() && (
+        // Cas standard : mise à jour de la fiche
+        isValidCat(request.resource.data) ||
+        // Cas spécifique : acquisition ou libération de verrou d'édition
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['editingLock'])
+      );
+      allow delete: if isAuthenticated();
+    }
+
+    // Collection des avis et témoignages
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidTestimonial(request.resource.data);
+      allow update: if isAuthenticated() && isValidTestimonial(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+    
+    // Par défaut, refuser tout le reste
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

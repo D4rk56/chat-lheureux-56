@@ -1,9 +1,22 @@
-# Routing Netlify Edge Functions
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Edge functions pour réseaux sociaux & images dynamiques
+[[edge_functions]]
+  path = "/chat-detail*"
+  function = "og-preview"
 
 [[edge_functions]]
-path = "/chat-detail*"
-function = "og-preview"
+  path = "/chat/*"
+  function = "og-preview"
 
 [[edge_functions]]
-path = "/api/cat-image*"
-function = "og-preview"
+  path = "/api/cat-image*"
+  function = "og-preview"
+
+# SPA Fallback pour React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

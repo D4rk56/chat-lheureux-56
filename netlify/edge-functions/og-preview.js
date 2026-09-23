@@ -4,7 +4,11 @@ export default async (request, context) => {
 
   // Route API pour convertir et servir l'image binaire du chat à Facebook
   if (url.pathname === "/api/cat-image" || url.pathname.startsWith("/api/cat-image")) {
-    const catId = url.searchParams.get("id");
+    let catId = url.searchParams.get("id");
+    if (!catId && url.pathname.startsWith("/api/cat-image/")) {
+      const segs = url.pathname.replace(/^\/api\/cat-image\//, "").split("/");
+      if (segs[0]) catId = decodeURIComponent(segs[0]);
+    }
     const fallbackImg = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop";
     
     if (!catId) return Response.redirect(fallbackImg, 302);
@@ -61,7 +65,13 @@ export default async (request, context) => {
     return;
   }
 
-  const catId = url.searchParams.get("id");
+  let catId = url.searchParams.get("id");
+  if (!catId && url.pathname.startsWith("/chat/")) {
+    const segments = url.pathname.replace(/^\/chat\//, "").split("/");
+    if (segments[0]) {
+      catId = decodeURIComponent(segments[0]);
+    }
+  }
   let catData = null;
   let resolvedCatId = catId;
 

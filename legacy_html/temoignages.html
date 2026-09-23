@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth overflow-x-hidden w-full max-w-full">
+<head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PNCFTMNH');</script>
+    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ils sont heureux — Témoignages d'adoptants - Chat L'Heureux 56</title>
+    <meta name="description" content="Découvrez les nouvelles et photos des chats adoptés auprès de l'association Chat L'Heureux 56 dans le Morbihan. Retours chaleureux de nos familles adoptantes.">
+    
+    <!-- Favicon officiel -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chat L'Heureux 56">
+    <meta property="og:title" content="Ils sont heureux — Témoignages d'adoption Chat L'Heureux 56">
+    <meta property="og:description" content="Découvrez les récits touchants de nos protégés adoptés et désormais comblés d'amour dans leur foyer définitif.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630&q=80">
+    <meta property="og:locale" content="fr_FR">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Optimisation : Pré-connexion à Firebase -->
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+
+    <script>
+        window.navigateTo = function(url) {
+            if (!url) return;
+            try { window.location.href = url; } catch (err) { console.warn("Navigation:", err); }
+        };
+    </script>
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; overflow-x: hidden; width: 100%; }
+        .font-title { font-family: 'Outfit', sans-serif; }
+        .bg-brand-gradient { background: linear-gradient(135deg, #d24de3 0%, #7db1f9 100%); }
+        .text-brand-gradient { background: linear-gradient(135deg, #d24de3 0%, #7db1f9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.7); }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); }
+        .hover-lift { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(210, 77, 227, 0.12); }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen relative overflow-x-hidden w-full max-w-full">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PNCFTMNH"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <div class="fixed top-0 left-0 right-0 z-40 px-3 sm:px-4 pt-3 sm:pt-6 pointer-events-none flex justify-center">
+        <nav class="glass-nav rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex justify-between items-center w-full max-w-[calc(100vw-1.5rem)] sm:max-w-5xl pointer-events-auto shadow-lg shadow-gray-200/50">
+            <div class="flex items-center gap-2 cursor-pointer group shrink-0" onclick="navigateTo('index.html')">
+                <img src="favicon.svg" alt="Logo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full">
+                <span class="font-title font-black text-lg sm:text-2xl tracking-tight text-brand-gradient">
+                    Chat L'Heureux 56
+                </span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="index.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">Accueil</a>
+                <a href="adoption.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">À l'adoption</a>
+                <a href="temoignages.html" class="text-sm font-bold text-[#d24de3] transition-colors">Ils sont heureux</a>
+                <a href="association.html" class="text-sm font-semibold text-gray-600 hover:text-[#d24de3] transition-colors">L'Association</a>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <a href="don-contact.html" class="hidden sm:inline-flex items-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm px-5 py-2.5 rounded-full font-extrabold hover:shadow-lg transition-all">
+                    <span>Soutenir</span>
+                    <i class="fa-solid fa-heart text-white text-xs"></i>
+                </a>
+                <button id="mobileMenuBtn" class="md:hidden text-gray-800 focus:outline-none bg-gray-100/80 w-10 h-10 rounded-full flex items-center justify-center transition-colors hover:bg-gray-200" aria-label="Menu Mobile">
+                    <i class="fa-solid fa-bars text-base"></i>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex-col justify-center items-center gap-6 text-center text-white text-lg font-bold p-6">
+        <button id="closeMobileMenuBtn" class="absolute top-6 right-6 text-2xl w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <a href="index.html" class="hover:text-pink-300">Accueil</a>
+        <a href="adoption.html" class="hover:text-pink-300">À l'adoption</a>
+        <a href="temoignages.html" class="text-pink-400">Ils sont heureux</a>
+        <a href="association.html" class="hover:text-pink-300">L'Association</a>
+        <a href="don-contact.html" class="bg-brand-gradient px-6 py-3 rounded-full text-white text-sm font-extrabold shadow-lg">
+            Soutenir l'association <i class="fa-solid fa-heart ml-2"></i>
+        </a>
+    </div>
+
+    <main class="flex-grow pt-28 sm:pt-36 pb-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        
+        <header class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-50 text-[#d24de3] border border-pink-100 text-xs font-bold mb-3 shadow-xs">
+                <i class="fa-solid fa-heart"></i> Nouvelles des adoptés
+            </span>
+            <h1 class="font-title text-3xl sm:text-5xl font-black text-gray-900 tracking-tight leading-tight mb-3">
+                Ils ont trouvé leur <span class="text-brand-gradient">foyer</span> 🏡
+            </h1>
+            <p class="text-xs sm:text-base text-gray-600 font-medium">
+                Découvrez les retours chaleureux et les anecdotes des familles ayant adopté un protégé de Chat L'Heureux 56 dans le Morbihan.
+            </p>
+        </header>
+
+        <!-- Liste des avis en quinconce -->
+        <div id="testimonialsList" class="flex flex-col gap-8 sm:gap-12 mb-16">
+            <div id="testimonialsLoading" class="py-12 text-center text-gray-400 font-medium text-xs sm:text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-notch fa-spin text-[#d24de3]"></i>
+                <span>Chargement des témoignages...</span>
+            </div>
+        </div>
+
+        <!-- Appel à témoignages -->
+        <section class="bg-brand-gradient text-white rounded-3xl p-6 sm:p-10 text-center shadow-xl relative overflow-hidden">
+            <div class="max-w-2xl mx-auto relative z-10">
+                <div class="text-3xl sm:text-4xl mb-3">💌</div>
+                <h2 class="font-title text-xl sm:text-3xl font-black mb-2">Vous avez adopté chez nous ?</h2>
+                <p class="text-white/95 text-xs sm:text-sm font-medium mb-6 leading-relaxed">
+                    Envoyez-nous des photos et quelques lignes sur la nouvelle vie de votre protégé, cela fait chaud au cœur de nos bénévoles et familles d'accueil !
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="mailto:asso.chatslheureux@gmail.com?subject=T%C3%A9moignage%20et%20nouvelles%20de%20mon%20chat%20adopt%C3%A9" class="inline-flex items-center justify-center gap-2 bg-white text-gray-900 px-5 py-3 rounded-xl font-bold text-xs sm:text-sm hover:bg-gray-50 transition-colors shadow-sm">
+                        <i class="fa-solid fa-envelope text-[#d24de3]"></i>
+                        <span>asso.chatslheureux@gmail.com</span>
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61593487828842" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 bg-[#1877F2] text-white px-5 py-3 rounded-xl font-bold text-xs sm:text-sm hover:bg-blue-600 transition-colors shadow-sm">
+                        <i class="fa-brands fa-facebook"></i>
+                        <span>Écrire sur Facebook</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bouton flottant retour en haut -->
+    <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-40 w-11 h-11 rounded-full bg-slate-900/90 text-white shadow-xl hover:bg-pink-600 transition-all duration-300 flex items-center justify-center opacity-0 pointer-events-none" title="Retour en haut">
+        <i class="fa-solid fa-arrow-up text-xs"></i>
+    </button>
+
+    <footer class="bg-slate-950 text-white border-t border-slate-800/80 pt-12 sm:pt-16 pb-10 mt-auto relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 mb-10">
+                <div class="md:col-span-5">
+                    <div class="mb-4 flex items-center gap-3">
+                        <img src="favicon.svg" alt="Logo" class="w-9 h-9 rounded-full">
+                        <div>
+                            <span class="text-xs font-black text-pink-400 uppercase tracking-widest block mb-1">Association (56)</span>
+                            <span class="font-title font-extrabold text-2xl sm:text-3xl tracking-tight text-white block">Chat L'Heureux 56</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 font-medium text-xs sm:text-sm mb-4 leading-relaxed max-w-md">
+                        Association déclarée à but non lucratif dédiée à la protection, au soin, à la stérilisation et à l'adoption responsable de chats abandonnés dans le Morbihan (56).
+                    </p>
+                    <p class="text-[11px] text-slate-500 font-mono mb-6">SIREN : 930 923 800 • SIRET : 930 923 800 00013</p>
+                    <div class="flex items-center gap-3">
+                        <a href="https://www.facebook.com/profile.php?id=61593487828842" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white hover:bg-blue-600 transition-colors">
+                            <i class="fa-brands fa-facebook-f text-sm"></i>
+                        </a>
+                        <a href="https://www.instagram.com/association.chatslheureux" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white hover:bg-pink-600 transition-colors">
+                            <i class="fa-brands fa-instagram text-sm"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="md:col-span-3 md:col-start-7">
+                    <h4 class="font-title font-extrabold text-white text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-compass text-pink-400 text-xs"></i> Navigation
+                    </h4>
+                    <ul class="space-y-2.5 font-semibold text-xs sm:text-sm">
+                        <li><a href="index.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Accueil</a></li>
+                        <li><a href="adoption.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> À l'adoption</a></li>
+                        <li><a href="temoignages.html" class="text-pink-400 font-bold flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-pink-400"></i> Ils sont heureux</a></li>
+                        <li><a href="association.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> L'Association</a></li>
+                        <li><a href="don-contact.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2"><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i> Soutenir & Dons</a></li>
+                    </ul>
+                </div>
+
+                <div class="md:col-span-3">
+                    <h4 class="font-title font-extrabold text-white text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-[#7db1f9] text-xs"></i> Contact
+                    </h4>
+                    <ul class="space-y-3 font-medium text-xs sm:text-sm text-slate-300">
+                        <li class="flex items-start gap-3"><i class="fa-solid fa-user-check text-pink-400 mt-1"></i> <div><strong class="block text-white">Marina Loric</strong><span class="text-slate-400 text-xs">Présidente de l'association</span></div></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-phone text-[#7db1f9]"></i> <a href="tel:0661508828" class="hover:text-white">06 61 50 88 28</a></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-envelope text-[#7db1f9]"></i> <a href="mailto:asso.chatslheureux@gmail.com" class="hover:text-white truncate">asso.chatslheureux@gmail.com</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-semibold text-slate-500">
+                <p>Fait avec nos petites patounes pleines d'amour 🐾 • &copy; 2026 Chat L'Heureux 56.</p>
+                <a href="admin.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-lock text-[10px] text-pink-400"></i> Espace Admin
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE",
+            authDomain: "chat-lheureux-56.firebaseapp.com",
+            projectId: "chat-lheureux-56",
+            storageBucket: "chat-lheureux-56.firebasestorage.app",
+            messagingSenderId: "238050920889",
+            appId: "1:238050920889:web:08f43e255fd1cb2f9c4e68"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function escapeStoryHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        window.toggleText = function(id) {
+            const el = document.getElementById('text_' + id);
+            const btn = document.getElementById('btn_' + id);
+            if (!el || !btn) return;
+            const isClamped = el.classList.contains('line-clamp-6');
+            if (isClamped) {
+                el.classList.remove('line-clamp-6');
+                btn.innerHTML = `<span>Réduire</span> <i class="fa-solid fa-chevron-up text-[10px]"></i>`;
+            } else {
+                el.classList.add('line-clamp-6');
+                btn.innerHTML = `<span>Lire la suite</span> <i class="fa-solid fa-chevron-down text-[10px]"></i>`;
+            }
+        };
+
+        function renderStories(items) {
+            const container = document.getElementById('testimonialsList');
+            if (!container) return;
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto border border-pink-100 bg-white shadow-xs">
+                        <div class="w-14 h-14 rounded-2xl bg-pink-50 text-[#d24de3] flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <h3 class="font-title text-xl font-bold text-gray-900 mb-2">Bientôt de nouveaux témoignages</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 font-medium mb-6 leading-relaxed">
+                            Les retours de nos familles adoptantes sont en cours d'ajout. Si vous avez adopté un chat auprès de Chat L'Heureux 56, n'hésitez pas à nous envoyer vos nouvelles !
+                        </p>
+                        <a href="mailto:asso.chatslheureux@gmail.com?subject=T%C3%A9moignage%20adoption" class="inline-flex items-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                            <span>Partager mon témoignage</span>
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map((story, i) => {
+                const isEven = (i % 2 === 0);
+                const photo = (story.photos && story.photos.length > 0) ? story.photos[0] : 'https://placehold.co/800x600?text=Adopt%C3%A9';
+                const catName = escapeStoryHtml(story.catName || 'Protégé');
+                const adoptant = escapeStoryHtml(story.adoptant || 'Famille adoptante');
+                const rawLoc = story.location || 'Morbihan (56)';
+                const location = escapeStoryHtml(rawLoc.includes('(') ? rawLoc : `${rawLoc} (56)`);
+                const content = escapeStoryHtml(story.content || '');
+                const isLong = content.length > 320;
+                const initial = (adoptant.charAt(0) || catName.charAt(0) || 'A').toUpperCase();
+
+                return `
+                    <article class="glass-card rounded-[2.5rem] p-5 sm:p-8 flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-6 sm:gap-8 items-start hover-lift border border-pink-100/60 bg-white">
+                        
+                        <!-- Photo -->
+                        <div class="w-full lg:w-5/12 shrink-0 lg:self-start lg:sticky lg:top-24">
+                            <div class="relative h-60 sm:h-72 w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-100 shadow-sm">
+                                <img src="${photo}" alt="${catName}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='https://placehold.co/800x600?text=Adopt%C3%A9';" class="w-full h-full object-cover">
+                                <div class="absolute top-3 left-3 bg-white/95 px-3 py-1 rounded-full text-[11px] font-black text-gray-800 shadow flex items-center gap-1.5">
+                                    <i class="fa-solid fa-heart text-pink-500"></i>
+                                    <span>Adopté 🎉</span>
+                                </div>
+                                <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-bold bg-black/40 backdrop-blur-sm px-3.5 py-2 rounded-xl">
+                                    <span class="font-title text-base font-black truncate">${catName}</span>
+                                    <span class="text-[11px] opacity-90 shrink-0"><i class="fa-solid fa-location-dot text-pink-400 mr-1"></i>${location}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contenu texte -->
+                        <div class="w-full lg:w-7/12 flex flex-col justify-between min-w-0">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2 text-xs font-bold text-[#d24de3]">
+                                    <i class="fa-solid fa-quote-left text-[10px]"></i>
+                                    <span>Témoignage</span>
+                                </div>
+
+                                <h2 class="font-title text-xl sm:text-2xl font-black text-gray-900 tracking-tight mb-3">
+                                    Des nouvelles de <span class="text-brand-gradient">${catName}</span>
+                                </h2>
+
+                                <p id="text_${story.id}" class="text-gray-700 text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words font-medium mb-3 ${isLong ? 'line-clamp-6' : ''}">« ${content} »</p>
+
+                                ${isLong ? `
+                                    <button id="btn_${story.id}" onclick="toggleText('${story.id}')" class="inline-flex items-center gap-1 text-xs font-bold text-[#d24de3] hover:text-pink-600 mb-3 transition-colors">
+                                        <span>Lire la suite</span>
+                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3 mt-4">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-9 h-9 rounded-full bg-pink-100 text-[#d24de3] font-black text-xs flex items-center justify-center shrink-0">
+                                        ${initial}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold text-gray-900 truncate">${adoptant}</p>
+                                        <span class="text-[10px] text-gray-500 font-semibold block truncate">Famille pour la vie</span>
+                                    </div>
+                                </div>
+                                <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full shrink-0">
+                                    <i class="fa-solid fa-circle-check text-[10px] mr-1"></i>Au foyer
+                                </span>
+                            </div>
+                        </div>
+
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function loadFirestoreStories() {
+            const container = document.getElementById('testimonialsList');
+            try {
+                const snap = await getDocs(collection(db, "testimonials"));
+                const list = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data && (data.catName || data.content)) {
+                        list.push({ id: d.id, ...data });
+                    }
+                });
+                renderStories(list);
+            } catch (err) {
+                console.error("Erreur chargement Firestore:", err);
+                if (container) {
+                    container.innerHTML = `<div class="text-center py-12 text-rose-500 font-medium text-xs sm:text-sm">Impossible de charger les témoignages actuellement.</div>`;
+                }
+            }
+        }
+        loadFirestoreStories();
+
+        // Back to top
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 350) {
+                backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+            }
+        });
+
+        const btnOpen = document.getElementById('mobileMenuBtn');
+        const btnClose = document.getElementById('closeMobileMenuBtn');
+        const menu = document.getElementById('mobileMenu');
+        if (btnOpen && menu && btnClose) {
+            btnOpen.addEventListener('click', () => { menu.classList.remove('hidden'); menu.classList.add('flex'); });
+            btnClose.addEventListener('click', () => { menu.classList.add('hidden'); menu.classList.remove('flex'); });
+        }
+    </script>
+</body>
+</html>
