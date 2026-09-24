@@ -84,37 +84,37 @@ export default function AdoptionDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="admin-glass-panel rounded-3xl p-6 sm:p-8 max-w-3xl w-full border border-slate-700/80 shadow-2xl relative my-auto max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-2.5 sm:p-6 overflow-y-auto">
+      <div className="admin-glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-3xl w-full border border-slate-700/80 shadow-2xl relative my-auto max-h-[92vh] flex flex-col">
         
         {/* Header Modale */}
-        <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-800 shrink-0">
+        <div className="flex items-start justify-between gap-3 pb-3.5 border-b border-slate-800 shrink-0">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColors[adoption.status] || 'bg-slate-800 text-slate-300'}`}>
                 {adoption.status || 'Nouveau'}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-[11px] sm:text-xs text-slate-400">
                 Reçue le {formatDate(adoption.submittedAt)}
               </span>
             </div>
-            <h2 className="font-title text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-              <Heart className="w-5 h-5 text-pink-400 fill-pink-400/20" />
-              <span>Demande pour : {adoption.catName}</span>
+            <h2 className="font-title text-lg sm:text-2xl font-black text-white flex items-center gap-2">
+              <Heart className="w-5 h-5 text-pink-400 fill-pink-400/20 shrink-0" />
+              <span className="truncate">Demande pour : {adoption.catName}</span>
             </h2>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Corps Défilable */}
-        <div className="overflow-y-auto py-5 space-y-6 flex-grow pr-1 custom-scrollbar">
+        <div className="overflow-y-auto py-4 sm:py-5 space-y-5 flex-grow pr-1 custom-scrollbar">
           
           {/* Section 1 : Candidat & Coordonnées */}
           <div className="admin-glass-card p-5 rounded-2xl border border-slate-800">
@@ -383,16 +383,16 @@ export default function AdoptionDetailModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="pt-3.5 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
           <div>
             {canDelete && (
               <button
                 type="button"
                 onClick={() => onDelete(adoption.id, `la demande pour ${adoption.catName} (${adoption.fullName})`)}
-                className="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-colors flex items-center gap-1.5"
+                className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Supprimer</span>
+                <span>Supprimer la demande</span>
               </button>
             )}
           </div>
@@ -401,7 +401,7 @@ export default function AdoptionDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors text-center"
             >
               Fermer
             </button>
@@ -409,7 +409,7 @@ export default function AdoptionDetailModal({
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="px-6 py-2.5 rounded-xl bg-brand-gradient text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center gap-2"
+              className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-brand-gradient text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -419,7 +419,7 @@ export default function AdoptionDetailModal({
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5" />
-                  <span>Enregistrer le suivi</span>
+                  <span>Enregistrer</span>
                 </>
               )}
             </button>

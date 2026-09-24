@@ -1004,12 +1004,12 @@ export default function AdminPage() {
       
       {/* Top Header Admin */}
       <header className="admin-glass-panel sticky top-0 z-40 border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="font-title font-black text-lg sm:text-2xl text-brand-gradient">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+            <span className="font-title font-black text-base sm:text-2xl text-brand-gradient truncate">
               Chat L'Heureux 56
             </span>
-            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+            <span className={`text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 rounded-full border shrink-0 ${
               role === USER_ROLES.ADMIN
                 ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
                 : role === USER_ROLES.GESTION
@@ -1020,15 +1020,15 @@ export default function AdminPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Bouton Réinitialiser mon mot de passe */}
             <button
               type="button"
               onClick={handleSelfPasswordReset}
-              className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700"
+              className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-700"
               title="M'envoyer un e-mail de réinitialisation de mot de passe"
             >
-              <Lock className="w-3.5 h-3.5 text-pink-400" />
+              <Lock className="w-3.5 h-3.5 text-pink-400 shrink-0" />
               <span className="hidden lg:inline">Mon mot de passe</span>
             </button>
 
@@ -1036,10 +1036,10 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={handleExportBackup}
-                className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700"
+                className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-700"
                 title="Télécharger une sauvegarde complète en JSON"
               >
-                <Download className="w-3.5 h-3.5 text-teal-400" />
+                <Download className="w-3.5 h-3.5 text-teal-400 shrink-0" />
                 <span className="hidden sm:inline">Sauvegarde JSON</span>
               </button>
             )}
@@ -1047,18 +1047,20 @@ export default function AdminPage() {
             <Link
               to="/"
               target="_blank"
-              className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700"
+              className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-700"
+              title="Voir le site public"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-pink-400" />
+              <ExternalLink className="w-3.5 h-3.5 text-pink-400 shrink-0" />
               <span className="hidden md:inline">Voir le site</span>
             </Link>
 
             <button
               type="button"
               onClick={handleLogout}
-              className="text-xs font-bold bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+              className="text-xs font-bold bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 p-2 sm:px-3 sm:py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+              title="Se déconnecter"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
@@ -1066,76 +1068,76 @@ export default function AdminPage() {
       </header>
 
       {/* Contenu principal */}
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
         
-        {/* Barre de stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {/* Barre de stats adaptative */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'Disponible' ? null : 'Disponible')}
-            className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+            className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
               statusFilter === 'Disponible' 
                 ? 'ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500' 
                 : 'border-slate-800 hover:border-slate-700'
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-slate-400">Disponibles</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span className="text-[11px] sm:text-xs font-bold text-slate-400">Disponibles</span>
+              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
             </div>
-            <span className="font-title text-2xl font-black text-white">{stats.dispo}</span>
+            <span className="font-title text-xl sm:text-2xl font-black text-white">{stats.dispo}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'Urgence' ? null : 'Urgence')}
-            className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+            className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
               statusFilter === 'Urgence' 
                 ? 'ring-2 ring-rose-500 bg-rose-500/10 border-rose-500' 
                 : 'border-slate-800 hover:border-slate-700'
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-slate-400">Urgences</span>
-              <AlertTriangle className="w-4 h-4 text-rose-400" />
+              <span className="text-[11px] sm:text-xs font-bold text-slate-400">Urgences</span>
+              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400 shrink-0" />
             </div>
-            <span className="font-title text-2xl font-black text-rose-400">{stats.urgence}</span>
+            <span className="font-title text-xl sm:text-2xl font-black text-rose-400">{stats.urgence}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'Réservé' ? null : 'Réservé')}
-            className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+            className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
               statusFilter === 'Réservé' 
                 ? 'ring-2 ring-amber-500 bg-amber-500/10 border-amber-500' 
                 : 'border-slate-800 hover:border-slate-700'
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-slate-400">Réservés</span>
-              <Clock className="w-4 h-4 text-amber-400" />
+              <span className="text-[11px] sm:text-xs font-bold text-slate-400">Réservés</span>
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
             </div>
-            <span className="font-title text-2xl font-black text-amber-400">{stats.reserve}</span>
+            <span className="font-title text-xl sm:text-2xl font-black text-amber-400">{stats.reserve}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'Adopté' ? null : 'Adopté')}
-            className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+            className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
               statusFilter === 'Adopté' 
                 ? 'ring-2 ring-pink-500 bg-pink-500/10 border-pink-500' 
                 : 'border-slate-800 hover:border-slate-700'
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-slate-400">Adoptés</span>
-              <Heart className="w-4 h-4 text-pink-400" />
+              <span className="text-[11px] sm:text-xs font-bold text-slate-400">Adoptés</span>
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-400 shrink-0" />
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-title text-2xl font-black text-pink-400">{stats.adopte}</span>
+            <div className="flex items-baseline gap-1.5 sm:gap-2">
+              <span className="font-title text-xl sm:text-2xl font-black text-pink-400">{stats.adopte}</span>
               {stats.expiredAdopted > 0 && (
-                <span className="text-[10px] font-bold text-rose-400">
-                  ({stats.expiredAdopted} expirés)
+                <span className="text-[10px] font-bold text-rose-400 truncate">
+                  ({stats.expiredAdopted} exp.)
                 </span>
               )}
             </div>
@@ -1144,7 +1146,7 @@ export default function AdminPage() {
 
         {/* Alerte Purge si chats expirés (+60j) (Réservé admin) */}
         {canDeleteCats(role) && stats.expiredAdopted > 0 && (
-          <div className="mb-8 p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="mb-6 sm:mb-8 p-3.5 sm:p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-rose-400 shrink-0" />
               <div>
@@ -1159,7 +1161,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => setPurgeModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shrink-0 shadow-md"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors shrink-0 shadow-md text-center"
             >
               Purger les fiches expirées
             </button>
@@ -1167,12 +1169,12 @@ export default function AdminPage() {
         )}
 
         {/* Onglets navigation multi-paliers : Chats vs Témoignages vs Adoptions vs Membres */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3 px-3 sm:mx-0 sm:px-0 flex-nowrap w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setCurrentTab('cats')}
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
+              className={`shrink-0 whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs transition-all ${
                 currentTab === 'cats'
                   ? 'bg-brand-gradient text-white shadow-md'
                   : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
@@ -1185,7 +1187,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setCurrentTab('stories')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
+                className={`shrink-0 whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs transition-all ${
                   currentTab === 'stories'
                     ? 'bg-brand-gradient text-white shadow-md'
                     : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
@@ -1199,13 +1201,13 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setCurrentTab('adoptions')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                className={`shrink-0 whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
                   currentTab === 'adoptions'
                     ? 'bg-brand-gradient text-white shadow-md'
                     : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
                 }`}
               >
-                <span>Demandes d'adoption ({adoptions.length})</span>
+                <span>Demandes ({adoptions.length})</span>
                 {adoptions.filter(a => (a.status || ADOPTION_STATUS.NOUVEAU) === ADOPTION_STATUS.NOUVEAU).length > 0 && (
                   <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-1.5 py-0.2 rounded-full">
                     {adoptions.filter(a => (a.status || ADOPTION_STATUS.NOUVEAU) === ADOPTION_STATUS.NOUVEAU).length}
@@ -1218,7 +1220,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => setCurrentTab('members')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                className={`shrink-0 whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
                   currentTab === 'members'
                     ? 'bg-brand-gradient text-white shadow-md'
                     : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
@@ -1230,12 +1232,12 @@ export default function AdminPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
             {currentTab === 'cats' && canEditCats(role) && (
               <button
                 type="button"
                 onClick={openNewCatModal}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold shadow-md transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold shadow-md transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Ajouter un chat</span>
@@ -1246,7 +1248,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={openNewStoryModal}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold shadow-md transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold shadow-md transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Ajouter un avis</span>

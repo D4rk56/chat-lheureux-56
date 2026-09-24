@@ -219,7 +219,23 @@ export default function AdoptionPage() {
 
       </div>
 
-      {/* Compteur de résultats */}
+      {/* Compteur de résultats & Bandeau d'information Coups de cœur */}
+      {currentFilter === 'favorites' && (
+        <div className="mb-6 p-4 rounded-2xl bg-pink-50/90 border border-pink-200 flex items-start sm:items-center gap-3.5 text-xs sm:text-sm text-pink-950 shadow-xs animate-in fade-in">
+          <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-xs">
+            <Heart className="w-4 h-4 fill-pink-500 text-pink-500" />
+          </div>
+          <div className="flex-1 leading-relaxed">
+            <strong className="block font-black text-pink-900">
+              Vos coups de cœur mémorisés ({favoritesCount})
+            </strong>
+            <span className="text-pink-800/90 font-medium text-xs">
+              💡 <strong>Rappel :</strong> vos coups de cœur sont enregistrés localement sur cet appareil (votre navigateur). Si vous changez de téléphone, de tablette ou d'ordinateur, vos favoris ne seront pas synchronisés.
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6 px-1">
         <span className="text-xs font-bold text-gray-500">
           {filteredCats.length} moustachu{filteredCats.length > 1 ? 's' : ''} trouvé{filteredCats.length > 1 ? 's' : ''}
@@ -243,7 +259,10 @@ export default function AdoptionPage() {
                 Aucun coup de cœur pour l'instant
               </h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
-                Cliquez sur le petit cœur présent sur la photo de n'importe quel chat pour l'enregistrer ici et le retrouver facilement !
+                Cliquez sur le petit cœur présent sur la photo de n'importe quel chat pour l'enregistrer dans votre sélection.
+                <span className="block text-[11px] text-gray-400 mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                  📱 <strong>Bon à savoir :</strong> les coups de cœur sont stockés uniquement sur cet appareil et ne sont pas transférés entre différents téléphones ou ordinateurs.
+                </span>
               </p>
               <button
                 type="button"

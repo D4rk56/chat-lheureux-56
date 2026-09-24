@@ -124,75 +124,75 @@ export default function AdoptionsTab({
     <div className="space-y-6">
       
       {/* Barre de Statistiques / Filtres Rapides */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
         <button
           type="button"
           onClick={() => setStatusFilter(statusFilter === ADOPTION_STATUS.NOUVEAU ? null : ADOPTION_STATUS.NOUVEAU)}
-          className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+          className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
             statusFilter === ADOPTION_STATUS.NOUVEAU 
               ? 'ring-2 ring-amber-500 bg-amber-500/10 border-amber-500' 
               : 'border-slate-800 hover:border-slate-700'
           }`}
         >
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-bold text-slate-400">Nouvelles</span>
-            <Clock className="w-4 h-4 text-amber-400" />
+            <span className="text-[11px] sm:text-xs font-bold text-slate-400">Nouvelles</span>
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
           </div>
-          <span className="font-title text-2xl font-black text-amber-400">{stats.nouveau}</span>
+          <span className="font-title text-xl sm:text-2xl font-black text-amber-400">{stats.nouveau}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter(statusFilter === ADOPTION_STATUS.EN_COURS ? null : ADOPTION_STATUS.EN_COURS)}
-          className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+          className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
             statusFilter === ADOPTION_STATUS.EN_COURS 
               ? 'ring-2 ring-sky-500 bg-sky-500/10 border-sky-500' 
               : 'border-slate-800 hover:border-slate-700'
           }`}
         >
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-bold text-slate-400">En cours</span>
-            <AlertCircle className="w-4 h-4 text-sky-400" />
+            <span className="text-[11px] sm:text-xs font-bold text-slate-400">En cours</span>
+            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400 shrink-0" />
           </div>
-          <span className="font-title text-2xl font-black text-sky-400">{stats.enCours}</span>
+          <span className="font-title text-xl sm:text-2xl font-black text-sky-400">{stats.enCours}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter(statusFilter === ADOPTION_STATUS.VALIDEE ? null : ADOPTION_STATUS.VALIDEE)}
-          className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+          className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
             statusFilter === ADOPTION_STATUS.VALIDEE 
               ? 'ring-2 ring-emerald-500 bg-emerald-500/10 border-emerald-500' 
               : 'border-slate-800 hover:border-slate-700'
           }`}
         >
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-bold text-slate-400">Validées</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span className="text-[11px] sm:text-xs font-bold text-slate-400">Validées</span>
+            <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
           </div>
-          <span className="font-title text-2xl font-black text-emerald-400">{stats.validee}</span>
+          <span className="font-title text-xl sm:text-2xl font-black text-emerald-400">{stats.validee}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter(statusFilter === ADOPTION_STATUS.REFUSEE ? null : ADOPTION_STATUS.REFUSEE)}
-          className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+          className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
             statusFilter === ADOPTION_STATUS.REFUSEE 
               ? 'ring-2 ring-rose-500 bg-rose-500/10 border-rose-500' 
               : 'border-slate-800 hover:border-slate-700'
           }`}
         >
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-bold text-slate-400">Refusées</span>
-            <Heart className="w-4 h-4 text-rose-400" />
+            <span className="text-[11px] sm:text-xs font-bold text-slate-400">Refusées</span>
+            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400 shrink-0" />
           </div>
-          <span className="font-title text-2xl font-black text-rose-400">{stats.refusee}</span>
+          <span className="font-title text-xl sm:text-2xl font-black text-rose-400">{stats.refusee}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter(statusFilter === ADOPTION_STATUS.ARCHIVEE ? null : ADOPTION_STATUS.ARCHIVEE)}
-          className={`admin-glass-card p-4 rounded-2xl border text-left transition-all ${
+          className={`admin-glass-card p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all ${
             statusFilter === ADOPTION_STATUS.ARCHIVEE 
               ? 'ring-2 ring-slate-400 bg-slate-800/80 border-slate-500' 
               : 'border-slate-800 hover:border-slate-700'
@@ -200,10 +200,10 @@ export default function AdoptionsTab({
           title="Demandes archivées au bout de 30 jours"
         >
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-bold text-slate-400">Archivées (&gt;30j)</span>
-            <Archive className="w-4 h-4 text-slate-400" />
+            <span className="text-[11px] sm:text-xs font-bold text-slate-400">Archivées (&gt;30j)</span>
+            <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
           </div>
-          <span className="font-title text-2xl font-black text-slate-300">{stats.archivee}</span>
+          <span className="font-title text-xl sm:text-2xl font-black text-slate-300">{stats.archivee}</span>
         </button>
       </div>
 
@@ -377,23 +377,24 @@ export default function AdoptionsTab({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+                <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end shrink-0 pt-2.5 md:pt-0 border-t md:border-t-0 border-slate-800/80">
                   {/* Bouton Archiver / Désarchiver rapide */}
                   {onArchiveAdoption && statusKey !== ADOPTION_STATUS.ARCHIVEE && (
                     <button
                       type="button"
                       onClick={() => onArchiveAdoption(item.id)}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all"
+                      className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all flex items-center gap-1.5"
                       title="Archiver cette demande (garder trace sans encombrer la vue active)"
                     >
                       <Archive className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="hidden sm:inline">Archiver</span>
                     </button>
                   )}
 
                   <button
                     type="button"
                     onClick={() => onSelectAdoption(item)}
-                    className="px-4 py-2 rounded-xl bg-pink-600/20 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-500/30 text-xs font-bold transition-all flex items-center gap-1.5"
+                    className="flex-1 md:flex-initial justify-center px-4 py-2.5 rounded-xl bg-pink-600/20 hover:bg-pink-600 text-pink-300 hover:text-white border border-pink-500/30 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Consulter le dossier</span>
