@@ -25,12 +25,10 @@ service cloud.firestore {
       // Lecture publique autorisée pour le site vitrine et l'edge function
       allow read: if true;
       
-      // Seuls les administrateurs connectés peuvent créer, modifier ou supprimer
+      // Seuls les utilisateurs connectés peuvent créer, modifier ou supprimer
       allow create: if isAuthenticated() && isValidCat(request.resource.data);
       allow update: if isAuthenticated() && (
-        // Cas standard : mise à jour de la fiche
         isValidCat(request.resource.data) ||
-        // Cas spécifique : acquisition ou libération de verrou d'édition
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['editingLock'])
       );
       allow delete: if isAuthenticated();
@@ -42,6 +40,41 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidTestimonial(request.resource.data);
       allow update: if isAuthenticated() && isValidTestimonial(request.resource.data);
       allow delete: if isAuthenticated();
+    }
+
+    // Collection des profils membres et rôles
+    match /users/{userId} {
+      // Les membres connectés peuvent consulter la liste des membres
+      allow read: if isAuthenticated();
+      // Création / modification par les utilisateurs connectés
+      allow create, update, delete: if isAuthenticated();
+    }
+
+    // Collection des codes d'invitation bénévoles
+    match /invitationCodes/{codeId} {
+      // Lecture unitaire par ID direct autorisée pour valider le code lors de l'inscription
+      // (Empêche l'énumération / fuite publique de tous les codes générés)
+      allow get: if true;
+      // Listing de l'ensemble des codes strictement réservé aux membres connectés
+      allow list: if isAuthenticated();
+      // Création et suppression réservées aux membres connectés (administrateurs)
+      allow create, delete: if isAuthenticated();
+      // Mise à jour autorisée pour marquer le code comme utilisé lors de l'inscription
+      allow update: if isAuthenticated() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedBy', 'usedByEmail', 'usedAt'])
+        && request.resource.data.used == true
+        && resource.data.used == false
+      );
+    }
+
+    // Collection des demandes d'adoption (questionnaire officiel)
+    match /adoptionRequests/{requestId} {
+      // Soumission publique autorisée avec validation minimale
+      allow create: if request.resource.data.catName is string
+        && request.resource.data.fullName is string
+        && request.resource.data.email is string;
+      // Lecture, suivi et suppression réservés aux membres connectés
+      allow read, update, delete: if isAuthenticated();
     }
     
     // Par défaut, refuser tout le reste

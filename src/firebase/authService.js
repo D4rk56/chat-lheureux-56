@@ -2,7 +2,9 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendPasswordResetEmail 
+  sendPasswordResetEmail,
+  createUserWithEmailAndPassword,
+  updateProfile
 } from "firebase/auth";
 import { auth } from "./config.js";
 
@@ -25,6 +27,12 @@ export function getAuthErrorMessage(code) {
       return "Accès temporairement bloqué en raison de tentatives répétées. Réessayez dans quelques instants.";
     case 'auth/network-request-failed':
       return "Erreur réseau. Vérifiez votre connexion Internet.";
+    case 'auth/email-already-in-use':
+      return "Cette adresse e-mail est déjà associée à un compte.";
+    case 'auth/weak-password':
+      return "Le mot de passe est trop court (au moins 6 caractères requis).";
+    case 'auth/operation-not-allowed':
+      return "L'inscription par e-mail n'est pas activée sur la console Firebase.";
     default:
       return `Erreur d'authentification (${code || 'inconnue'}).`;
   }
@@ -40,6 +48,18 @@ export async function logoutUser() {
 
 export async function resetPassword(email) {
   return await sendPasswordResetEmail(auth, email.trim());
+}
+
+export async function registerUser(email, password, displayName) {
+  const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  if (displayName) {
+    try {
+      await updateProfile(userCredential.user, { displayName: displayName.trim() });
+    } catch (e) {
+      console.warn("Échec mise à jour du nom d'affichage :", e);
+    }
+  }
+  return userCredential.user;
 }
 
 export function subscribeToAuthState(callback) {

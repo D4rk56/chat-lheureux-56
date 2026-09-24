@@ -21,7 +21,11 @@ import {
   Star,
   Eye,
   RefreshCw,
-  X
+  X,
+  KeyRound,
+  Users,
+  Sparkles,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -37,11 +41,41 @@ import {
   purgeExpiredAdoptedCats 
 } from '../firebase/catsService';
 import { fetchStories, saveStory, deleteStory } from '../firebase/storiesService';
+import { 
+  fetchAdoptionRequests, 
+  updateAdoptionRequest, 
+  deleteAdoptionRequest, 
+  ADOPTION_STATUS 
+} from '../firebase/adoptionsService';
+import { 
+  fetchAllUsers, 
+  updateUserRole, 
+  deleteUserRecord, 
+  createInviteCode, 
+  fetchInviteCodes, 
+  deleteInviteCode 
+} from '../firebase/memberService';
+import { 
+  USER_ROLES, 
+  ROLE_LABELS, 
+  isAdminRole, 
+  canEditCats, 
+  canDeleteCats, 
+  canManageStories, 
+  canManageAdoptions, 
+  canDeleteAdoptions, 
+  canManageMembers 
+} from '../utils/roles.js';
 import { calculateAgeFromBirthDate, getCatAdoptionInfo, ADOPTED_EXPIRATION_DAYS } from '../utils/age.js';
 import { compressImageFile } from '../utils/imageCompressor.js';
 
+import AdoptionsTab from '../components/admin/AdoptionsTab';
+import MembersTab from '../components/admin/MembersTab';
+import AdoptionDetailModal from '../components/admin/AdoptionDetailModal';
+import PasswordResetModal from '../components/admin/PasswordResetModal';
+
 export default function AdminPage() {
-  const { user, loading: authLoading, login, logout, sendPasswordReset } = useAuth();
+  const { user, userProfile, role, loading: authLoading, login, logout, sendPasswordReset } = useAuth();
   const { showToast } = useToast();
 
   // États de connexion
@@ -49,14 +83,24 @@ export default function AdminPage() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginSubmitting, setLoginSubmitting] = useState(false);
+  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
 
   // Données
   const [cats, setCats] = useState([]);
   const [stories, setStories] = useState([]);
+  const [adoptions, setAdoptions] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [inviteCodes, setInviteCodes] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [loadingAdoptions, setLoadingAdoptions] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
 
-  // Onglet courant : 'cats' ou 'stories'
+  // Onglet courant : 'cats', 'stories', 'adoptions', ou 'members'
   const [currentTab, setCurrentTab] = useState('cats');
+
+  // Modale Détail Demande d'Adoption
+  const [selectedAdoption, setSelectedAdoption] = useState(null);
+  const [adoptionModalOpen, setAdoptionModalOpen] = useState(false);
 
   // Filtres admin
   const [searchQuery, setSearchQuery] = useState('');
@@ -137,8 +181,18 @@ export default function AdminPage() {
     } else {
       setCats([]);
       setStories([]);
+      setAdoptions([]);
+      setMembers([]);
+      setInviteCodes([]);
     }
-  }, [user]);
+  }, [user, role]);
+
+  // Initialisation de l'onglet par défaut selon le rôle
+  useEffect(() => {
+    if (role === USER_ROLES.BENEVOLE) {
+      setCurrentTab('adoptions');
+    }
+  }, [role]);
 
   // Nettoyage lors de la fermeture ou du démontage
   useEffect(() => {
@@ -154,17 +208,146 @@ export default function AdminPage() {
   const loadAllData = async () => {
     setLoadingData(true);
     try {
-      const [allCats, allStories] = await Promise.all([
+      const promises = [
         fetchCats(false),
-        fetchStories()
-      ]);
-      setCats(allCats);
-      setStories(allStories);
+        fetchStories(),
+        fetchAdoptionRequests()
+      ];
+
+      // Chargement membres & codes si admin
+      if (isAdminRole(role)) {
+        promises.push(fetchAllUsers(), fetchInviteCodes());
+      }
+
+      const results = await Promise.all(promises);
+      setCats(results[0] || []);
+      setStories(results[1] || []);
+      setAdoptions(results[2] || []);
+      if (results[3]) setMembers(results[3]);
+      if (results[4]) setInviteCodes(results[4]);
     } catch (err) {
       console.error("Erreur chargement données admin :", err);
-      showToast("Erreur", "Impossible de charger les données.", "error");
+      showToast("Erreur", "Impossible de charger l'ensemble des données.", "error");
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const loadAdoptions = async () => {
+    setLoadingAdoptions(true);
+    try {
+      const fresh = await fetchAdoptionRequests();
+      setAdoptions(fresh);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de rafraîchir les adoptions.", "error");
+    } finally {
+      setLoadingAdoptions(false);
+    }
+  };
+
+  const loadMembersAndCodes = async () => {
+    setLoadingMembers(true);
+    try {
+      const [freshMembers, freshCodes] = await Promise.all([
+        fetchAllUsers(),
+        fetchInviteCodes()
+      ]);
+      setMembers(freshMembers);
+      setInviteCodes(freshCodes);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de rafraîchir les membres.", "error");
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // --- Handlers Demandes d'adoption ---
+  const handleSelectAdoption = (adoptionItem) => {
+    setSelectedAdoption(adoptionItem);
+    setAdoptionModalOpen(true);
+  };
+
+  const handleUpdateAdoptionStatus = async (id, updates) => {
+    try {
+      await updateAdoptionRequest(id, updates);
+      setAdoptions(prev => prev.map(a => a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a));
+      if (selectedAdoption && selectedAdoption.id === id) {
+        setSelectedAdoption(prev => ({ ...prev, ...updates, updatedAt: new Date().toISOString() }));
+      }
+      showToast("Suivi enregistré", "Le dossier d'adoption a été mis à jour avec succès.");
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de mettre à jour le dossier.", "error");
+    }
+  };
+
+  const handleDeleteAdoption = (id, label) => {
+    setPendingDelete({ id, type: 'adoption', label });
+    setDeleteModalOpen(true);
+  };
+
+  // --- Handlers Membres & Rôles ---
+  const handleUpdateUserRole = async (uid, newRole) => {
+    try {
+      await updateUserRole(uid, newRole);
+      setMembers(prev => prev.map(m => m.uid === uid ? { ...m, role: newRole } : m));
+      showToast("Rôle mis à jour", `Statut du membre modifié en ${ROLE_LABELS[newRole] || newRole}.`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de modifier le rôle du membre.", "error");
+    }
+  };
+
+  const handleDeleteMember = (uid, label) => {
+    setPendingDelete({ id: uid, type: 'member', label: `l'accès de « ${label} »` });
+    setDeleteModalOpen(true);
+  };
+
+  const handleSendMemberPasswordReset = async (email) => {
+    try {
+      await sendPasswordReset(email);
+      showToast("Lien envoyé", `Un e-mail de réinitialisation a été envoyé à ${email}.`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", getAuthErrorMessage(err.code), "error");
+    }
+  };
+
+  const handleCreateInviteCode = async ({ role: codeRole, note }) => {
+    try {
+      const newCode = await createInviteCode({
+        role: codeRole,
+        note,
+        createdBy: user?.email || 'admin'
+      });
+      setInviteCodes(prev => [newCode, ...prev]);
+      showToast("Code généré !", `Code d'invitation ${newCode.code} créé.`);
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de générer le code d'invitation.", "error");
+    }
+  };
+
+  const handleDeleteInviteCode = async (codeId) => {
+    try {
+      await deleteInviteCode(codeId);
+      setInviteCodes(prev => prev.filter(c => c.id !== codeId));
+      showToast("Code révoqué", "Le code d'invitation a été supprimé.");
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de révoquer ce code.", "error");
+    }
+  };
+
+  const handleSelfPasswordReset = async () => {
+    if (!user?.email) return;
+    try {
+      await sendPasswordReset(user.email);
+      showToast("E-mail envoyé", `Un lien de réinitialisation vous a été envoyé à ${user.email}.`);
+    } catch (err) {
+      showToast("Erreur", getAuthErrorMessage(err.code), "error");
     }
   };
 
@@ -570,8 +753,13 @@ export default function AdminPage() {
     try {
       if (pendingDelete.type === 'cat') {
         await deleteCat(pendingDelete.id);
-      } else {
+      } else if (pendingDelete.type === 'story') {
         await deleteStory(pendingDelete.id);
+      } else if (pendingDelete.type === 'adoption') {
+        await deleteAdoptionRequest(pendingDelete.id);
+        setAdoptionModalOpen(false);
+      } else if (pendingDelete.type === 'member') {
+        await deleteUserRecord(pendingDelete.id);
       }
       showToast("Supprimé", "L'élément a été retiré de la base de données.");
       setDeleteModalOpen(false);
@@ -609,9 +797,9 @@ export default function AdminPage() {
             <div className="w-16 h-16 bg-brand-gradient rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg shadow-pink-500/20">
               <ShieldCheck className="w-8 h-8" />
             </div>
-            <h1 className="font-title text-2xl font-black text-white mb-1">Espace Gestion</h1>
+            <h1 className="font-title text-2xl font-black text-white mb-1">Espace Bénévoles & Gestion</h1>
             <p className="text-xs font-semibold text-slate-400">
-              Accès réservé au bureau de l'association Chat L'Heureux 56
+              Association Chat L'Heureux 56
             </p>
           </div>
 
@@ -644,7 +832,7 @@ export default function AdminPage() {
                 </label>
                 <button
                   type="button"
-                  onClick={handlePasswordReset}
+                  onClick={() => setForgotPasswordModalOpen(true)}
                   className="text-[11px] font-bold text-pink-400 hover:underline"
                 >
                   Mot de passe oublié ?
@@ -679,12 +867,34 @@ export default function AdminPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-slate-800 text-center">
+          {/* Lien vers Inscription Bénévole par Code */}
+          <div className="mt-5 pt-4 border-t border-slate-800 text-center space-y-2">
+            <p className="text-xs text-slate-400">
+              Futur bénévole avec un code d'invitation ?
+            </p>
+            <Link 
+              to="/inscription" 
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-pink-400 hover:text-pink-300 transition-colors"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>S'inscrire avec un code d'invitation</span>
+            </Link>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-800/60 text-center">
             <Link to="/" className="text-xs font-bold text-slate-400 hover:text-white transition-colors">
               &larr; Retourner sur le site public
             </Link>
           </div>
         </div>
+
+        {/* Modale Mot de passe oublié */}
+        <PasswordResetModal
+          isOpen={forgotPasswordModalOpen}
+          onClose={() => setForgotPasswordModalOpen(false)}
+          initialEmail={loginEmail}
+          onSendReset={sendPasswordReset}
+        />
       </div>
     );
   }
@@ -700,21 +910,40 @@ export default function AdminPage() {
             <span className="font-title font-black text-lg sm:text-2xl text-brand-gradient">
               Chat L'Heureux 56
             </span>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider bg-pink-500/15 text-pink-400 border border-pink-500/30 px-2.5 py-0.5 rounded-full">
-              Console Admin
+            <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+              role === USER_ROLES.ADMIN
+                ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+                : role === USER_ROLES.GESTION
+                  ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                  : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+            }`}>
+              {ROLE_LABELS[role] || role}
             </span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Bouton Réinitialiser mon mot de passe */}
             <button
               type="button"
-              onClick={handleExportBackup}
+              onClick={handleSelfPasswordReset}
               className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700"
-              title="Télécharger une sauvegarde complète en JSON"
+              title="M'envoyer un e-mail de réinitialisation de mot de passe"
             >
-              <Download className="w-3.5 h-3.5 text-teal-400" />
-              <span className="hidden sm:inline">Sauvegarde JSON</span>
+              <Lock className="w-3.5 h-3.5 text-pink-400" />
+              <span className="hidden lg:inline">Mon mot de passe</span>
             </button>
+
+            {canEditCats(role) && (
+              <button
+                type="button"
+                onClick={handleExportBackup}
+                className="text-xs font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl border border-slate-700"
+                title="Télécharger une sauvegarde complète en JSON"
+              >
+                <Download className="w-3.5 h-3.5 text-teal-400" />
+                <span className="hidden sm:inline">Sauvegarde JSON</span>
+              </button>
+            )}
 
             <Link
               to="/"
@@ -814,8 +1043,8 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Alerte Purge si chats expirés (+60j) */}
-        {stats.expiredAdopted > 0 && (
+        {/* Alerte Purge si chats expirés (+60j) (Réservé admin) */}
+        {canDeleteCats(role) && stats.expiredAdopted > 0 && (
           <div className="mb-8 p-4 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-rose-400 shrink-0" />
@@ -838,9 +1067,9 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Onglets : Chats vs Témoignages */}
+        {/* Onglets navigation multi-paliers : Chats vs Témoignages vs Adoptions vs Membres */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setCurrentTab('cats')}
@@ -850,23 +1079,60 @@ export default function AdminPage() {
                   : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
               }`}
             >
-              Chats ({cats.length})
+              {canEditCats(role) ? `Chats (${cats.length})` : `Chats (Consultation)`}
             </button>
-            <button
-              type="button"
-              onClick={() => setCurrentTab('stories')}
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
-                currentTab === 'stories'
-                  ? 'bg-brand-gradient text-white shadow-md'
-                  : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
-              }`}
-            >
-              Avis & Témoignages ({stories.length})
-            </button>
+
+            {canManageStories(role) && (
+              <button
+                type="button"
+                onClick={() => setCurrentTab('stories')}
+                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
+                  currentTab === 'stories'
+                    ? 'bg-brand-gradient text-white shadow-md'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                }`}
+              >
+                Avis & Témoignages ({stories.length})
+              </button>
+            )}
+
+            {canManageAdoptions(role) && (
+              <button
+                type="button"
+                onClick={() => setCurrentTab('adoptions')}
+                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                  currentTab === 'adoptions'
+                    ? 'bg-brand-gradient text-white shadow-md'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                }`}
+              >
+                <span>Demandes d'adoption ({adoptions.length})</span>
+                {adoptions.filter(a => (a.status || ADOPTION_STATUS.NOUVEAU) === ADOPTION_STATUS.NOUVEAU).length > 0 && (
+                  <span className="bg-amber-500 text-slate-950 font-black text-[10px] px-1.5 py-0.2 rounded-full">
+                    {adoptions.filter(a => (a.status || ADOPTION_STATUS.NOUVEAU) === ADOPTION_STATUS.NOUVEAU).length}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {canManageMembers(role) && (
+              <button
+                type="button"
+                onClick={() => setCurrentTab('members')}
+                className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                  currentTab === 'members'
+                    ? 'bg-brand-gradient text-white shadow-md'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Membres & Invitations</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            {currentTab === 'cats' ? (
+            {currentTab === 'cats' && canEditCats(role) && (
               <button
                 type="button"
                 onClick={openNewCatModal}
@@ -875,7 +1141,9 @@ export default function AdminPage() {
                 <Plus className="w-4 h-4" />
                 <span>Ajouter un chat</span>
               </button>
-            ) : (
+            )}
+
+            {currentTab === 'stories' && canManageStories(role) && (
               <button
                 type="button"
                 onClick={openNewStoryModal}
@@ -891,6 +1159,16 @@ export default function AdminPage() {
         {/* Vue Onglet 1 : Chats */}
         {currentTab === 'cats' && (
           <div>
+            {/* Bannière d'information consultation bénévole */}
+            {!canEditCats(role) && (
+              <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                <span>
+                  <strong>Espace consultation bénévole :</strong> Vous pouvez explorer et consulter toutes les fiches de chats pour renseigner les futurs adoptants. L'ajout et l'édition de fiches sont réservés aux gestionnaires et administrateurs.
+                </span>
+              </div>
+            )}
+
             {/* Barre de recherche admin */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <div className="relative flex-1">
@@ -1017,25 +1295,39 @@ export default function AdminPage() {
                         </Link>
 
                         <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEditCatModal(cat)}
-                            className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                            <span>Modifier</span>
-                          </button>
+                          {canEditCats(role) ? (
+                            <button
+                              type="button"
+                              onClick={() => openEditCatModal(cat)}
+                              className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                              <span>Modifier</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => openEditCatModal(cat, false, true)}
+                              className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                              title="Consulter la fiche"
+                            >
+                              <Eye className="w-3 h-3 text-emerald-400" />
+                              <span>Consulter</span>
+                            </button>
+                          )}
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPendingDelete({ id: cat.id, type: 'cat', label: `le chat « ${cat.name} »` });
-                              setDeleteModalOpen(true);
-                            }}
-                            className="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {canDeleteCats(role) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPendingDelete({ id: cat.id, type: 'cat', label: `le chat « ${cat.name} »` });
+                                setDeleteModalOpen(true);
+                              }}
+                              className="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1104,7 +1396,43 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Vue Onglet 3 : Demandes d'adoption */}
+        {currentTab === 'adoptions' && canManageAdoptions(role) && (
+          <AdoptionsTab
+            adoptions={adoptions}
+            loading={loadingAdoptions}
+            onRefresh={loadAdoptions}
+            onSelectAdoption={handleSelectAdoption}
+          />
+        )}
+
+        {/* Vue Onglet 4 : Membres & Invitations */}
+        {currentTab === 'members' && canManageMembers(role) && (
+          <MembersTab
+            currentUserId={user?.uid}
+            members={members}
+            inviteCodes={inviteCodes}
+            loading={loadingMembers}
+            onRefresh={loadMembersAndCodes}
+            onUpdateRole={handleUpdateUserRole}
+            onDeleteMember={handleDeleteMember}
+            onSendPasswordReset={handleSendMemberPasswordReset}
+            onCreateInviteCode={handleCreateInviteCode}
+            onDeleteInviteCode={handleDeleteInviteCode}
+          />
+        )}
+
       </main>
+
+      {/* --- MODALE DÉTAILS DEMANDE D'ADOPTION --- */}
+      <AdoptionDetailModal
+        isOpen={adoptionModalOpen}
+        onClose={() => setAdoptionModalOpen(false)}
+        adoption={selectedAdoption}
+        onUpdateStatus={handleUpdateAdoptionStatus}
+        onDelete={handleDeleteAdoption}
+        canDelete={canDeleteAdoptions(role)}
+      />
 
       {/* --- MODALE AJOUT / ÉDITION CHAT --- */}
       {catModalOpen && (

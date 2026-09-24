@@ -7,6 +7,7 @@ import {
   Check, 
   X, 
   ArrowLeft, 
+  ArrowRight, 
   Sparkles, 
   ShieldCheck, 
   Calendar, 
@@ -515,16 +516,14 @@ export default function CatDetailPage() {
           <div className="pt-2 space-y-2.5">
             {!isAdopted ? (
               <>
-                <a
-                  href="https://docs.google.com/forms/d/e/1FAIpQLScNaXx_ZzAWX6_UdybeZK2V77Gbp_FVD304-GuGwi8LGr-7yA/viewform"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to={`/formulaire-adoption?chat=${encodeURIComponent(cat.name)}`}
                   className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-pink-500/25 hover:shadow-xl hover:opacity-95 transition-all uppercase tracking-wider"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Remplir le questionnaire d'adoption</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
 
                 <a
                   href={`mailto:asso.chatslheureux@gmail.com?subject=Demande%20d'adoption%20pour%20${encodeURIComponent(cat.name)}&body=Bonjour%20l'association%20Chat%20L'Heureux%2056,%0A%0AJe%20souhaite%20d%C3%A9poser%20une%20candidature%20d'adoption%20pour%20${encodeURIComponent(cat.name)}.%0A%0AMon%20nom%20:%0AMon%20t%C3%A9l%C3%A9phone%20:%0AMa%20commune%20:%0AType%20de%20logement%20(maison/appartement,%20acc%C3%A8s%20ext%C3%A9rieur)%20:%0AAutres%20animaux%20au%20foyer%20:%0A%0AMerci%20!`}

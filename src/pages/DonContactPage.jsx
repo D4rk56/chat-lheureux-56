@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Heart, 
   Sparkles, 
@@ -359,10 +360,8 @@ export default function DonContactPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 relative z-10">
-          <a 
-            href="https://docs.google.com/forms/d/e/1FAIpQLScNaXx_ZzAWX6_UdybeZK2V77Gbp_FVD304-GuGwi8LGr-7yA/viewform" 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <Link 
+            to="/formulaire-adoption" 
             className="bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/10 transition-all flex items-center justify-between group"
           >
             <div className="flex items-center gap-3.5">
@@ -371,11 +370,11 @@ export default function DonContactPage() {
               </div>
               <div>
                 <h3 className="font-bold text-xs sm:text-sm text-white">Questionnaire d'adoption</h3>
-                <p className="text-[10px] sm:text-[11px] text-gray-400">Remplir sur Google Forms</p>
+                <p className="text-[10px] sm:text-[11px] text-gray-400">Formulaire en ligne officiel (Chat L'Heureux 56)</p>
               </div>
             </div>
-            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
-          </a>
+            <Sparkles className="w-4 h-4 text-pink-400 group-hover:text-white transition-colors" />
+          </Link>
 
           <a 
             href="https://docs.google.com/forms/d/e/1FAIpQLSe2_gn8dq66LJu-AWQ90dI-DRc2FP5NdD88cNcgoAyEX7IHfA/viewform" 

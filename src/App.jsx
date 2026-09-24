@@ -10,12 +10,14 @@ import BackToTop from './components/BackToTop';
 
 import HomePage from './pages/HomePage';
 import AdoptionPage from './pages/AdoptionPage';
+import AdoptionFormPage from './pages/AdoptionFormPage';
 import CatDetailPage from './pages/CatDetailPage';
 import TestimonialsPage from './pages/TestimonialsPage';
 import AssociationPage from './pages/AssociationPage';
 import DonContactPage from './pages/DonContactPage';
 import MentionsLegalesPage from './pages/MentionsLegalesPage';
 import AdminPage from './pages/AdminPage';
+import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Fait défiler la page vers le haut à chaque navigation
@@ -42,10 +44,10 @@ function AnalyticsTracker() {
   return null;
 }
 
-// Layout principal conditionnel (exclut le Header/Footer public sur /admin)
+// Layout principal conditionnel (exclut le Header/Footer public sur /admin et /inscription)
 function AppLayout() {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isBackoffice = location.pathname.startsWith('/admin') || location.pathname.startsWith('/inscription');
 
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden">
@@ -55,7 +57,7 @@ function AppLayout() {
 
       <ScrollToTop />
       <AnalyticsTracker />
-      {!isAdmin && <Header />}
+      {!isBackoffice && <Header />}
       
       <Routes>
         {/* Routes Publiques Principales */}
@@ -64,6 +66,11 @@ function AppLayout() {
 
         <Route path="/adoption" element={<AdoptionPage />} />
         <Route path="/adoption.html" element={<AdoptionPage />} />
+
+        {/* Questionnaire d'adoption intégré */}
+        <Route path="/formulaire-adoption" element={<AdoptionFormPage />} />
+        <Route path="/formulaire-adoption.html" element={<AdoptionFormPage />} />
+        <Route path="/adopter" element={<AdoptionFormPage />} />
 
         <Route path="/chat/:id" element={<CatDetailPage />} />
         <Route path="/chat-detail.html" element={<CatDetailPage />} />
@@ -81,7 +88,11 @@ function AppLayout() {
         <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
         <Route path="/mentions-legales.html" element={<MentionsLegalesPage />} />
 
-        {/* Console Administration */}
+        {/* Inscription Bénévoles par Code Aléatoire */}
+        <Route path="/inscription" element={<RegisterPage />} />
+        <Route path="/inscription.html" element={<RegisterPage />} />
+
+        {/* Console Administration & Bénévoles */}
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin.html" element={<AdminPage />} />
 
@@ -89,8 +100,8 @@ function AppLayout() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
-      {!isAdmin && <Footer />}
-      {!isAdmin && <BackToTop />}
+      {!isBackoffice && <Footer />}
+      {!isBackoffice && <BackToTop />}
     </div>
   );
 }

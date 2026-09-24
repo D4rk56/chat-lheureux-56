@@ -3,6 +3,17 @@ import { test, describe } from 'node:test';
 import { calculateAgeFromBirthDate, getCatAdoptionInfo, ADOPTED_EXPIRATION_DAYS } from '../src/utils/age.js';
 import { isCatLockedByOther, LOCK_EXPIRATION_MS } from '../src/firebase/catsService.js';
 import { getAuthErrorMessage } from '../src/firebase/authService.js';
+import { cleanAdoptionFormData, validateAdoptionForm, INITIAL_ADOPTION_FORM } from '../src/utils/adoptionFormLogic.js';
+import { generateRandomInviteCode, normalizeInviteCode, isValidCodeFormat } from '../src/utils/inviteCodes.js';
+import { 
+  USER_ROLES, 
+  canEditCats, 
+  canDeleteCats, 
+  canManageStories, 
+  canManageAdoptions, 
+  canManageMembers, 
+  getDefaultTabForRole 
+} from '../src/utils/roles.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -219,6 +230,18 @@ describe('Traduction des erreurs Firebase Auth (getAuthErrorMessage)', () => {
       getAuthErrorMessage('auth/network-request-failed'),
       "Erreur réseau. Vérifiez votre connexion Internet."
     );
+    assert.equal(
+      getAuthErrorMessage('auth/email-already-in-use'),
+      "Cette adresse e-mail est déjà associée à un compte."
+    );
+    assert.equal(
+      getAuthErrorMessage('auth/weak-password'),
+      "Le mot de passe est trop court (au moins 6 caractères requis)."
+    );
+    assert.equal(
+      getAuthErrorMessage('auth/operation-not-allowed'),
+      "L'inscription par e-mail n'est pas activée sur la console Firebase."
+    );
   });
 
   test('Doit renvoyer un message par défaut pour les codes inconnus', () => {
@@ -226,3 +249,299 @@ describe('Traduction des erreurs Firebase Auth (getAuthErrorMessage)', () => {
     assert.ok(msg.includes('inconnue') || msg.includes('auth/unknown-error'));
   });
 });
+
+describe('Nettoyage et validation conditionnelle du formulaire d\'adoption (cleanAdoptionFormData)', () => {
+  test('Doit retirer les questions spécifiques aux animaux quand hasAnimals === "Non"', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      hasAnimals: 'Non',
+      animalDetails: '2 chats',
+      dogDetails: 'Berger 3 ans',
+      animalStatus: ['Vaccinés', 'Identifiés'],
+      isSociable: 'Oui'
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal(cleaned.hasAnimals, 'Non');
+    assert.equal('animalDetails' in cleaned, false);
+    assert.equal('dogDetails' in cleaned, false);
+    assert.equal('animalStatus' in cleaned, false);
+    assert.equal('isSociable' in cleaned, false);
+  });
+
+  test('Doit conserver les questions spécifiques aux animaux quand hasAnimals === "Oui"', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      hasAnimals: 'Oui',
+      animalDetails: '1 chat de 2 ans',
+      dogDetails: 'Labrador 4 ans',
+      animalStatus: ['Vaccinés', 'Stérilisés'],
+      isSociable: 'Oui'
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal(cleaned.hasAnimals, 'Oui');
+    assert.equal(cleaned.animalDetails, '1 chat de 2 ans');
+    assert.equal(cleaned.dogDetails, 'Labrador 4 ans');
+    assert.deepEqual(cleaned.animalStatus, ['Vaccinés', 'Stérilisés']);
+    assert.equal(cleaned.isSociable, 'Oui');
+  });
+
+  test('Doit masquer les détails enfants si nombre d\'enfants <= 0', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      childrenCount: '0',
+      childrenAges: '10 ans',
+      childrenAnimalContact: 'Oui'
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal('childrenAges' in cleaned, false);
+    assert.equal('childrenAnimalContact' in cleaned, false);
+  });
+
+  test('Doit conserver les détails enfants si nombre d\'enfants > 0', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      childrenCount: '2',
+      childrenAges: '6 et 9 ans',
+      childrenAnimalContact: 'Oui'
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal(cleaned.childrenAges, '6 et 9 ans');
+    assert.equal(cleaned.childrenAnimalContact, 'Oui');
+  });
+
+  test('Doit retirer superficie jardin si pas de jardin', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      hasGarden: 'Non',
+      gardenSurface: '500m2'
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal('gardenSurface' in cleaned, false);
+  });
+
+  test('Doit retirer sécurisation balcon si pas de balcon', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      hasBalcony: 'Non',
+      isBalconySecured: 'Oui'
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal('isBalconySecured' in cleaned, false);
+  });
+
+  test('Doit retirer étage et type autre selon le housingType', () => {
+    const rawMaison = {
+      ...INITIAL_ADOPTION_FORM,
+      housingType: 'Maison',
+      floor: '2',
+      housingTypeOther: 'Ferme'
+    };
+    const cleanedMaison = cleanAdoptionFormData(rawMaison);
+    assert.equal('floor' in cleanedMaison, false);
+    assert.equal('housingTypeOther' in cleanedMaison, false);
+
+    const rawAutre = {
+      ...INITIAL_ADOPTION_FORM,
+      housingType: 'Autre',
+      housingTypeOther: 'Péniche fluviale',
+      floor: '1'
+    };
+    const cleanedAutre = cleanAdoptionFormData(rawAutre);
+    assert.equal('floor' in cleanedAutre, false);
+    assert.equal(cleanedAutre.housingTypeOther, 'Péniche fluviale');
+  });
+
+  test('Doit nettoyer dogDetails si vide ou absent', () => {
+    const raw = {
+      ...INITIAL_ADOPTION_FORM,
+      hasAnimals: 'Oui',
+      animalDetails: '1 chat',
+      dogDetails: '   '
+    };
+    const cleaned = cleanAdoptionFormData(raw);
+    assert.equal('dogDetails' in cleaned, false);
+  });
+
+  test('validateAdoptionForm doit détecter les champs obligatoires manquants de base', () => {
+    const invalid = validateAdoptionForm({});
+    assert.equal(invalid.isValid, false);
+    assert.ok(invalid.errors.catName);
+    assert.ok(invalid.errors.fullName);
+    assert.ok(invalid.errors.email);
+    assert.ok(invalid.errors.phone);
+    assert.ok(invalid.errors.address);
+    assert.ok(invalid.errors.postalCodeCity);
+    assert.ok(invalid.errors.profession);
+  });
+
+  test('validateAdoptionForm doit valider conditionnellement les animaux', () => {
+    const formWithAnimals = {
+      catName: 'Mimi',
+      fullName: 'Jean Martin',
+      email: 'jean@test.fr',
+      phone: '0612345678',
+      address: '1 rue des Fleurs',
+      postalCodeCity: '56000 Vannes',
+      profession: 'Ingénieur',
+      adultsCount: '2',
+      housingType: 'Maison',
+      hasAnimals: 'Oui',
+      animalDetails: '', // Manquant !
+      sleepingPlace: 'Salon',
+      hoursAbsent: '6h',
+      absenceLocation: 'Maison'
+    };
+    const res = validateAdoptionForm(formWithAnimals);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.animalDetails);
+  });
+
+  test('validateAdoptionForm doit valider conditionnellement les enfants', () => {
+    const formWithKids = {
+      catName: 'Mimi',
+      fullName: 'Jean Martin',
+      email: 'jean@test.fr',
+      phone: '0612345678',
+      address: '1 rue des Fleurs',
+      postalCodeCity: '56000 Vannes',
+      profession: 'Ingénieur',
+      adultsCount: '2',
+      childrenCount: '2',
+      childrenAges: '', // Manquant !
+      housingType: 'Maison',
+      sleepingPlace: 'Salon',
+      hoursAbsent: '6h',
+      absenceLocation: 'Maison'
+    };
+    const res = validateAdoptionForm(formWithKids);
+    assert.equal(res.isValid, false);
+    assert.ok(res.errors.childrenAges);
+  });
+
+  test('validateAdoptionForm doit valider conditionnellement le logement (Appartement, Autre, Jardin)', () => {
+    // Appartement sans étage
+    const formAppart = {
+      catName: 'Mimi',
+      fullName: 'Jean Martin',
+      email: 'jean@test.fr',
+      phone: '0612345678',
+      address: '1 rue des Fleurs',
+      postalCodeCity: '56000 Vannes',
+      profession: 'Ingénieur',
+      adultsCount: '1',
+      housingType: 'Appartement',
+      floor: '', // Manquant !
+      sleepingPlace: 'Salon',
+      hoursAbsent: '6h',
+      absenceLocation: 'Maison'
+    };
+    assert.ok(validateAdoptionForm(formAppart).errors.floor);
+
+    // Autre sans précision
+    const formAutre = {
+      ...formAppart,
+      housingType: 'Autre',
+      housingTypeOther: '' // Manquant !
+    };
+    assert.ok(validateAdoptionForm(formAutre).errors.housingTypeOther);
+
+    // Jardin sans superficie
+    const formJardin = {
+      ...formAppart,
+      housingType: 'Maison',
+      hasGarden: 'Oui',
+      gardenSurface: '' // Manquant !
+    };
+    assert.ok(validateAdoptionForm(formJardin).errors.gardenSurface);
+  });
+
+  test('validateAdoptionForm doit valider un formulaire complet et cohérent', () => {
+    const valid = validateAdoptionForm({
+      catName: 'Mimi',
+      fullName: 'Jean Martin',
+      email: 'jean.martin@example.fr',
+      phone: '0612345678',
+      address: '1 rue des Fleurs',
+      postalCodeCity: '56000 Vannes',
+      profession: 'Ingénieur',
+      adultsCount: '2',
+      childrenCount: '1',
+      childrenAges: '7 ans',
+      housingType: 'Appartement',
+      floor: '2',
+      hasAnimals: 'Oui',
+      animalDetails: '1 chat sociable',
+      sleepingPlace: 'Salon',
+      hoursAbsent: '7h',
+      absenceLocation: 'Maison entière'
+    });
+    assert.equal(valid.isValid, true);
+    assert.equal(Object.keys(valid.errors).length, 0);
+  });
+});
+
+describe('Codes d\'invitation aléatoires sécurisés (inviteCodes)', () => {
+  test('generateRandomInviteCode doit générer un code au format CLH-XXXX-XXXX', () => {
+    const code = generateRandomInviteCode();
+    assert.ok(/^CLH-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{4}$/.test(code));
+  });
+
+  test('generateRandomInviteCode ne doit pas contenir de caractères ambigus (0, O, 1, I, L) dans la partie aléatoire', () => {
+    for (let i = 0; i < 20; i++) {
+      const code = generateRandomInviteCode();
+      const randomPart = code.slice(4); // Exclut le préfixe CLH-
+      assert.equal(/[01OIL]/.test(randomPart), false);
+    }
+  });
+
+  test('generateRandomInviteCode doit produire des codes uniques', () => {
+    const set = new Set();
+    for (let i = 0; i < 50; i++) {
+      set.add(generateRandomInviteCode());
+    }
+    assert.equal(set.size, 50);
+  });
+
+  test('normalizeInviteCode doit nettoyer les espaces et passer en majuscules', () => {
+    assert.equal(normalizeInviteCode(' clh-abcd-1234 '), 'CLH-ABCD-1234');
+    assert.equal(normalizeInviteCode(''), '');
+    assert.equal(normalizeInviteCode(null), '');
+  });
+
+  test('isValidCodeFormat doit valider les formats de codes acceptés', () => {
+    assert.equal(isValidCodeFormat('CLH-4A8K-9Z2M'), true);
+    assert.equal(isValidCodeFormat('clh-4a8k-9z2m'), true);
+    assert.equal(isValidCodeFormat('INVALID'), false);
+    assert.equal(isValidCodeFormat('CLH-123'), false);
+  });
+});
+
+describe('Rôles et autorisations (roles)', () => {
+  test('Administrateur a tous les droits', () => {
+    assert.equal(canEditCats(USER_ROLES.ADMIN), true);
+    assert.equal(canDeleteCats(USER_ROLES.ADMIN), true);
+    assert.equal(canManageStories(USER_ROLES.ADMIN), true);
+    assert.equal(canManageAdoptions(USER_ROLES.ADMIN), true);
+    assert.equal(canManageMembers(USER_ROLES.ADMIN), true);
+    assert.equal(getDefaultTabForRole(USER_ROLES.ADMIN), 'cats');
+  });
+
+  test('Gestionnaire a les droits sur les chats et les avis, mais pas sur les membres', () => {
+    assert.equal(canEditCats(USER_ROLES.GESTION), true);
+    assert.equal(canDeleteCats(USER_ROLES.GESTION), false);
+    assert.equal(canManageStories(USER_ROLES.GESTION), true);
+    assert.equal(canManageAdoptions(USER_ROLES.GESTION), true);
+    assert.equal(canManageMembers(USER_ROLES.GESTION), false);
+    assert.equal(getDefaultTabForRole(USER_ROLES.GESTION), 'cats');
+  });
+
+  test('Bénévole a l\'accès privilégié aux demandes d\'adoption et onglet par défaut adoptions', () => {
+    assert.equal(canEditCats(USER_ROLES.BENEVOLE), false);
+    assert.equal(canDeleteCats(USER_ROLES.BENEVOLE), false);
+    assert.equal(canManageStories(USER_ROLES.BENEVOLE), false);
+    assert.equal(canManageAdoptions(USER_ROLES.BENEVOLE), true);
+    assert.equal(canManageMembers(USER_ROLES.BENEVOLE), false);
+    assert.equal(getDefaultTabForRole(USER_ROLES.BENEVOLE), 'adoptions');
+  });
+});
+
