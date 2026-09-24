@@ -1,0 +1,17 @@
+{
+  "name": "Chat L'Heureux 56",
+  "short_name": "ChatLHeureux",
+  "description": "Association de protection féline et d'adoption responsable à Colpo (56)",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d24de3",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
