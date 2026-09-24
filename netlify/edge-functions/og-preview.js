@@ -1,7 +1,7 @@
 export default async (request, context) => {
   try {
     const url = new URL(request.url);
-    const apiKey = Netlify.env.get("FIREBASE_API_KEY");
+    const apiKey = Netlify.env.get("FIREBASE_API_KEY") || Netlify.env.get("VITE_FIREBASE_API_KEY");
     const keyParam = apiKey ? `?key=${encodeURIComponent(apiKey)}` : "";
 
     // 1. Route API pour convertir et servir l'image binaire du chat à Facebook/WhatsApp
