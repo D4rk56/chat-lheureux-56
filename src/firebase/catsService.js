@@ -56,9 +56,22 @@ export async function fetchCats(filterExpired = true) {
   });
 
   try {
-    localStorage.setItem('cached_cats_catalog', JSON.stringify(list));
+    // Si les données sont volumineuses (photos multiples / base64),
+    // on stocke une version allégée sans les photos lourdes pour l'hydratation 0ms.
+    // La persistance complète est assurée nativement par IndexedDB de Firestore.
+    const lightweightList = list.map(c => {
+      const { photos, image, ...rest } = c;
+      const primaryPhoto = (photos && photos[0]) || image || '';
+      return {
+        ...rest,
+        image: primaryPhoto.length < 50000 ? primaryPhoto : '',
+        photos: primaryPhoto.length < 50000 ? [primaryPhoto] : []
+      };
+    });
+    localStorage.setItem('cached_cats_catalog', JSON.stringify(lightweightList));
   } catch (e) {
-    console.warn("Impossible d'écrire dans localStorage :", e);
+    // En cas de dépassement de quota, on nettoie le cache localStorage sans bloquer
+    try { localStorage.removeItem('cached_cats_catalog'); } catch (_) {}
   }
 
   if (filterExpired) {
