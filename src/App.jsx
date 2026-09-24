@@ -27,6 +27,21 @@ function ScrollToTop() {
   return null;
 }
 
+// Suivi automatique des pages vues dans Google Analytics (SPA React Router)
+function AnalyticsTracker() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_path: pathname + search,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    }
+  }, [pathname, search]);
+  return null;
+}
+
 // Layout principal conditionnel (exclut le Header/Footer public sur /admin)
 function AppLayout() {
   const location = useLocation();
@@ -39,6 +54,7 @@ function AppLayout() {
       <div className="fixed top-1/3 -right-20 w-[28rem] h-[28rem] bg-[#7db1f9]/6 rounded-full blur-3xl pointer-events-none -z-10"></div>
 
       <ScrollToTop />
+      <AnalyticsTracker />
       {!isAdmin && <Header />}
       
       <Routes>

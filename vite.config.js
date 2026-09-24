@@ -5,6 +5,9 @@ import { resolve } from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env.FIREBASE_API_KEY': JSON.stringify(process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY || '')
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,
@@ -16,7 +19,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/analytics']
         }
       }
     }
