@@ -6,6 +6,7 @@
 
 export const INITIAL_ADOPTION_FORM = {
   // Page 1 : Choix de l'animal & Identité
+  catId: '',
   catName: '',
   fullName: '',
   email: '',

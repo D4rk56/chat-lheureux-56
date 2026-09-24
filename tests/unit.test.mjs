@@ -19,6 +19,13 @@ import {
   ASSO_PRESIDENT_EMAILS
 } from '../src/utils/roles.js';
 import { KNOWN_ACCOUNTS } from '../src/firebase/memberService.js';
+import { 
+  getAdoptionDaysAge, 
+  getAdoptionLifecycleInfo, 
+  ADOPTION_ARCHIVE_DAYS, 
+  ADOPTION_PURGE_DAYS, 
+  ADOPTION_STATUS 
+} from '../src/firebase/adoptionsService.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -589,5 +596,44 @@ describe('Rôles et autorisations (roles)', () => {
     assert.equal(alex.role, USER_ROLES.GESTION);
   });
 });
+describe('Cycle de vie des demandes d\'adoption (archivage 30j & purge 60j)', () => {
+  test('Calcule correctement l\'âge en jours', () => {
+    const now = Date.now();
+    const date10DaysAgo = new Date(now - 10 * 86400000).toISOString();
+    assert.equal(getAdoptionDaysAge(date10DaysAgo), 10);
+  });
 
+  test('Gère les dates invalides ou nulles', () => {
+    assert.equal(getAdoptionDaysAge(null), 0);
+    assert.equal(getAdoptionDaysAge(''), 0);
+    assert.equal(getAdoptionDaysAge('invalid-date'), 0);
+  });
 
+  test('Demande récente (< 30 jours) n\'est ni archivable ni purgeable', () => {
+    const info = getAdoptionLifecycleInfo({ submittedAt: new Date().toISOString(), status: ADOPTION_STATUS.NOUVEAU });
+    assert.equal(info.isArchived, false);
+    assert.equal(info.isArchivable, false);
+    assert.equal(info.isPurgable, false);
+  });
+
+  test('Demande de 35 jours est archivable mais pas purgeable', () => {
+    const d35 = new Date(Date.now() - 35 * 86400000).toISOString();
+    const info = getAdoptionLifecycleInfo({ submittedAt: d35, status: ADOPTION_STATUS.NOUVEAU });
+    assert.equal(info.isArchived, false);
+    assert.equal(info.isArchivable, true);
+    assert.equal(info.isPurgable, false);
+  });
+
+  test('Demande déjà archivée n\'est plus marquée archivable', () => {
+    const d40 = new Date(Date.now() - 40 * 86400000).toISOString();
+    const info = getAdoptionLifecycleInfo({ submittedAt: d40, status: ADOPTION_STATUS.ARCHIVEE });
+    assert.equal(info.isArchived, true);
+    assert.equal(info.isArchivable, false);
+  });
+
+  test('Demande de plus de 60 jours est purgeable', () => {
+    const d65 = new Date(Date.now() - 65 * 86400000).toISOString();
+    const info = getAdoptionLifecycleInfo({ submittedAt: d65, status: ADOPTION_STATUS.ARCHIVEE });
+    assert.equal(info.isPurgable, true);
+  });
+});

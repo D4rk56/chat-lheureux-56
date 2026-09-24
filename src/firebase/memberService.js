@@ -327,6 +327,48 @@ export async function addManualMember({ email, fullName, phone, pseudo = '', rol
 }
 
 /**
+ * Met à jour les coordonnées et le profil d'un membre (nom, téléphone, pseudo, rôle)
+ * Utilisé par les administrateurs pour corriger une faute de frappe ou un changement de numéro.
+ * @param {string} uid 
+ * @param {Object} profileUpdates 
+ * @returns {Promise<Object>}
+ */
+export async function updateMemberProfile(uid, { fullName, phone, pseudo = '', role = null }) {
+  if (!uid) throw new Error("Identifiant du membre requis.");
+  if (!fullName || !fullName.trim()) throw new Error("Le vrai nom et prénom sont obligatoires.");
+  if (!phone || !phone.trim()) throw new Error("Le numéro de téléphone est obligatoire.");
+
+  const userRef = doc(db, USERS_COLLECTION, uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) throw new Error("Membre introuvable.");
+
+  const existing = snap.data();
+  const email = existing.email;
+  const isProtected = isSuperAdminEmail(email) || isAssoPresidentEmail(email);
+
+  const cleanName = fullName.trim();
+  const cleanPhone = phone.trim();
+  const cleanPseudo = pseudo ? pseudo.trim() : '';
+  const cleanDisplayName = cleanPseudo || cleanName;
+  const now = new Date().toISOString();
+
+  const updates = {
+    fullName: cleanName,
+    phone: cleanPhone,
+    pseudo: cleanPseudo,
+    displayName: cleanDisplayName,
+    updatedAt: now
+  };
+
+  if (role && !isProtected) {
+    updates.role = role;
+  }
+
+  await updateDoc(userRef, updates);
+  return { uid, id: uid, ...existing, ...updates };
+}
+
+/**
  * Modifie le rôle d'un utilisateur
  * @param {string} uid 
  * @param {string} newRole 

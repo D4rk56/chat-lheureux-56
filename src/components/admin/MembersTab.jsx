@@ -5,6 +5,7 @@ import {
   ShieldCheck, 
   UserPlus, 
   Trash2, 
+  Edit3,
   Copy, 
   Check, 
   Mail, 
@@ -32,6 +33,7 @@ export default function MembersTab({
   loading = false,
   onRefresh,
   onUpdateRole,
+  onEditMember,
   onDeleteMember,
   onSendPasswordReset,
   onCreateInviteCode,
@@ -58,6 +60,16 @@ export default function MembersTab({
   const [manualRole, setManualRole] = useState(USER_ROLES.BENEVOLE);
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const [manualError, setManualError] = useState('');
+
+  // Modale Modification de Membre (pour corriger faute de frappe, numéro, etc.)
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editPseudo, setEditPseudo] = useState('');
+  const [editRole, setEditRole] = useState(USER_ROLES.BENEVOLE);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState('');
 
   const handleCopyCode = (code, id) => {
     navigator.clipboard.writeText(code);
@@ -133,6 +145,49 @@ export default function MembersTab({
       setManualError(err.message || "Erreur lors de l'enregistrement du membre.");
     } finally {
       setManualSubmitting(false);
+    }
+  };
+
+  const handleOpenEditModal = (member) => {
+    setEditingMember(member);
+    setEditFullName(member.fullName || member.displayName || '');
+    setEditPhone(member.phone || '');
+    setEditPseudo(member.pseudo || '');
+    setEditRole(member.role || USER_ROLES.BENEVOLE);
+    setEditError('');
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setEditError('');
+
+    if (!editFullName.trim()) {
+      setEditError("Le nom et prénom sont obligatoires.");
+      return;
+    }
+    if (!editPhone.trim()) {
+      setEditError("Le numéro de téléphone est obligatoire.");
+      return;
+    }
+
+    setEditSubmitting(true);
+    try {
+      if (onEditMember) {
+        await onEditMember(editingMember.uid || editingMember.id, {
+          fullName: editFullName.trim(),
+          phone: editPhone.trim(),
+          pseudo: editPseudo.trim(),
+          role: editRole
+        });
+      }
+      setEditModalOpen(false);
+      setEditingMember(null);
+    } catch (err) {
+      setEditError(err.message || "Erreur lors de la mise à jour du membre.");
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -349,35 +404,46 @@ export default function MembersTab({
                           </div>
                         </td>
 
-                        {/* Colonne 3 : Rôle attribué */}
+                        {/* Colonne 3 : Rôle attribué (Sélection à fort contraste sans clair sur clair) */}
                         <td className="py-3.5 px-4">
-                          <select
-                            value={isProtected ? USER_ROLES.ADMIN : (m.role || USER_ROLES.BENEVOLE)}
-                            onChange={(e) => onUpdateRole(m.uid, e.target.value)}
-                            disabled={isProtected}
-                            title={
-                              isSuperAdmin
-                                ? "L'administrateur principal conserve toujours les droits d'administration complets."
-                                : isPresident
-                                  ? "Le compte officiel de la présidence / association dispose des droits Administrateur permanents."
-                                  : "Modifier le rôle"
-                            }
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border focus:outline-none transition-all ${
-                              isSuperAdmin
-                                ? 'bg-amber-900/30 border-amber-500/40 text-amber-300 cursor-not-allowed opacity-90'
-                                : isPresident
-                                  ? 'bg-purple-900/40 border-purple-500/50 text-purple-300 cursor-not-allowed opacity-90'
-                                  : m.role === USER_ROLES.ADMIN
-                                    ? 'bg-purple-900/30 border-purple-500/40 text-purple-300'
-                                    : m.role === USER_ROLES.GESTION
-                                      ? 'bg-blue-900/30 border-blue-500/40 text-blue-300'
-                                      : 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300'
-                            }`}
-                          >
-                            <option value={USER_ROLES.ADMIN}>Administrateur (Tous droits)</option>
-                            <option value={USER_ROLES.GESTION}>Gestion (Chats & Avis)</option>
-                            <option value={USER_ROLES.BENEVOLE}>Bénévole (Adoptions)</option>
-                          </select>
+                          {isSuperAdmin ? (
+                            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 inline-flex items-center gap-1.5 shadow-xs">
+                              <span>👑 Admin Principal</span>
+                            </span>
+                          ) : isPresident ? (
+                            <span className="px-3 py-1.5 rounded-xl text-xs font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 inline-flex items-center gap-1.5 shadow-xs">
+                              <span>🏛️ Présidence (Admin)</span>
+                            </span>
+                          ) : (
+                            <select
+                              value={m.role || USER_ROLES.BENEVOLE}
+                              onChange={(e) => onUpdateRole(m.uid, e.target.value)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0d1322] text-white border border-slate-700 hover:border-slate-500 focus:outline-none focus:border-pink-500 cursor-pointer shadow-xs transition-colors"
+                              title="Modifier le rôle du membre"
+                            >
+                              <option 
+                                value={USER_ROLES.ADMIN} 
+                                className="bg-[#0b0f19] text-white font-bold py-1.5"
+                                style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}
+                              >
+                                Administrateur (Tous droits)
+                              </option>
+                              <option 
+                                value={USER_ROLES.GESTION} 
+                                className="bg-[#0b0f19] text-white font-bold py-1.5"
+                                style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}
+                              >
+                                Gestion (Chats & Avis)
+                              </option>
+                              <option 
+                                value={USER_ROLES.BENEVOLE} 
+                                className="bg-[#0b0f19] text-white font-bold py-1.5"
+                                style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}
+                              >
+                                Bénévole (Adoptions)
+                              </option>
+                            </select>
+                          )}
                         </td>
 
                         {/* Colonne 4 : Date Inscription */}
@@ -392,7 +458,20 @@ export default function MembersTab({
 
                         {/* Colonne 6 : Actions */}
                         <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Bouton Éditer les coordonnées */}
+                            {onEditMember && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(m)}
+                                className="p-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-600 text-blue-300 hover:text-white transition-colors"
+                                title="Modifier les coordonnées du membre (téléphone, nom, etc.)"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+
+                            {/* Bouton Réinitialiser Mot de passe */}
                             <button
                               type="button"
                               onClick={() => onSendPasswordReset(m.email)}
@@ -402,6 +481,7 @@ export default function MembersTab({
                               <Mail className="w-3.5 h-3.5 text-pink-400" />
                             </button>
 
+                            {/* Bouton Supprimer Membre */}
                             {!isCurrent && !isProtected && (
                               <button
                                 type="button"
@@ -544,6 +624,168 @@ export default function MembersTab({
         </div>
       </div>
 
+      {/* ================= MODALE MODIFICATION D'UN MEMBRE ================= */}
+      {editModalOpen && editingMember && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="admin-glass-panel rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-700/80 shadow-2xl relative animate-in fade-in zoom-in-95">
+            <button
+              type="button"
+              onClick={() => setEditModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <Edit3 className="w-6 h-6" />
+              </div>
+              <h3 className="font-title text-xl font-black text-white mb-1">
+                Modifier le membre
+              </h3>
+              <p className="text-xs text-slate-400">
+                Correction de coordonnées (nom, téléphone, pseudo ou rôle).
+              </p>
+            </div>
+
+            {editError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {/* Adresse e-mail (lecture seule) */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Adresse E-mail</span>
+                  <span className="text-[10px] text-slate-500 lowercase">Non modifiable</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+                  <input
+                    type="email"
+                    disabled
+                    value={editingMember.email || ''}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 text-xs font-mono cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Nom & Prénom */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Nom complet (Vrai nom & Prénom) *</span>
+                  <span className="text-[10px] text-pink-400 lowercase">Obligatoire</span>
+                </label>
+                <div className="relative">
+                  <Users className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+                  <input
+                    type="text"
+                    required
+                    value={editFullName}
+                    onChange={(e) => setEditFullName(e.target.value)}
+                    placeholder="Ex: Camille Martin"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+              </div>
+
+              {/* Téléphone */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Numéro de téléphone *</span>
+                  <span className="text-[10px] text-pink-400 lowercase">Obligatoire</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+                  <input
+                    type="tel"
+                    required
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+              </div>
+
+              {/* Pseudo */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Pseudo affiché (Optionnel)</span>
+                  <span className="text-[10px] text-slate-500 lowercase">Optionnel</span>
+                </label>
+                <div className="relative">
+                  <AtSign className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+                  <input
+                    type="text"
+                    value={editPseudo}
+                    onChange={(e) => setEditPseudo(e.target.value)}
+                    placeholder="Ex: CamilleM (laisser vide pour utiliser le nom complet)"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+              </div>
+
+              {/* Rôle */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Rôle attribué</span>
+                  {(isSuperAdminEmail(editingMember.email) || isAssoPresidentEmail(editingMember.email)) && (
+                    <span className="text-[10px] text-amber-400 font-bold lowercase">Compte principal protégé</span>
+                  )}
+                </label>
+                <select
+                  disabled={isSuperAdminEmail(editingMember.email) || isAssoPresidentEmail(editingMember.email)}
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-pink-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <option value={USER_ROLES.BENEVOLE} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>
+                    Bénévole (Adoptions)
+                  </option>
+                  <option value={USER_ROLES.GESTION} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>
+                    Gestion (Chats & Témoignages)
+                  </option>
+                  <option value={USER_ROLES.ADMIN} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>
+                    Administrateur (Tous droits)
+                  </option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex-1 py-3 rounded-xl bg-brand-gradient text-white text-xs font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {editSubmitting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Enregistrement...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Enregistrer</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ================= MODALE AJOUT MANUEL D'UN MEMBRE ================= */}
       {manualModalOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -589,7 +831,7 @@ export default function MembersTab({
                     value={manualEmail}
                     onChange={(e) => setManualEmail(e.target.value)}
                     placeholder="ex: galexandre@galexandre.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
                   />
                 </div>
               </div>
@@ -607,7 +849,7 @@ export default function MembersTab({
                     value={manualFullName}
                     onChange={(e) => setManualFullName(e.target.value)}
                     placeholder="Ex: Alexandre G."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
                   />
                 </div>
               </div>
@@ -625,7 +867,7 @@ export default function MembersTab({
                     value={manualPhone}
                     onChange={(e) => setManualPhone(e.target.value)}
                     placeholder="06 12 34 56 78"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
                   />
                 </div>
               </div>
@@ -642,7 +884,7 @@ export default function MembersTab({
                     value={manualPseudo}
                     onChange={(e) => setManualPseudo(e.target.value)}
                     placeholder="Ex: Alexandre"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
                   />
                 </div>
               </div>
@@ -654,11 +896,11 @@ export default function MembersTab({
                 <select
                   value={manualRole}
                   onChange={(e) => setManualRole(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-pink-500"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-pink-500"
                 >
-                  <option value={USER_ROLES.BENEVOLE}>Bénévole (Adoptions)</option>
-                  <option value={USER_ROLES.GESTION}>Gestion (Chats & Témoignages)</option>
-                  <option value={USER_ROLES.ADMIN}>Administrateur (Tous droits)</option>
+                  <option value={USER_ROLES.BENEVOLE} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Bénévole (Adoptions)</option>
+                  <option value={USER_ROLES.GESTION} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Gestion (Chats & Témoignages)</option>
+                  <option value={USER_ROLES.ADMIN} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Administrateur (Tous droits)</option>
                 </select>
               </div>
 
@@ -725,11 +967,11 @@ export default function MembersTab({
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-pink-500"
+                  className="w-full px-4 py-3 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-pink-500"
                 >
-                  <option value={USER_ROLES.BENEVOLE}>Bénévole (Gestion des adoptions)</option>
-                  <option value={USER_ROLES.GESTION}>Gestionnaire (Chats & Témoignages)</option>
-                  <option value={USER_ROLES.ADMIN}>Administrateur (Tous les droits)</option>
+                  <option value={USER_ROLES.BENEVOLE} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Bénévole (Gestion des adoptions)</option>
+                  <option value={USER_ROLES.GESTION} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Gestionnaire (Chats & Témoignages)</option>
+                  <option value={USER_ROLES.ADMIN} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Administrateur (Tous les droits)</option>
                 </select>
               </div>
 
@@ -742,7 +984,7 @@ export default function MembersTab({
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   placeholder="Ex: Camille - permanence accueil du samedi"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-pink-500"
+                  className="w-full px-4 py-3 rounded-xl bg-[#0d1322] border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-pink-500"
                 />
               </div>
 

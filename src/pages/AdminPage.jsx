@@ -45,11 +45,17 @@ import {
   fetchAdoptionRequests, 
   updateAdoptionRequest, 
   deleteAdoptionRequest, 
-  ADOPTION_STATUS 
+  archiveAdoptionRequest,
+  archiveOldAdoptions,
+  purgeExpiredAdoptions,
+  ADOPTION_STATUS,
+  ADOPTION_ARCHIVE_DAYS,
+  ADOPTION_PURGE_DAYS
 } from '../firebase/adoptionsService';
 import { 
   fetchAllUsers, 
   updateUserRole, 
+  updateMemberProfile,
   deleteUserRecord, 
   addManualMember,
   createInviteCode, 
@@ -308,7 +314,64 @@ export default function AdminPage() {
     setDeleteModalOpen(true);
   };
 
+  const handleArchiveAdoption = async (id) => {
+    try {
+      await archiveAdoptionRequest(id);
+      setAdoptions(prev => prev.map(a => a.id === id ? { ...a, status: ADOPTION_STATUS.ARCHIVEE, archivedAt: new Date().toISOString() } : a));
+      if (selectedAdoption && selectedAdoption.id === id) {
+        setSelectedAdoption(prev => ({ ...prev, status: ADOPTION_STATUS.ARCHIVEE, archivedAt: new Date().toISOString() }));
+      }
+      showToast("Dossier archivé", "La demande d'adoption a été déplacée dans les archives.");
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible d'archiver la demande.", "error");
+    }
+  };
+
+  const handleArchiveAllOldAdoptions = async () => {
+    try {
+      const count = await archiveOldAdoptions(ADOPTION_ARCHIVE_DAYS);
+      if (count > 0) {
+        await loadAdoptions();
+        showToast("Archivage terminé", `${count} demande(s) de plus de 30 jours ont été archivées.`);
+      } else {
+        showToast("Information", "Aucune demande de plus de 30 jours à archiver.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Échec de l'archivage automatique.", "error");
+    }
+  };
+
+  const handlePurgeExpiredAdoptions = async () => {
+    try {
+      const count = await purgeExpiredAdoptions(ADOPTION_PURGE_DAYS);
+      if (count > 0) {
+        await loadAdoptions();
+        showToast("Purge effectuée", `${count} demande(s) de plus de 60 jours ont été supprimées définitivement.`);
+      } else {
+        showToast("Information", "Aucune demande de plus de 60 jours à purger.");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Échec de la purge de l'historique.", "error");
+    }
+  };
+
   // --- Handlers Membres & Rôles ---
+  const handleUpdateMemberProfile = async (uid, updates) => {
+    try {
+      const updated = await updateMemberProfile(uid, updates);
+      setMembers(prev => prev.map(m => (m.uid === uid || m.id === uid) ? { ...m, ...updates } : m));
+      showToast("Coordonnées mises à jour", "Les informations du membre ont été enregistrées avec succès.");
+      return updated;
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", err.message || "Impossible de modifier les informations du membre.", "error");
+      throw err;
+    }
+  };
+
   const handleUpdateUserRole = async (uid, newRole) => {
     try {
       await updateUserRole(uid, newRole);
@@ -1439,6 +1502,10 @@ export default function AdminPage() {
             loading={loadingAdoptions}
             onRefresh={loadAdoptions}
             onSelectAdoption={handleSelectAdoption}
+            onArchiveAdoption={handleArchiveAdoption}
+            onArchiveAllOld={handleArchiveAllOldAdoptions}
+            onPurgeExpired={handlePurgeExpiredAdoptions}
+            canDelete={canDeleteAdoptions(role)}
           />
         )}
 
@@ -1451,6 +1518,7 @@ export default function AdminPage() {
             loading={loadingMembers}
             onRefresh={loadMembersAndCodes}
             onUpdateRole={handleUpdateUserRole}
+            onEditMember={handleUpdateMemberProfile}
             onDeleteMember={handleDeleteMember}
             onSendPasswordReset={handleSendMemberPasswordReset}
             onCreateInviteCode={handleCreateInviteCode}

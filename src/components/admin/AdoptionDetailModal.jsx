@@ -79,7 +79,8 @@ export default function AdoptionDetailModal({
     [ADOPTION_STATUS.NOUVEAU]: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     [ADOPTION_STATUS.EN_COURS]: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     [ADOPTION_STATUS.VALIDEE]: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    [ADOPTION_STATUS.REFUSEE]: 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+    [ADOPTION_STATUS.REFUSEE]: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    [ADOPTION_STATUS.ARCHIVEE]: 'bg-slate-700/40 text-slate-300 border-slate-600'
   };
 
   return (
@@ -347,10 +348,11 @@ export default function AdoptionDetailModal({
                   onChange={(e) => setCurrentStatus(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-pink-500"
                 >
-                  <option value={ADOPTION_STATUS.NOUVEAU}>Nouveau (À traiter)</option>
-                  <option value={ADOPTION_STATUS.EN_COURS}>En cours d'instruction</option>
-                  <option value={ADOPTION_STATUS.VALIDEE}>Validée (Visite/Adoption)</option>
-                  <option value={ADOPTION_STATUS.REFUSEE}>Refusée / Abandonnée</option>
+                  <option value={ADOPTION_STATUS.NOUVEAU} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Nouveau (À traiter)</option>
+                  <option value={ADOPTION_STATUS.EN_COURS} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>En cours d'instruction</option>
+                  <option value={ADOPTION_STATUS.VALIDEE} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Validée (Visite/Adoption)</option>
+                  <option value={ADOPTION_STATUS.REFUSEE} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Refusée / Abandonnée</option>
+                  <option value={ADOPTION_STATUS.ARCHIVEE} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Archivée (&gt; 30 jours)</option>
                 </select>
               </div>
 

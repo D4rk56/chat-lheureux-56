@@ -517,7 +517,7 @@ export default function CatDetailPage() {
             {!isAdopted ? (
               <>
                 <Link
-                  to={`/formulaire-adoption?chat=${encodeURIComponent(cat.name)}`}
+                  to={`/formulaire-adoption?chat=${encodeURIComponent(cat.name)}&catId=${encodeURIComponent(cat.id)}`}
                   className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-xs sm:text-sm font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-pink-500/25 hover:shadow-xl hover:opacity-95 transition-all uppercase tracking-wider"
                 >
                   <Sparkles className="w-4 h-4" />
