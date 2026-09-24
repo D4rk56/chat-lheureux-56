@@ -16,6 +16,23 @@ export const ROLE_LABELS = {
 };
 
 /**
+ * Liste des e-mails d'administrateurs principaux permanents
+ */
+export const SUPER_ADMIN_EMAILS = [
+  'dark56100@gmail.com'
+];
+
+/**
+ * Vérifie si une adresse e-mail correspond à l'administrateur principal
+ * @param {string} email 
+ * @returns {boolean}
+ */
+export function isSuperAdminEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  return SUPER_ADMIN_EMAILS.includes(email.trim().toLowerCase());
+}
+
+/**
  * Vérifie si le rôle a les permissions d'administration complète
  * @param {string} role 
  * @returns {boolean}

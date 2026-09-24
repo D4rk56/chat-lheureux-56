@@ -12,7 +12,9 @@ import {
   canManageStories, 
   canManageAdoptions, 
   canManageMembers, 
-  getDefaultTabForRole 
+  getDefaultTabForRole,
+  isSuperAdminEmail,
+  SUPER_ADMIN_EMAILS
 } from '../src/utils/roles.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
@@ -543,5 +545,16 @@ describe('Rôles et autorisations (roles)', () => {
     assert.equal(canManageMembers(USER_ROLES.BENEVOLE), false);
     assert.equal(getDefaultTabForRole(USER_ROLES.BENEVOLE), 'adoptions');
   });
+
+  test('dark56100@gmail.com est reconnu comme administrateur principal permanent', () => {
+    assert.equal(SUPER_ADMIN_EMAILS.includes('dark56100@gmail.com'), true);
+    assert.equal(isSuperAdminEmail('dark56100@gmail.com'), true);
+    assert.equal(isSuperAdminEmail('DARK56100@GMAIL.COM'), true);
+    assert.equal(isSuperAdminEmail(' dark56100@gmail.com '), true);
+    assert.equal(isSuperAdminEmail('autre.benevole@test.fr'), false);
+    assert.equal(isSuperAdminEmail(''), false);
+    assert.equal(isSuperAdminEmail(null), false);
+  });
 });
+
 

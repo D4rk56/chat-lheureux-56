@@ -12,7 +12,7 @@ import {
   limit 
 } from "firebase/firestore";
 import { db } from "./config.js";
-import { USER_ROLES } from "../utils/roles.js";
+import { USER_ROLES, isSuperAdminEmail } from "../utils/roles.js";
 import { generateRandomInviteCode, normalizeInviteCode } from "../utils/inviteCodes.js";
 
 const USERS_COLLECTION = "users";
@@ -35,8 +35,7 @@ export async function fetchUserProfile(uid) {
 
 /**
  * Assure la présence de l'utilisateur dans la collection `users`.
- * Si la base est vierge ou si l'utilisateur est le premier à se connecter,
- * il reçoit automatiquement le rôle 'Administrateur'.
+ * L'administrateur principal (dark56100@gmail.com) est garanti avec le rôle 'Administrateur'.
  * @param {Object} user Firebase Auth User
  * @param {string} [initialRole] Rôle explicite attribué (ex: lors d'une inscription par invitation)
  * @returns {Promise<Object>}
@@ -47,11 +46,24 @@ export async function ensureUserRecord(user, initialRole = null) {
   const userRef = doc(db, USERS_COLLECTION, user.uid);
   const snap = await getDoc(userRef);
   const now = new Date().toISOString();
+  const isSuperAdmin = isSuperAdminEmail(user.email);
 
   if (snap.exists()) {
     const existing = snap.data();
+
+    // S'assurer que l'administrateur principal possède toujours le rôle Administrateur
+    if (isSuperAdmin && existing.role !== USER_ROLES.ADMIN) {
+      try {
+        await updateDoc(userRef, { role: USER_ROLES.ADMIN, isSuperAdmin: true, updatedAt: now });
+        existing.role = USER_ROLES.ADMIN;
+        existing.isSuperAdmin = true;
+      } catch (e) {
+        console.warn("Échec promotion admin principal :", e);
+      }
+    }
+
     // Si un rôle explicite a été spécifié (ex: via un code d'invitation) et diffère de l'existant
-    if (initialRole && existing.role !== initialRole) {
+    if (!isSuperAdmin && initialRole && existing.role !== initialRole) {
       try {
         await updateDoc(userRef, { role: initialRole, lastLoginAt: now, updatedAt: now });
         return { uid: user.uid, ...existing, role: initialRole, lastLoginAt: now };
@@ -65,26 +77,35 @@ export async function ensureUserRecord(user, initialRole = null) {
     } catch (e) {
       console.warn("Échec mise à jour lastLoginAt :", e);
     }
-    return { uid: user.uid, ...existing, lastLoginAt: now };
+    return { 
+      uid: user.uid, 
+      ...existing, 
+      role: isSuperAdmin ? USER_ROLES.ADMIN : existing.role, 
+      isSuperAdmin: isSuperAdmin || existing.isSuperAdmin,
+      lastLoginAt: now 
+    };
   }
 
   // L'utilisateur n'existe pas encore dans Firestore
-  let assignedRole = initialRole;
+  let assignedRole = isSuperAdmin ? USER_ROLES.ADMIN : initialRole;
 
   if (!assignedRole) {
-    // Vérifier si des utilisateurs existent déjà
-    try {
-      const allUsersSnap = await getDocs(query(collection(db, USERS_COLLECTION), limit(1)));
-      if (allUsersSnap.empty) {
-        // Premier utilisateur du système : nommé Administrateur par défaut
-        assignedRole = USER_ROLES.ADMIN;
-      } else {
-        // Par défaut pour un utilisateur existant sans profil : Bénévole
+    if (isSuperAdmin) {
+      assignedRole = USER_ROLES.ADMIN;
+    } else {
+      try {
+        const allUsersSnap = await getDocs(query(collection(db, USERS_COLLECTION), limit(1)));
+        if (allUsersSnap.empty) {
+          // Premier utilisateur du système : nommé Administrateur par défaut
+          assignedRole = USER_ROLES.ADMIN;
+        } else {
+          // Par défaut pour un utilisateur existant sans profil : Bénévole
+          assignedRole = USER_ROLES.BENEVOLE;
+        }
+      } catch (err) {
+        console.warn("Erreur comptage utilisateurs, fallback Bénévole :", err);
         assignedRole = USER_ROLES.BENEVOLE;
       }
-    } catch (err) {
-      console.warn("Erreur comptage utilisateurs, fallback Bénévole :", err);
-      assignedRole = USER_ROLES.BENEVOLE;
     }
   }
 
@@ -129,6 +150,10 @@ export async function fetchAllUsers() {
 export async function updateUserRole(uid, newRole) {
   if (!uid || !newRole) return;
   const userRef = doc(db, USERS_COLLECTION, uid);
+  const snap = await getDoc(userRef);
+  if (snap.exists() && isSuperAdminEmail(snap.data()?.email)) {
+    throw new Error("Impossible de modifier le rôle de l'administrateur principal.");
+  }
   await updateDoc(userRef, {
     role: newRole,
     updatedAt: new Date().toISOString()
@@ -143,6 +168,10 @@ export async function updateUserRole(uid, newRole) {
 export async function deleteUserRecord(uid) {
   if (!uid) return;
   const userRef = doc(db, USERS_COLLECTION, uid);
+  const snap = await getDoc(userRef);
+  if (snap.exists() && isSuperAdminEmail(snap.data()?.email)) {
+    throw new Error("Impossible de supprimer le compte de l'administrateur principal.");
+  }
   await deleteDoc(userRef);
 }
 

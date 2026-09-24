@@ -11,7 +11,7 @@ import {
   fetchUserProfile, 
   redeemInviteCode 
 } from '../firebase/memberService';
-import { USER_ROLES } from '../utils/roles';
+import { USER_ROLES, isSuperAdminEmail } from '../utils/roles';
 
 const AuthContext = createContext({
   user: null,
@@ -38,16 +38,20 @@ export function AuthProvider({ children }) {
       setRole(USER_ROLES.BENEVOLE);
       return null;
     }
+    const isSuperAdmin = isSuperAdminEmail(firebaseUser.email);
+    if (isSuperAdmin) {
+      setRole(USER_ROLES.ADMIN);
+    }
     try {
-      const roleToAssign = explicitRole || pendingRegisterRoleRef.current;
+      const roleToAssign = isSuperAdmin ? USER_ROLES.ADMIN : (explicitRole || pendingRegisterRoleRef.current);
       const profile = await ensureUserRecord(firebaseUser, roleToAssign);
       setUserProfile(profile);
-      setRole(profile?.role || USER_ROLES.BENEVOLE);
+      setRole(isSuperAdmin ? USER_ROLES.ADMIN : (profile?.role || USER_ROLES.BENEVOLE));
       return profile;
     } catch (err) {
       console.warn("Erreur chargement profil utilisateur :", err);
       // Fallback par défaut
-      setRole(USER_ROLES.BENEVOLE);
+      setRole(isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.BENEVOLE);
       return null;
     }
   }, []);
@@ -56,6 +60,9 @@ export function AuthProvider({ children }) {
     const unsubscribe = subscribeToAuthState(async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        if (isSuperAdminEmail(currentUser.email)) {
+          setRole(USER_ROLES.ADMIN);
+        }
         await loadUserProfile(currentUser);
       } else {
         setUserProfile(null);

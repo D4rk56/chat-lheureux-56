@@ -14,7 +14,7 @@ import {
   X,
   Sparkles
 } from 'lucide-react';
-import { USER_ROLES, ROLE_LABELS } from '../../utils/roles';
+import { USER_ROLES, ROLE_LABELS, isSuperAdminEmail } from '../../utils/roles';
 
 export default function MembersTab({
   currentUserId,
@@ -123,12 +123,18 @@ export default function MembersTab({
               <tbody className="divide-y divide-slate-800/60">
                 {members.map((m) => {
                   const isCurrent = m.uid === currentUserId;
+                  const isSuperAdmin = isSuperAdminEmail(m.email);
                   return (
                     <tr key={m.uid || m.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-4 sm:px-6">
-                        <div className="font-bold text-white flex items-center gap-2">
+                        <div className="font-bold text-white flex flex-wrap items-center gap-2">
                           <span>{m.displayName || 'Bénévole'}</span>
-                          {isCurrent && (
+                          {isSuperAdmin && (
+                            <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+                              👑 Admin Principal
+                            </span>
+                          )}
+                          {isCurrent && !isSuperAdmin && (
                             <span className="text-[10px] bg-pink-500/20 text-pink-300 border border-pink-500/30 px-2 py-0.5 rounded-full font-bold">
                               Vous
                             </span>
@@ -139,14 +145,18 @@ export default function MembersTab({
 
                       <td className="py-3.5 px-4">
                         <select
-                          value={m.role || USER_ROLES.BENEVOLE}
+                          value={isSuperAdmin ? USER_ROLES.ADMIN : (m.role || USER_ROLES.BENEVOLE)}
                           onChange={(e) => onUpdateRole(m.uid, e.target.value)}
+                          disabled={isSuperAdmin}
+                          title={isSuperAdmin ? "L'administrateur principal conserve toujours les droits d'administration complets." : "Modifier le rôle"}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold border focus:outline-none transition-all ${
-                            m.role === USER_ROLES.ADMIN
-                              ? 'bg-purple-900/30 border-purple-500/40 text-purple-300'
-                              : m.role === USER_ROLES.GESTION
-                                ? 'bg-blue-900/30 border-blue-500/40 text-blue-300'
-                                : 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300'
+                            isSuperAdmin
+                              ? 'bg-amber-900/30 border-amber-500/40 text-amber-300 cursor-not-allowed opacity-90'
+                              : m.role === USER_ROLES.ADMIN
+                                ? 'bg-purple-900/30 border-purple-500/40 text-purple-300'
+                                : m.role === USER_ROLES.GESTION
+                                  ? 'bg-blue-900/30 border-blue-500/40 text-blue-300'
+                                  : 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300'
                           }`}
                         >
                           <option value={USER_ROLES.ADMIN}>Administrateur (Tous droits)</option>
@@ -174,7 +184,7 @@ export default function MembersTab({
                             <Mail className="w-3.5 h-3.5 text-pink-400" />
                           </button>
 
-                          {!isCurrent && (
+                          {!isCurrent && !isSuperAdmin && (
                             <button
                               type="button"
                               onClick={() => onDeleteMember(m.uid, m.displayName || m.email)}
