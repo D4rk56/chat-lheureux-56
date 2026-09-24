@@ -1,7 +1,8 @@
 export default async (request, context) => {
   try {
     const url = new URL(request.url);
-    const apiKey = "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE";
+    const apiKey = Netlify.env.get("FIREBASE_API_KEY");
+    const keyParam = apiKey ? `?key=${encodeURIComponent(apiKey)}` : "";
 
     // 1. Route API pour convertir et servir l'image binaire du chat à Facebook/WhatsApp
     if (url.pathname === "/api/cat-image" || url.pathname.startsWith("/api/cat-image")) {
@@ -21,7 +22,7 @@ export default async (request, context) => {
       if (!catId) return Response.redirect(fallbackImg, 302);
 
       try {
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats/${catId}?key=${apiKey}`;
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats/${catId}${keyParam}`;
         const res = await fetch(firestoreUrl);
         if (res.ok) {
           const data = await res.json();
@@ -90,7 +91,7 @@ export default async (request, context) => {
 
     if (catId) {
       try {
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats/${catId}?key=${apiKey}`;
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats/${catId}${keyParam}`;
         const res = await fetch(firestoreUrl);
         if (res.ok) {
           const data = await res.json();
@@ -104,7 +105,7 @@ export default async (request, context) => {
     // Si l'ID est introuvable ou invalide, secours sur le premier chat réel disponible dans Firestore
     if (!catData) {
       try {
-        const listUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats?pageSize=1&key=${apiKey}`;
+        const listUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats?pageSize=1${apiKey ? `&key=${encodeURIComponent(apiKey)}` : ""}`;
         const res = await fetch(listUrl);
         if (res.ok) {
           const listData = await res.json();
