@@ -208,26 +208,45 @@ export default function AdminPage() {
   const loadAllData = async () => {
     setLoadingData(true);
     try {
-      const promises = [
+      const [catsSettled, storiesSettled, adoptionsSettled, membersSettled, codesSettled] = await Promise.allSettled([
         fetchCats(false),
         fetchStories(),
-        fetchAdoptionRequests()
-      ];
+        canManageAdoptions(role) ? fetchAdoptionRequests() : Promise.resolve([]),
+        isAdminRole(role) ? fetchAllUsers() : Promise.resolve([]),
+        isAdminRole(role) ? fetchInviteCodes() : Promise.resolve([])
+      ]);
 
-      // Chargement membres & codes si admin
-      if (isAdminRole(role)) {
-        promises.push(fetchAllUsers(), fetchInviteCodes());
+      if (catsSettled.status === 'fulfilled') {
+        setCats(catsSettled.value || []);
+      } else {
+        console.warn("Échec chargement chats :", catsSettled.reason);
       }
 
-      const results = await Promise.all(promises);
-      setCats(results[0] || []);
-      setStories(results[1] || []);
-      setAdoptions(results[2] || []);
-      if (results[3]) setMembers(results[3]);
-      if (results[4]) setInviteCodes(results[4]);
+      if (storiesSettled.status === 'fulfilled') {
+        setStories(storiesSettled.value || []);
+      } else {
+        console.warn("Échec chargement avis :", storiesSettled.reason);
+      }
+
+      if (adoptionsSettled.status === 'fulfilled') {
+        setAdoptions(adoptionsSettled.value || []);
+      } else {
+        console.warn("Échec chargement adoptions :", adoptionsSettled.reason);
+      }
+
+      if (membersSettled && membersSettled.status === 'fulfilled') {
+        setMembers(membersSettled.value || []);
+      } else if (membersSettled) {
+        console.warn("Échec chargement membres :", membersSettled.reason);
+      }
+
+      if (codesSettled && codesSettled.status === 'fulfilled') {
+        setInviteCodes(codesSettled.value || []);
+      } else if (codesSettled) {
+        console.warn("Échec chargement codes d'invitation :", codesSettled.reason);
+      }
     } catch (err) {
-      console.error("Erreur chargement données admin :", err);
-      showToast("Erreur", "Impossible de charger l'ensemble des données.", "error");
+      console.error("Erreur inattendue chargement données admin :", err);
     } finally {
       setLoadingData(false);
     }
