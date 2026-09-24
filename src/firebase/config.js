@@ -8,11 +8,11 @@ import {
 } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Clé API Firebase (priorité aux variables d'environnement Netlify / Vite)
+// Clé API Firebase (chargée de manière sécurisée via variables d'environnement Netlify / Vite)
 const apiKey = (typeof import.meta !== "undefined" && import.meta.env?.VITE_FIREBASE_API_KEY)
   || (typeof process !== "undefined" && process.env?.FIREBASE_API_KEY)
   || (typeof process !== "undefined" && process.env?.VITE_FIREBASE_API_KEY)
-  || "AIzaSyCrmwfjhttviYl1bHXOS67oJY41kM2QVXE";
+  || "AIzaSy_PLACEHOLDER_SET_IN_NETLIFY_ENV";
 
 const firebaseConfig = {
   apiKey: apiKey,
