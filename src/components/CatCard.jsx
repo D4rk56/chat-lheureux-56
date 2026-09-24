@@ -100,32 +100,41 @@ export default function CatCard({ cat }) {
           {isFemale ? '♀' : '♂'} {age}
         </div>
 
-        {/* Badge Statut (Bas gauche) */}
-        {status === 'Urgence' && (
-          <span className="absolute bottom-3 left-3 bg-rose-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse flex items-center gap-1.5 border border-white/20 z-10">
-            <AlertCircle className="w-3.5 h-3.5" /> 🚨 Urgence
-          </span>
-        )}
-        {status === 'Réservé' && (
-          <span className="absolute bottom-3 left-3 bg-amber-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20 z-10">
-            <Clock className="w-3.5 h-3.5" /> Réservé
-          </span>
-        )}
-        {isAdopted && (
-          <span className="absolute bottom-3 left-3 bg-slate-950/90 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20 z-10">
-            <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" /> {adoptedLabel}
-          </span>
-        )}
-        {status === 'Disponible' && (
-          <span className="absolute bottom-3 left-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20 z-10">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Disponible
-          </span>
-        )}
+        {/* Barre inférieure des badges : Statut & Localisation (Flexbox anti-collision) */}
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-1.5 z-10 pointer-events-none">
+          {/* Badge Statut */}
+          <div className="shrink-0">
+            {status === 'Urgence' && (
+              <span className="bg-rose-500 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg animate-pulse flex items-center gap-1.5 border border-white/20">
+                <AlertCircle className="w-3.5 h-3.5" /> Urgence
+              </span>
+            )}
+            {status === 'Réservé' && (
+              <span className="bg-amber-500 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20">
+                <Clock className="w-3.5 h-3.5" /> Réservé
+              </span>
+            )}
+            {isAdopted && (
+              <span className="bg-slate-950/90 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20">
+                <Heart className="w-3.5 h-3.5 text-pink-400 fill-pink-400" /> {adoptedLabel}
+              </span>
+            )}
+            {status === 'Disponible' && (
+              <span className="bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 border border-white/20">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Disponible
+              </span>
+            )}
+          </div>
 
-        {/* Badge Localisation (Bas droite) */}
-        <span className="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-extrabold px-3 py-1 rounded-full shadow-md flex items-center gap-1.5 border border-white/20 z-10">
-          <MapPin className="w-3 h-3 text-pink-400" /> {location}
-        </span>
+          {/* Badge Localisation (Anti-superposition avec max-width et truncate) */}
+          <span 
+            title={location}
+            className="bg-slate-950/80 backdrop-blur-md text-white text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 border border-white/20 min-w-0 max-w-[55%] shrink"
+          >
+            <MapPin className="w-3 h-3 text-pink-400 shrink-0" />
+            <span className="truncate">{location}</span>
+          </span>
+        </div>
       </div>
 
       {/* Contenu textuel */}

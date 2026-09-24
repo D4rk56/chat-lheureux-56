@@ -75,14 +75,28 @@ export default function CatDetailPage() {
 
   // Récupération de suggestions d'autres chats
   useEffect(() => {
+    let isMounted = true;
     const cached = getCachedCats(true);
     if (cached.length > 0) {
-      setSimilarCats(cached.filter((c) => c.id !== catId).slice(0, 3));
-    } else {
-      fetchCats(true).then((all) => {
-        setSimilarCats(all.filter((c) => c.id !== catId).slice(0, 3));
-      });
+      const filtered = cached.filter((c) => c.id !== catId && ((c.photos && c.photos.length > 0) || c.image));
+      if (filtered.length > 0) {
+        setSimilarCats(filtered.slice(0, 3));
+      }
     }
+
+    // Toujours rafraîchir avec les données complètes de Firestore
+    fetchCats(true)
+      .then((all) => {
+        if (isMounted && all && all.length > 0) {
+          const validCats = all.filter((c) => c.id !== catId);
+          setSimilarCats(validCats.slice(0, 3));
+        }
+      })
+      .catch((err) => {
+        console.warn("Erreur chargement suggestions d'autres chats :", err);
+      });
+
+    return () => { isMounted = false; };
   }, [catId]);
 
   const handleFavoriteToggle = () => {

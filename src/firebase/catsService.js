@@ -27,19 +27,34 @@ export function isCatLockedByOther(cat, currentUserEmail) {
   return lockAge < LOCK_EXPIRATION_MS;
 }
 
+// Cache en mémoire pour hydratation instantanée 0ms entre les navigations SPA
+let inMemoryCatsCache = null;
+
 /**
  * Récupère le cache local des chats (hydratation 0ms).
  */
 export function getCachedCats(filterExpired = true) {
   try {
-    const raw = localStorage.getItem('cached_cats_catalog');
+    // 1. Priorité au cache en mémoire (données complètes avec toutes les photos)
+    if (inMemoryCatsCache && inMemoryCatsCache.length > 0) {
+      return filterExpired
+        ? inMemoryCatsCache.filter(cat => !getCatAdoptionInfo(cat).isExpired)
+        : inMemoryCatsCache;
+    }
+
+    // 2. Fallback localStorage si disponible
+    const raw = localStorage.getItem('cached_cats_catalog_v2');
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    if (!filterExpired) return parsed;
-    return parsed.filter(cat => !getCatAdoptionInfo(cat).isExpired);
+    
+    // Ignorer le cache s'il ne contient aucune photo valide pour éviter le placeholder "photo en cours"
+    const valid = parsed.filter(c => (c.photos && c.photos.length > 0 && c.photos[0]) || c.image);
+    if (valid.length === 0) return [];
+
+    if (!filterExpired) return valid;
+    return valid.filter(cat => !getCatAdoptionInfo(cat).isExpired);
   } catch (e) {
-    console.warn("Erreur lecture cache local des chats :", e);
     return [];
   }
 }
@@ -55,23 +70,20 @@ export async function fetchCats(filterExpired = true) {
     list.push(cat);
   });
 
+  // Met à jour le cache en mémoire (avec photos complètes)
+  inMemoryCatsCache = list;
+
   try {
-    // Si les données sont volumineuses (photos multiples / base64),
-    // on stocke une version allégée sans les photos lourdes pour l'hydratation 0ms.
-    // La persistance complète est assurée nativement par IndexedDB de Firestore.
-    const lightweightList = list.map(c => {
-      const { photos, image, ...rest } = c;
-      const primaryPhoto = (photos && photos[0]) || image || '';
-      return {
-        ...rest,
-        image: primaryPhoto.length < 50000 ? primaryPhoto : '',
-        photos: primaryPhoto.length < 50000 ? [primaryPhoto] : []
-      };
-    });
-    localStorage.setItem('cached_cats_catalog', JSON.stringify(lightweightList));
+    // Nettoyer l'ancienne clé de cache potentiellement corrompue
+    localStorage.removeItem('cached_cats_catalog');
+
+    // Sauvegarder dans localStorage si la taille globale est sous le quota navigateur (~2.5 Mo)
+    const jsonStr = JSON.stringify(list);
+    if (jsonStr.length < 2500000) {
+      localStorage.setItem('cached_cats_catalog_v2', jsonStr);
+    }
   } catch (e) {
-    // En cas de dépassement de quota, on nettoie le cache localStorage sans bloquer
-    try { localStorage.removeItem('cached_cats_catalog'); } catch (_) {}
+    // Si quota dépassé, IndexedDB Firestore gère la persistance nativement
   }
 
   if (filterExpired) {
