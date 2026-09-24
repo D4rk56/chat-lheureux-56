@@ -51,6 +51,7 @@ import {
   fetchAllUsers, 
   updateUserRole, 
   deleteUserRecord, 
+  addManualMember,
   createInviteCode, 
   fetchInviteCodes, 
   deleteInviteCode 
@@ -357,6 +358,22 @@ export default function AdminPage() {
     } catch (err) {
       console.error(err);
       showToast("Erreur", "Impossible de révoquer ce code.", "error");
+    }
+  };
+
+  const handleAddManualMember = async (memberData) => {
+    try {
+      const created = await addManualMember(memberData);
+      setMembers(prev => {
+        const filtered = prev.filter(m => m.email?.toLowerCase().trim() !== memberData.email?.toLowerCase().trim());
+        return [created, ...filtered];
+      });
+      showToast("Membre synchronisé !", `Le compte ${memberData.email} a été ajouté avec succès.`);
+      return created;
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", err.message || "Impossible d'ajouter le membre.", "error");
+      throw err;
     }
   };
 
@@ -1438,6 +1455,7 @@ export default function AdminPage() {
             onSendPasswordReset={handleSendMemberPasswordReset}
             onCreateInviteCode={handleCreateInviteCode}
             onDeleteInviteCode={handleDeleteInviteCode}
+            onAddManualMember={handleAddManualMember}
           />
         )}
 

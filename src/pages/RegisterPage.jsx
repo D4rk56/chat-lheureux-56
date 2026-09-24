@@ -6,6 +6,8 @@ import {
   Lock, 
   Mail, 
   User, 
+  Phone,
+  AtSign,
   CheckCircle2, 
   AlertTriangle, 
   ArrowLeft,
@@ -32,6 +34,8 @@ export default function RegisterPage() {
 
   // Formulaire d'inscription
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [pseudo, setPseudo] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -80,6 +84,16 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!fullName.trim()) {
+      setRegisterError("Veuillez renseigner votre nom et prénom (obligatoire).");
+      return;
+    }
+
+    if (!phone.trim() || phone.trim().length < 6) {
+      setRegisterError("Veuillez renseigner un numéro de téléphone valide pour être contacté (obligatoire).");
+      return;
+    }
+
     if (password.length < 6) {
       setRegisterError("Le mot de passe doit comporter au moins 6 caractères.");
       return;
@@ -95,7 +109,10 @@ export default function RegisterPage() {
       await registerWithInvite({
         email: email.trim(),
         password,
-        displayName: fullName.trim(),
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        pseudo: pseudo.trim(),
+        displayName: (pseudo.trim() || fullName.trim()),
         codeDoc: validCodeDoc
       });
 
@@ -247,9 +264,11 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              {/* Vrai nom & prénom - Obligatoire */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Nom & Prénom
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Nom & Prénom (Vrai nom)</span>
+                  <span className="text-[10px] text-pink-400 font-bold lowercase">Obligatoire</span>
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
@@ -264,9 +283,51 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Téléphone - Obligatoire */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Adresse E-mail
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Numéro de téléphone</span>
+                  <span className="text-[10px] text-pink-400 font-bold lowercase">Obligatoire</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Permet à l'équipe et au bureau de l'association de vous contacter facilement.
+                </p>
+              </div>
+
+              {/* Pseudo - Optionnel */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Pseudo affiché</span>
+                  <span className="text-[10px] text-slate-500 font-normal lowercase">Optionnel</span>
+                </label>
+                <div className="relative">
+                  <AtSign className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />
+                  <input
+                    type="text"
+                    value={pseudo}
+                    onChange={(e) => setPseudo(e.target.value)}
+                    placeholder="Ex: CamilleM (laisser vide pour afficher votre vrai nom)"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+                  />
+                </div>
+              </div>
+
+              {/* Adresse e-mail */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                  <span>Adresse E-mail</span>
+                  <span className="text-[10px] text-pink-400 font-bold lowercase">Obligatoire</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" />

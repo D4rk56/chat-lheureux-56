@@ -14,8 +14,11 @@ import {
   canManageMembers, 
   getDefaultTabForRole,
   isSuperAdminEmail,
-  SUPER_ADMIN_EMAILS
+  isAssoPresidentEmail,
+  SUPER_ADMIN_EMAILS,
+  ASSO_PRESIDENT_EMAILS
 } from '../src/utils/roles.js';
+import { KNOWN_ACCOUNTS } from '../src/firebase/memberService.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -554,6 +557,36 @@ describe('Rôles et autorisations (roles)', () => {
     assert.equal(isSuperAdminEmail('autre.benevole@test.fr'), false);
     assert.equal(isSuperAdminEmail(''), false);
     assert.equal(isSuperAdminEmail(null), false);
+  });
+
+  test('asso.chatslheureux@gmail.com est reconnu comme Présidence / Association', () => {
+    assert.equal(ASSO_PRESIDENT_EMAILS.includes('asso.chatslheureux@gmail.com'), true);
+    assert.equal(isAssoPresidentEmail('asso.chatslheureux@gmail.com'), true);
+    assert.equal(isAssoPresidentEmail('ASSO.CHATSLHEUREUX@GMAIL.COM'), true);
+    assert.equal(isAssoPresidentEmail(' asso.chatslheureux@gmail.com '), true);
+    assert.equal(isAssoPresidentEmail('autre@test.fr'), false);
+    assert.equal(isAssoPresidentEmail(''), false);
+    assert.equal(isAssoPresidentEmail(null), false);
+  });
+
+  test('KNOWN_ACCOUNTS contient les comptes officiels et historiques avec leurs rôles', () => {
+    assert.ok(Array.isArray(KNOWN_ACCOUNTS));
+    assert.ok(KNOWN_ACCOUNTS.length >= 3);
+
+    const dark = KNOWN_ACCOUNTS.find(a => a.email === 'dark56100@gmail.com');
+    assert.ok(dark);
+    assert.equal(dark.role, USER_ROLES.ADMIN);
+    assert.equal(dark.isSuperAdmin, true);
+
+    const asso = KNOWN_ACCOUNTS.find(a => a.email === 'asso.chatslheureux@gmail.com');
+    assert.ok(asso);
+    assert.equal(asso.role, USER_ROLES.ADMIN);
+    assert.equal(asso.isPresident, true);
+    assert.equal(asso.phone, '06 61 50 88 28');
+
+    const alex = KNOWN_ACCOUNTS.find(a => a.email === 'galexandre@galexandre.com');
+    assert.ok(alex);
+    assert.equal(alex.role, USER_ROLES.GESTION);
   });
 });
 

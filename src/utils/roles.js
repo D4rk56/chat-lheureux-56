@@ -33,6 +33,23 @@ export function isSuperAdminEmail(email) {
 }
 
 /**
+ * Liste des e-mails officiels de la présidence / association
+ */
+export const ASSO_PRESIDENT_EMAILS = [
+  'asso.chatslheureux@gmail.com'
+];
+
+/**
+ * Vérifie si une adresse e-mail correspond au compte Présidence / Association
+ * @param {string} email 
+ * @returns {boolean}
+ */
+export function isAssoPresidentEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  return ASSO_PRESIDENT_EMAILS.includes(email.trim().toLowerCase());
+}
+
+/**
  * Vérifie si le rôle a les permissions d'administration complète
  * @param {string} role 
  * @returns {boolean}

@@ -95,17 +95,23 @@ export function AuthProvider({ children }) {
   /**
    * Inscription d'un nouveau bénévole/membre avec validation et consommation de son code d'invitation
    */
-  const registerWithInvite = async ({ email, password, displayName, codeDoc }) => {
+  const registerWithInvite = async ({ email, password, displayName, fullName, phone, pseudo, codeDoc }) => {
     const assignedRole = codeDoc.role || USER_ROLES.BENEVOLE;
     // Pré-enregistrer le rôle pour éviter que onAuthStateChanged ne l'écrase
     pendingRegisterRoleRef.current = assignedRole;
 
     try {
       // 1. Créer le compte Firebase Auth
-      const newUser = await registerUser(email, password, displayName);
+      const finalDisplayName = (pseudo && pseudo.trim()) || (fullName && fullName.trim()) || displayName;
+      const newUser = await registerUser(email, password, finalDisplayName);
       
-      // 2. Initialiser le profil utilisateur avec le rôle spécifié par le code
-      const profile = await ensureUserRecord(newUser, assignedRole);
+      // 2. Initialiser le profil utilisateur avec le rôle spécifié par le code et les coordonnées
+      const profile = await ensureUserRecord(newUser, assignedRole, {
+        fullName: fullName || displayName || '',
+        phone: phone || '',
+        pseudo: pseudo || '',
+        displayName: finalDisplayName
+      });
 
       // 3. Marquer le code d'invitation comme utilisé
       try {
