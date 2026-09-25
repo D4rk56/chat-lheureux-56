@@ -4,14 +4,17 @@ import {
   loginUser, 
   logoutUser, 
   resetPassword,
-  registerUser 
+  registerUser,
+  loginWithGoogle
 } from '../firebase/authService';
 import { 
   ensureUserRecord, 
   fetchUserProfile, 
-  redeemInviteCode 
+  redeemInviteCode,
+  isRegisteredMember,
+  KNOWN_ACCOUNTS
 } from '../firebase/memberService';
-import { USER_ROLES, isSuperAdminEmail } from '../utils/roles';
+import { USER_ROLES, isSuperAdminEmail, isAssoPresidentEmail } from '../utils/roles';
 
 const AuthContext = createContext({
   user: null,
@@ -19,9 +22,12 @@ const AuthContext = createContext({
   role: USER_ROLES.BENEVOLE,
   loading: true,
   login: async () => {},
+  loginGoogle: async () => {},
   logout: async () => {},
   sendPasswordReset: async () => {},
   registerWithInvite: async () => {},
+  registerGoogleWithInvite: async () => {},
+  cancelGoogleRegistration: async () => {},
   refreshProfile: async () => {}
 });
 
@@ -42,7 +48,20 @@ export function AuthProvider({ children }) {
     if (isSuperAdmin) {
       setRole(USER_ROLES.ADMIN);
     }
+    const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+    const isKnown = isSuperAdmin || isAssoPresidentEmail(cleanEmail) || KNOWN_ACCOUNTS.some(k => k.email?.toLowerCase() === cleanEmail);
+
     try {
+      const existing = await fetchUserProfile(firebaseUser.uid);
+
+      // Si l'utilisateur n'existe pas encore en base, n'est pas un compte connu, et n'a pas de code d'invitation en cours d'application
+      if (!existing && !isKnown && !explicitRole && !pendingRegisterRoleRef.current) {
+        // Utilisateur non encore autorisé / première connexion Google sans code
+        setUserProfile(null);
+        setRole(USER_ROLES.BENEVOLE);
+        return null;
+      }
+
       const roleToAssign = isSuperAdmin ? USER_ROLES.ADMIN : (explicitRole || pendingRegisterRoleRef.current);
       const profile = await ensureUserRecord(firebaseUser, roleToAssign);
       setUserProfile(profile);
@@ -50,7 +69,6 @@ export function AuthProvider({ children }) {
       return profile;
     } catch (err) {
       console.warn("Erreur chargement profil utilisateur :", err);
-      // Fallback par défaut
       setRole(isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.BENEVOLE);
       return null;
     }
@@ -128,6 +146,61 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginGoogle = async () => {
+    const cred = await loginWithGoogle();
+    if (cred?.user) {
+      const isMember = await isRegisteredMember(cred.user);
+      if (isMember) {
+        await loadUserProfile(cred.user);
+        return { success: true, user: cred.user, isNewUser: false };
+      } else {
+        return { success: true, user: cred.user, isNewUser: true, needsInviteCode: true };
+      }
+    }
+    return { success: false, error: "Connexion Google interrompue." };
+  };
+
+  /**
+   * Finalisation d'inscription avec Google et consommation du code d'invitation
+   */
+  const registerGoogleWithInvite = async ({ googleUser, codeDoc, fullName, phone, pseudo }) => {
+    const targetUser = googleUser || user;
+    if (!targetUser) throw new Error("Aucun utilisateur Google connecté.");
+    if (!codeDoc) throw new Error("Code d'invitation requis.");
+
+    const assignedRole = codeDoc.role || USER_ROLES.BENEVOLE;
+    pendingRegisterRoleRef.current = assignedRole;
+
+    try {
+      const finalDisplayName = (pseudo && pseudo.trim()) || (fullName && fullName.trim()) || targetUser.displayName || targetUser.email?.split('@')[0];
+      const profile = await ensureUserRecord(targetUser, assignedRole, {
+        fullName: fullName || targetUser.displayName || '',
+        phone: phone || '',
+        pseudo: pseudo || '',
+        displayName: finalDisplayName,
+        photoURL: targetUser.photoURL || ''
+      });
+
+      try {
+        await redeemInviteCode(codeDoc.id, targetUser.uid, targetUser.email);
+      } catch (err) {
+        console.warn("Erreur lors de la consommation du code d'invitation :", err);
+      }
+
+      setUserProfile(profile);
+      setRole(assignedRole);
+      return profile;
+    } finally {
+      pendingRegisterRoleRef.current = null;
+    }
+  };
+
+  const cancelGoogleRegistration = async () => {
+    setUserProfile(null);
+    setRole(USER_ROLES.BENEVOLE);
+    return await logoutUser();
+  };
+
   const refreshProfile = async () => {
     if (user) {
       await loadUserProfile(user);
@@ -141,9 +214,12 @@ export function AuthProvider({ children }) {
       role, 
       loading, 
       login, 
+      loginGoogle,
       logout, 
       sendPasswordReset,
       registerWithInvite,
+      registerGoogleWithInvite,
+      cancelGoogleRegistration,
       refreshProfile
     }}>
       {children}

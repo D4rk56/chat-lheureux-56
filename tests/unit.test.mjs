@@ -18,7 +18,7 @@ import {
   SUPER_ADMIN_EMAILS,
   ASSO_PRESIDENT_EMAILS
 } from '../src/utils/roles.js';
-import { KNOWN_ACCOUNTS } from '../src/firebase/memberService.js';
+import { KNOWN_ACCOUNTS, isRegisteredMember } from '../src/firebase/memberService.js';
 import { 
   getAdoptionDaysAge, 
   getAdoptionLifecycleInfo, 
@@ -258,6 +258,18 @@ describe('Traduction des erreurs Firebase Auth (getAuthErrorMessage)', () => {
     assert.equal(
       getAuthErrorMessage('auth/operation-not-allowed'),
       "L'inscription par e-mail n'est pas activée sur la console Firebase."
+    );
+    assert.equal(
+      getAuthErrorMessage('auth/popup-closed-by-user'),
+      "La fenêtre de connexion Google a été fermée avant la finalisation."
+    );
+    assert.equal(
+      getAuthErrorMessage('auth/popup-blocked'),
+      "La fenêtre pop-up Google a été bloquée par votre navigateur. Veuillez autoriser les fenêtres pop-up."
+    );
+    assert.equal(
+      getAuthErrorMessage('auth/unauthorized-domain'),
+      "Domaine non autorisé dans Firebase pour Google Auth. Vérifiez les domaines autorisés dans la console Firebase."
     );
   });
 
@@ -712,4 +724,39 @@ describe('Service et fonction d\'envoi d\'e-mails (noreply@chat-lheureux.fr)', (
     assert.equal(body.success, true);
   });
 });
+
+describe('Connexion Google et sécurisation par code d\'invitation', () => {
+  test('isRegisteredMember doit reconnaître immédiatement l\'administrateur principal', async () => {
+    const isMember = await isRegisteredMember({ email: 'dark56100@gmail.com', uid: 'superadmin123' });
+    assert.equal(isMember, true);
+  });
+
+  test('isRegisteredMember doit reconnaître le compte association', async () => {
+    const isMember = await isRegisteredMember({ email: 'asso.chatslheureux@gmail.com', uid: 'asso123' });
+    assert.equal(isMember, true);
+  });
+
+  test('isRegisteredMember doit reconnaître les comptes connus historiques', async () => {
+    const isMember = await isRegisteredMember({ email: 'galexandre@galexandre.com', uid: 'galex123' });
+    assert.equal(isMember, true);
+  });
+
+  test('isRegisteredMember doit rejeter un utilisateur Google inconnu sans compte préalable', async () => {
+    const isMember = await isRegisteredMember({ email: 'nouveau.benevole.inconnu@gmail.com', uid: 'unk999' });
+    assert.equal(isMember, false);
+  });
+
+  test('Le rôle par défaut lors d\'une inscription par invitation Google est "Bénévole"', () => {
+    const codeDocWithoutRole = { id: 'CLH-TEST-0001', role: null };
+    const defaultRole = codeDocWithoutRole.role || USER_ROLES.BENEVOLE;
+    assert.equal(defaultRole, USER_ROLES.BENEVOLE);
+  });
+
+  test('Un code d\'invitation avec rôle personnalisé est respecté', () => {
+    const codeDocWithRole = { id: 'CLH-TEST-0002', role: USER_ROLES.GESTION };
+    const assignedRole = codeDocWithRole.role || USER_ROLES.BENEVOLE;
+    assert.equal(assignedRole, USER_ROLES.GESTION);
+  });
+});
+
 

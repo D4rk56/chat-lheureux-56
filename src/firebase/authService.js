@@ -4,7 +4,9 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider
 } from "firebase/auth";
 import { auth } from "./config.js";
 
@@ -33,9 +35,25 @@ export function getAuthErrorMessage(code) {
       return "Le mot de passe est trop court (au moins 6 caractères requis).";
     case 'auth/operation-not-allowed':
       return "L'inscription par e-mail n'est pas activée sur la console Firebase.";
+    case 'auth/popup-closed-by-user':
+      return "La fenêtre de connexion Google a été fermée avant la finalisation.";
+    case 'auth/cancelled-popup-request':
+      return "Opération annulée (une seule tentative de connexion peut être traitée à la fois).";
+    case 'auth/popup-blocked':
+      return "La fenêtre pop-up Google a été bloquée par votre navigateur. Veuillez autoriser les fenêtres pop-up.";
+    case 'auth/account-exists-with-different-credential':
+      return "Un compte existe déjà avec cette adresse e-mail mais avec un mode de connexion différent.";
+    case 'auth/unauthorized-domain':
+      return "Domaine non autorisé dans Firebase pour Google Auth. Vérifiez les domaines autorisés dans la console Firebase.";
     default:
       return `Erreur d'authentification (${code || 'inconnue'}).`;
   }
+}
+
+export async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return await signInWithPopup(auth, provider);
 }
 
 export async function loginUser(email, password) {

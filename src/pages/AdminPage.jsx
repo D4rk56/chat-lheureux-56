@@ -60,7 +60,8 @@ import {
   addManualMember,
   createInviteCode, 
   fetchInviteCodes, 
-  deleteInviteCode 
+  deleteInviteCode,
+  validateInviteCode
 } from '../firebase/memberService';
 import { 
   USER_ROLES, 
@@ -75,6 +76,8 @@ import {
 } from '../utils/roles.js';
 import { calculateAgeFromBirthDate, getCatAdoptionInfo, ADOPTED_EXPIRATION_DAYS } from '../utils/age.js';
 import { compressImageFile } from '../utils/imageCompressor.js';
+import { normalizeInviteCode } from '../utils/inviteCodes.js';
+import GoogleIcon from '../components/icons/GoogleIcon';
 
 import AdoptionsTab from '../components/admin/AdoptionsTab';
 import MembersTab from '../components/admin/MembersTab';
@@ -82,7 +85,18 @@ import AdoptionDetailModal from '../components/admin/AdoptionDetailModal';
 import PasswordResetModal from '../components/admin/PasswordResetModal';
 
 export default function AdminPage() {
-  const { user, userProfile, role, loading: authLoading, login, logout, sendPasswordReset } = useAuth();
+  const { 
+    user, 
+    userProfile, 
+    role, 
+    loading: authLoading, 
+    login, 
+    loginGoogle,
+    logout, 
+    sendPasswordReset,
+    registerGoogleWithInvite,
+    cancelGoogleRegistration
+  } = useAuth();
   const { showToast } = useToast();
 
   // États de connexion
@@ -91,6 +105,17 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
   const [loginSubmitting, setLoginSubmitting] = useState(false);
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
+
+  // États connexion Google & validation code d'invitation
+  const [googleLoginSubmitting, setGoogleLoginSubmitting] = useState(false);
+  const [googleCodeModalOpen, setGoogleCodeModalOpen] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
+  const [googleInviteCode, setGoogleInviteCode] = useState('');
+  const [googleFullName, setGoogleFullName] = useState('');
+  const [googlePhone, setGooglePhone] = useState('');
+  const [googlePseudo, setGooglePseudo] = useState('');
+  const [googleCodeError, setGoogleCodeError] = useState('');
+  const [googleCodeVerifying, setGoogleCodeVerifying] = useState(false);
 
   // Données
   const [cats, setCats] = useState([]);
@@ -464,6 +489,83 @@ export default function AdminPage() {
     } finally {
       setLoginSubmitting(false);
     }
+  };
+
+  const handleGoogleLoginClick = async () => {
+    setLoginError('');
+    setGoogleLoginSubmitting(true);
+    try {
+      const res = await loginGoogle();
+      if (!res.success) {
+        if (res.error) setLoginError(res.error);
+        return;
+      }
+
+      if (res.isNewUser && res.needsInviteCode) {
+        setPendingGoogleUser(res.user);
+        setGoogleFullName(res.user.displayName || '');
+        setGoogleInviteCode('');
+        setGoogleCodeError('');
+        setGoogleCodeModalOpen(true);
+      } else {
+        showToast("Connexion réussie", "Bienvenue dans l'espace administration !");
+      }
+    } catch (err) {
+      console.error("Erreur Google Auth :", err);
+      setLoginError(getAuthErrorMessage(err.code));
+    } finally {
+      setGoogleLoginSubmitting(false);
+    }
+  };
+
+  const handleVerifyAndCompleteGoogleRegistration = async (e) => {
+    e.preventDefault();
+    setGoogleCodeError('');
+    const targetUser = pendingGoogleUser || user;
+    if (!targetUser) {
+      setGoogleCodeError("Aucune session Google active.");
+      return;
+    }
+
+    const cleanedCode = normalizeInviteCode(googleInviteCode);
+    if (!cleanedCode) {
+      setGoogleCodeError("Veuillez saisir votre code d'invitation.");
+      return;
+    }
+
+    setGoogleCodeVerifying(true);
+    try {
+      const validation = await validateInviteCode(cleanedCode);
+      if (!validation.valid) {
+        setGoogleCodeError(validation.error || "Ce code d'invitation est invalide ou expiré.");
+        return;
+      }
+
+      await registerGoogleWithInvite({
+        googleUser: targetUser,
+        codeDoc: validation.codeDoc,
+        fullName: (googleFullName || targetUser.displayName || '').trim(),
+        phone: googlePhone.trim(),
+        pseudo: googlePseudo.trim()
+      });
+
+      setGoogleCodeModalOpen(false);
+      setPendingGoogleUser(null);
+      showToast("Accès activé !", "Votre compte Google a été enregistré avec succès en tant que Bénévole.");
+    } catch (err) {
+      console.error("Erreur validation code Google :", err);
+      setGoogleCodeError(err.message || "Erreur lors de l'activation du compte.");
+    } finally {
+      setGoogleCodeVerifying(false);
+    }
+  };
+
+  const handleCancelGoogleRegistration = async () => {
+    setGoogleCodeModalOpen(false);
+    setPendingGoogleUser(null);
+    setGoogleInviteCode('');
+    setGoogleCodeError('');
+    await cancelGoogleRegistration();
   };
 
   const handleLogout = async () => {
@@ -888,6 +990,108 @@ export default function AdminPage() {
     );
   }
 
+  // Si l'utilisateur est authentifié avec Google mais n'a pas encore validé de code d'invitation
+  const isGooglePendingInvite = !!(user && !userProfile && !isSuperAdminEmail(user?.email));
+
+  if (isGooglePendingInvite) {
+    return (
+      <div className="min-h-screen bg-[#090d16] text-white flex flex-col justify-center items-center p-4">
+        <div className="admin-glass-panel w-full max-w-md p-6 sm:p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden animate-in fade-in">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-brand-gradient rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-4 shadow-lg shadow-pink-500/20">
+              <KeyRound className="w-8 h-8" />
+            </div>
+            <h1 className="font-title text-2xl font-black text-white mb-1">Code d'Invitation Requis</h1>
+            <p className="text-xs text-slate-400">
+              Compte Google : <strong className="text-white">{user?.email}</strong>
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs mb-5 leading-relaxed">
+            Pour la sécurité de l'association, l'accès à cet espace est réservé aux bénévoles autorisés. Veuillez renseigner le code d'invitation généré par un administrateur pour activer votre accès.
+          </div>
+
+          {googleCodeError && (
+            <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold mb-4 flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
+              <span>{googleCodeError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleVerifyAndCompleteGoogleRegistration} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                Code d'invitation (format CLH-XXXX-XXXX)
+              </label>
+              <input
+                type="text"
+                required
+                value={googleInviteCode}
+                onChange={(e) => setGoogleInviteCode(e.target.value.toUpperCase())}
+                placeholder="CLH-XXXX-XXXX"
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white font-mono text-center tracking-widest text-base focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 uppercase"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                <span>Numéro de téléphone</span>
+                <span className="text-[10px] text-pink-400 font-bold lowercase">Recommandé</span>
+              </label>
+              <input
+                type="tel"
+                value={googlePhone}
+                onChange={(e) => setGooglePhone(e.target.value)}
+                placeholder="06 12 34 56 78"
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                <span>Pseudo affiché</span>
+                <span className="text-[10px] text-slate-500 font-normal lowercase">Optionnel</span>
+              </label>
+              <input
+                type="text"
+                value={googlePseudo}
+                onChange={(e) => setGooglePseudo(e.target.value)}
+                placeholder="Ex: CamilleM"
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white text-sm focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={googleCodeVerifying}
+              className="w-full py-3.5 rounded-xl bg-brand-gradient text-white font-bold text-sm shadow-lg shadow-pink-500/25 hover:opacity-95 transition-all flex items-center justify-center gap-2 mt-2"
+            >
+              {googleCodeVerifying ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Vérification du code...</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>Activer mon accès Bénévole</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCancelGoogleRegistration}
+              className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors"
+            >
+              Annuler et se déconnecter
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-[#090d16] text-white flex flex-col justify-center items-center p-4">
@@ -908,6 +1112,31 @@ export default function AdminPage() {
               <span>{loginError}</span>
             </div>
           )}
+
+          {/* Bouton Connexion Google */}
+          <button
+            type="button"
+            onClick={handleGoogleLoginClick}
+            disabled={loginSubmitting || googleLoginSubmitting}
+            className="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-slate-950/20 active:scale-[0.99] disabled:opacity-60 mb-5"
+          >
+            {googleLoginSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                <span>Connexion Google en cours...</span>
+              </>
+            ) : (
+              <>
+                <GoogleIcon className="w-4 h-4 shrink-0" />
+                <span>Continuer avec Google</span>
+              </>
+            )}
+          </button>
+
+          <div className="relative my-4 text-center">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
+            <div className="relative"><span className="bg-[#090d16] px-3 text-[11px] text-slate-500 font-bold uppercase tracking-wider">ou par mot de passe</span></div>
+          </div>
 
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>

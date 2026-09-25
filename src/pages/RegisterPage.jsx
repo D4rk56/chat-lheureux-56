@@ -20,11 +20,12 @@ import { validateInviteCode } from '../firebase/memberService';
 import { getAuthErrorMessage } from '../firebase/authService';
 import { normalizeInviteCode } from '../utils/inviteCodes';
 import { ROLE_LABELS } from '../utils/roles';
+import GoogleIcon from '../components/icons/GoogleIcon';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, logout, registerWithInvite } = useAuth();
+  const { user, logout, registerWithInvite, registerGoogleWithInvite, loginGoogle } = useAuth();
   const { showToast } = useToast();
 
   const [codeParam, setCodeParam] = useState(searchParams.get('code') || '');
@@ -41,6 +42,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
 
   // Si un code est présent dans l'URL, le vérifier automatiquement au chargement
   useEffect(() => {
@@ -123,6 +125,46 @@ export default function RegisterPage() {
       setRegisterError(getAuthErrorMessage(err.code));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleRegisterGoogle = async () => {
+    if (!validCodeDoc) {
+      setRegisterError("Veuillez d'abord valider un code d'invitation.");
+      return;
+    }
+
+    setRegisterError('');
+    setGoogleSubmitting(true);
+    try {
+      const res = await loginGoogle();
+      if (!res.success) {
+        if (res.error) setRegisterError(res.error);
+        return;
+      }
+
+      if (!res.isNewUser) {
+        showToast("Déjà membre !", `Votre compte Google (${res.user.email}) est déjà actif au sein de l'association.`);
+        navigate('/admin');
+        return;
+      }
+
+      // Finalisation inscription avec le code d'invitation
+      await registerGoogleWithInvite({
+        googleUser: res.user,
+        codeDoc: validCodeDoc,
+        fullName: fullName.trim() || res.user.displayName || '',
+        phone: phone.trim(),
+        pseudo: pseudo.trim()
+      });
+
+      showToast("Bienvenue !", "Votre inscription avec Google a été validée avec succès.");
+      navigate('/admin');
+    } catch (err) {
+      console.error("Erreur inscription Google :", err);
+      setRegisterError(getAuthErrorMessage(err.code));
+    } finally {
+      setGoogleSubmitting(false);
     }
   };
 
@@ -254,6 +296,40 @@ export default function RegisterPage() {
               >
                 Changer
               </button>
+            </div>
+
+            {/* Option Rapide : Inscription en 1 clic avec Google */}
+            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                <Sparkles className="w-4 h-4 text-pink-400" />
+                <span>Option rapide : Inscription en 1 clic</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Associez directement votre compte Google à votre code pour activer votre accès Bénévole sans mot de passe à mémoriser.
+              </p>
+              <button
+                type="button"
+                onClick={handleRegisterGoogle}
+                disabled={googleSubmitting || submitting}
+                className="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2.5 shadow-md active:scale-[0.99] disabled:opacity-60"
+              >
+                {googleSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Connexion Google en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                    <span>S'inscrire avec Google</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="relative my-2 text-center">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
+              <div className="relative"><span className="bg-[#090d16] px-3 text-[11px] text-slate-500 font-bold uppercase tracking-wider">ou par mot de passe classique</span></div>
             </div>
 
             {registerError && (

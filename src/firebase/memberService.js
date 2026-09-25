@@ -64,6 +64,35 @@ export async function fetchUserProfile(uid) {
 }
 
 /**
+ * Vérifie si un utilisateur Firebase Auth est déjà un membre enregistré / pré-autorisé de l'association.
+ * Permet de déterminer si un utilisateur Google a besoin d'un code d'invitation lors de sa première connexion.
+ * @param {Object} firebaseUser 
+ * @returns {Promise<boolean>}
+ */
+export async function isRegisteredMember(firebaseUser) {
+  if (!firebaseUser) return false;
+  const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+  if (isSuperAdminEmail(cleanEmail) || isAssoPresidentEmail(cleanEmail)) return true;
+  if (KNOWN_ACCOUNTS.some(k => k.email.toLowerCase() === cleanEmail)) return true;
+
+  try {
+    const userRef = doc(db, USERS_COLLECTION, firebaseUser.uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) return true;
+
+    if (cleanEmail) {
+      const syntheticId = 'account_' + cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
+      const synthRef = doc(db, USERS_COLLECTION, syntheticId);
+      const synthSnap = await getDoc(synthRef);
+      if (synthSnap.exists()) return true;
+    }
+  } catch (err) {
+    console.warn("Erreur vérification membre enregistré :", err);
+  }
+  return false;
+}
+
+/**
  * Assure la présence de l'utilisateur dans la collection `users`.
  * L'administrateur principal (dark56100@gmail.com) et le compte association sont garantis avec le rôle 'Administrateur'.
  * @param {Object} user Firebase Auth User
@@ -130,6 +159,9 @@ export async function ensureUserRecord(user, initialRole = null, extraProfile = 
     if (extraProfile.displayName && (!existing.displayName || existing.displayName === 'Membre')) {
       updates.displayName = extraProfile.displayName;
     }
+    if ((user.photoURL || extraProfile.photoURL) && !existing.photoURL) {
+      updates.photoURL = extraProfile.photoURL || user.photoURL;
+    }
 
     // Si un rôle explicite a été spécifié (ex: via un code d'invitation) et diffère de l'existant
     if (!mustBeAdmin && initialRole && existing.role !== initialRole) {
@@ -161,21 +193,11 @@ export async function ensureUserRecord(user, initialRole = null, extraProfile = 
     if (isSuperAdmin || isPresident) {
       assignedRole = USER_ROLES.ADMIN;
     } else {
-      try {
-        const allUsersSnap = await getDocs(query(collection(db, USERS_COLLECTION), limit(1)));
-        if (allUsersSnap.empty) {
-          assignedRole = USER_ROLES.ADMIN;
-        } else {
-          assignedRole = USER_ROLES.BENEVOLE;
-        }
-      } catch (err) {
-        console.warn("Erreur comptage utilisateurs, fallback Bénévole :", err);
-        assignedRole = USER_ROLES.BENEVOLE;
-      }
+      assignedRole = USER_ROLES.BENEVOLE;
     }
   }
 
-  const known = KNOWN_ACCOUNTS.find(k => k.email.toLowerCase() === cleanEmail);
+  const known = KNOWN_ACCOUNTS.find(k => k.email?.toLowerCase() === cleanEmail);
 
   const newProfile = {
     uid: user.uid,
@@ -185,6 +207,7 @@ export async function ensureUserRecord(user, initialRole = null, extraProfile = 
     pseudo: extraProfile.pseudo || known?.pseudo || '',
     phone: extraProfile.phone || known?.phone || '',
     displayName: extraProfile.displayName || extraProfile.pseudo || extraProfile.fullName || known?.displayName || user.displayName || user.email?.split('@')[0] || 'Membre',
+    photoURL: extraProfile.photoURL || user.photoURL || '',
     role: assignedRole,
     isSuperAdmin: isSuperAdmin || !!known?.isSuperAdmin,
     isPresident: isPresident || !!known?.isPresident,
