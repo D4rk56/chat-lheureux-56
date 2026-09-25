@@ -1003,7 +1003,7 @@ describe('Utilitaires WhatsApp et Partage de Dossier d\'Adoption (PLAN 1 & 2)', 
       fullName: 'Sophie Bernard'
     };
     const msg = formatAdoptionWhatsAppMessage(adoptionWithCatId);
-    assert.ok(msg.includes('https://chat-lheureux.fr/chats/nougat-56'));
+    assert.ok(msg.includes('https://chat-lheureux.fr/chat/nougat-56'));
     assert.ok(msg.includes('*Chat :* Nougat'));
   });
 });

@@ -66,7 +66,8 @@ import {
   fetchInviteCodes, 
   deleteInviteCode,
   validateInviteCode,
-  toggleMemberAdoptionNotification
+  toggleMemberAdoptionNotification,
+  KNOWN_ACCOUNTS
 } from '../firebase/memberService';
 import { 
   USER_ROLES, 
@@ -79,7 +80,8 @@ import {
   canDeleteAdoptions, 
   canManageMembers,
   isSuperAdminEmail,
-  isAssoPresidentEmail
+  isAssoPresidentEmail,
+  getDefaultTabForRole
 } from '../utils/roles.js';
 import { calculateAgeFromBirthDate, getCatAdoptionInfo, ADOPTED_EXPIRATION_DAYS } from '../utils/age.js';
 import { compressImageFile } from '../utils/imageCompressor.js';
@@ -210,6 +212,7 @@ export default function AdminPage() {
   // Heartbeat & Snapshot listeners
   const lockHeartbeatRef = useRef(null);
   const snapshotUnsubRef = useRef(null);
+  const initialTabSetRef = useRef(false);
 
   function getDefaultCatForm() {
     return {
@@ -277,12 +280,19 @@ export default function AdminPage() {
     };
   }, [user]);
 
-  // Initialisation de l'onglet par défaut selon le rôle
+  // Initialisation de l'onglet par défaut selon le rôle après résolution de la session
   useEffect(() => {
-    if (role === USER_ROLES.BENEVOLE) {
-      setCurrentTab('adoptions');
+    if (!authLoading && user && !initialTabSetRef.current) {
+      initialTabSetRef.current = true;
+      setCurrentTab(getDefaultTabForRole(role));
     }
-  }, [role]);
+  }, [authLoading, user, role]);
+
+  useEffect(() => {
+    if (!user) {
+      initialTabSetRef.current = false;
+    }
+  }, [user]);
 
   // Nettoyage lors de la fermeture ou du démontage
   useEffect(() => {
@@ -1389,7 +1399,10 @@ export default function AdminPage() {
 
   // Si l'utilisateur est authentifié avec Google mais n'a pas encore validé de code d'invitation
   const isGoogleUser = user?.providerData?.some((p) => p.providerId === 'google.com') || false;
-  const isKnownEmail = isSuperAdminEmail(user?.email) || isAssoPresidentEmail(user?.email);
+  const userCleanEmail = (user?.email || '').trim().toLowerCase();
+  const isKnownEmail = isSuperAdminEmail(userCleanEmail) || 
+    isAssoPresidentEmail(userCleanEmail) || 
+    KNOWN_ACCOUNTS.some(k => k.email?.toLowerCase() === userCleanEmail);
   const isGooglePendingInvite = Boolean(
     !authLoading &&
     user &&

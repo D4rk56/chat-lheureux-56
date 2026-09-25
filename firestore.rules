@@ -175,8 +175,8 @@ service cloud.firestore {
     // 7. PARAMÈTRES SYSTÈME (Ex: DESTINATAIRES NOTIFICATIONS)
     // ==========================================
     match /systemSettings/{settingId} {
-      // Lecture autorisée pour router les notifications de formulaires
-      allow read: if true;
+      // Lecture strictement réservée aux membres authentifiés de l'association (protection RGPD des adresses privées)
+      allow read: if isAuthenticated();
       
       // Modification et synchronisation réservées aux Administrateurs
       allow write: if isAdmin();

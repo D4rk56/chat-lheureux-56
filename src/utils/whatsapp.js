@@ -99,7 +99,7 @@ export function formatAdoptionWhatsAppMessage(adoption) {
   const motivations = (adoption.comments || adoption.adoptionReason || adoption.catExpectations || adoption.internalNotes || '').trim();
 
   // Fiche chat URL
-  const catUrl = adoption.catId ? `https://chat-lheureux.fr/chats/${adoption.catId}` : null;
+  const catUrl = adoption.catId ? `https://chat-lheureux.fr/chat/${adoption.catId}` : null;
 
   // Date
   let dateStr = '';

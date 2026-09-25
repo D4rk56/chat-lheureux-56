@@ -84,7 +84,7 @@ function buildWhatsAppShareText(data) {
   }
 
   const motivations = (data.comments || data.adoptionReason || data.catExpectations || '').trim();
-  const catUrl = data.catId ? `${SITE_URL}/chats/${data.catId}` : null;
+  const catUrl = data.catId ? `${SITE_URL}/chat/${data.catId}` : null;
 
   const lines = [
     `🐾 *Chat L'Heureux 56 — Demande d'adoption*`,
@@ -133,7 +133,7 @@ function renderAdoptionApplicantTemplate(data) {
   const address = data.address || '';
   const profession = data.profession || "Non renseigné";
   const housingType = data.housingType || "Non renseigné";
-  const catUrl = data.catId ? `${SITE_URL}/chats/${data.catId}` : SITE_URL;
+  const catUrl = data.catId ? `${SITE_URL}/chat/${data.catId}` : SITE_URL;
 
   // Animaux
   let animalsDisplay = "Aucun autre animal";
@@ -352,7 +352,7 @@ function renderAdoptionAdminNotificationTemplate(data) {
     ? `https://wa.me/${cleanCandidatePhone}?text=${encodeURIComponent(`Bonjour ${fullName}, je vous contacte suite à votre demande d'adoption pour ${catName} auprès de l'association Chat L'Heureux 56.`)}`
     : null;
   const adminUrl = `${SITE_URL}/admin`;
-  const catUrl = data.catId ? `${SITE_URL}/chats/${data.catId}` : null;
+  const catUrl = data.catId ? `${SITE_URL}/chat/${data.catId}` : null;
 
   return `
 <!DOCTYPE html>
@@ -714,9 +714,15 @@ export default async (req, context) => {
 
     // Normalisation des destinataires
     const primaryRecipients = Array.isArray(to) ? to : (to ? [to] : [DEFAULT_REPLY_TO]);
-    const bccRecipients = Array.isArray(bcc) 
-      ? bcc.filter(b => typeof b === 'string' && b.includes('@') && !primaryRecipients.includes(b))
+
+    // Prise en charge sécurisée des membres abonnés en BCC depuis l'environnement serveur
+    const envBcc = (type === 'adoption_admin_notification' && process.env.ADOPTION_NOTIFICATION_BCC)
+      ? process.env.ADOPTION_NOTIFICATION_BCC.split(',').map(s => s.trim()).filter(s => s.includes('@'))
       : [];
+
+    const rawBccList = [...(Array.isArray(bcc) ? bcc : []), ...envBcc];
+    const bccRecipients = Array.from(new Set(rawBccList))
+      .filter(b => typeof b === 'string' && b.includes('@') && !primaryRecipients.includes(b));
 
     // 1. Envoi via Brevo (Recommandé)
     if (brevoApiKey) {

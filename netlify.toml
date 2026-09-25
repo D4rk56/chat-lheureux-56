@@ -17,6 +17,10 @@
   function = "og-preview"
 
 [[edge_functions]]
+  path = "/chats/*"
+  function = "og-preview"
+
+[[edge_functions]]
   path = "/api/cat-image*"
   function = "og-preview"
 

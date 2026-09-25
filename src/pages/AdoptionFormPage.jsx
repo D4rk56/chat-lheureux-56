@@ -28,7 +28,6 @@ import { submitAdoptionRequest } from '../firebase/adoptionsService';
 import { INITIAL_ADOPTION_FORM, validateAdoptionForm } from '../utils/adoptionFormLogic';
 import { useToast } from '../context/ToastContext';
 import { sendAdoptionConfirmationEmail, sendAdoptionNotificationToMembers } from '../services/emailService';
-import { fetchActiveAdoptionRecipients } from '../firebase/memberService';
 
 export default function AdoptionFormPage() {
   const [searchParams] = useSearchParams();
@@ -184,18 +183,14 @@ export default function AdoptionFormPage() {
       showToast("Candidature envoyée !", "Votre questionnaire a bien été transmis à l'association Chat L'Heureux 56.");
       window.scrollTo({ top: 80, behavior: 'smooth' });
 
-      // Envoi de l'accusé de réception officiel et alerte association/membres en arrière-plan
+      // Envoi de l'accusé de réception officiel et alerte association en arrière-plan
       const adoptionPayload = { ...formData, id: res?.id };
       sendAdoptionConfirmationEmail(adoptionPayload).catch(e => 
         console.warn("Échec envoi accusé de réception adoption (non bloquant) :", e)
       );
-      fetchActiveAdoptionRecipients()
-        .then(recipients => sendAdoptionNotificationToMembers(adoptionPayload, recipients))
-        .catch(e => {
-          console.warn("Échec alerte membres (fallback asso directe) :", e);
-          return sendAdoptionNotificationToMembers(adoptionPayload, []);
-        })
-        .catch(e => console.warn("Échec alerte e-mail association (non bloquant) :", e));
+      sendAdoptionNotificationToMembers(adoptionPayload).catch(e => 
+        console.warn("Échec alerte e-mail association (non bloquant) :", e)
+      );
     } catch (err) {
       console.error(err);
       showToast("Erreur d'envoi", "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.", "error");

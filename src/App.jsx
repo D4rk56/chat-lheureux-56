@@ -73,6 +73,7 @@ function AppLayout() {
         <Route path="/adopter" element={<AdoptionFormPage />} />
 
         <Route path="/chat/:id" element={<CatDetailPage />} />
+        <Route path="/chats/:id" element={<CatDetailPage />} />
         <Route path="/chat-detail.html" element={<CatDetailPage />} />
 
         <Route path="/temoignages" element={<TestimonialsPage />} />

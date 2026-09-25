@@ -172,10 +172,18 @@ export async function ensureUserRecord(user, initialRole = null, extraProfile = 
       updates.updatedAt = now;
     }
 
-    try {
-      await updateDoc(userRef, updates);
-    } catch (e) {
-      console.warn("Échec mise à jour profil :", e);
+    const hasRoleOrInfoChange = updates.role || updates.fullName || updates.phone || updates.pseudo || updates.displayName || updates.photoURL;
+    if (hasRoleOrInfoChange) {
+      try {
+        await updateDoc(userRef, updates);
+      } catch (e) {
+        console.warn("Échec mise à jour profil :", e);
+      }
+    } else {
+      // Mise à jour de routine de lastLoginAt en tâche de fond sans bloquer l'affichage de l'interface
+      updateDoc(userRef, updates).catch((e) => {
+        console.warn("Échec mise à jour lastLoginAt (non bloquant) :", e);
+      });
     }
 
     return { 

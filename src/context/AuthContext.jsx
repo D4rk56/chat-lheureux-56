@@ -37,6 +37,7 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(USER_ROLES.BENEVOLE);
   const [loading, setLoading] = useState(true);
   const pendingRegisterRoleRef = useRef(null);
+  const inFlightProfileRef = useRef(null);
 
   const loadUserProfile = useCallback(async (firebaseUser, explicitRole = null) => {
     if (!firebaseUser) {
@@ -44,46 +45,65 @@ export function AuthProvider({ children }) {
       setRole(USER_ROLES.BENEVOLE);
       return null;
     }
-    const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
-    const isSuperAdmin = isSuperAdminEmail(cleanEmail);
-    const isPresident = isAssoPresidentEmail(cleanEmail);
-    const knownAcc = KNOWN_ACCOUNTS.find(k => k.email?.toLowerCase() === cleanEmail);
 
-    if (isSuperAdmin || isPresident) {
-      setRole(USER_ROLES.ADMIN);
-    } else if (knownAcc?.role) {
-      setRole(knownAcc.role);
-    } else if (explicitRole) {
-      setRole(explicitRole);
+    // Si une résolution est déjà en cours pour ce même utilisateur sans rôle explicite
+    if (!explicitRole && inFlightProfileRef.current && inFlightProfileRef.current.uid === firebaseUser.uid) {
+      return await inFlightProfileRef.current.promise;
     }
 
-    const isKnown = isSuperAdmin || isPresident || !!knownAcc;
+    const fetchPromise = (async () => {
+      const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
+      const isSuperAdmin = isSuperAdminEmail(cleanEmail);
+      const isPresident = isAssoPresidentEmail(cleanEmail);
+      const knownAcc = KNOWN_ACCOUNTS.find(k => k.email?.toLowerCase() === cleanEmail);
 
-    try {
-      const existing = await fetchUserProfile(firebaseUser.uid);
-
-      // Si l'utilisateur n'existe pas encore en base, n'est pas un compte connu, et n'a pas de code d'invitation en cours d'application
-      if (!existing && !isKnown && !explicitRole && !pendingRegisterRoleRef.current) {
-        // Utilisateur non encore autorisé / première connexion Google sans code
-        setUserProfile(null);
-        setRole(USER_ROLES.BENEVOLE);
-        return null;
+      if (isSuperAdmin || isPresident) {
+        setRole(USER_ROLES.ADMIN);
+      } else if (knownAcc?.role) {
+        setRole(knownAcc.role);
+      } else if (explicitRole) {
+        setRole(explicitRole);
       }
 
-      const roleToAssign = (isSuperAdmin || isPresident)
-        ? USER_ROLES.ADMIN
-        : (explicitRole || pendingRegisterRoleRef.current || knownAcc?.role);
+      const isKnown = isSuperAdmin || isPresident || !!knownAcc;
 
-      const profile = await ensureUserRecord(firebaseUser, roleToAssign);
-      setUserProfile(profile);
-      setRole(isSuperAdmin || isPresident ? USER_ROLES.ADMIN : (profile?.role || USER_ROLES.BENEVOLE));
-      return profile;
-    } catch (err) {
-      console.warn("Erreur chargement profil utilisateur :", err);
-      const fallbackRole = (isSuperAdmin || isPresident) ? USER_ROLES.ADMIN : (knownAcc?.role || USER_ROLES.BENEVOLE);
-      setRole(fallbackRole);
-      return null;
+      try {
+        const existing = await fetchUserProfile(firebaseUser.uid);
+
+        // Si l'utilisateur n'existe pas encore en base, n'est pas un compte connu, et n'a pas de code d'invitation en cours d'application
+        if (!existing && !isKnown && !explicitRole && !pendingRegisterRoleRef.current) {
+          // Utilisateur non encore autorisé / première connexion Google sans code
+          setUserProfile(null);
+          setRole(USER_ROLES.BENEVOLE);
+          return null;
+        }
+
+        const roleToAssign = (isSuperAdmin || isPresident)
+          ? USER_ROLES.ADMIN
+          : (explicitRole || pendingRegisterRoleRef.current || knownAcc?.role);
+
+        const profile = await ensureUserRecord(firebaseUser, roleToAssign);
+        setUserProfile(profile);
+        setRole(isSuperAdmin || isPresident ? USER_ROLES.ADMIN : (profile?.role || USER_ROLES.BENEVOLE));
+        return profile;
+      } catch (err) {
+        console.warn("Erreur chargement profil utilisateur :", err);
+        const fallbackRole = (isSuperAdmin || isPresident) ? USER_ROLES.ADMIN : (knownAcc?.role || USER_ROLES.BENEVOLE);
+        setRole(fallbackRole);
+        return null;
+      }
+    })();
+
+    if (!explicitRole) {
+      inFlightProfileRef.current = { uid: firebaseUser.uid, promise: fetchPromise };
+      fetchPromise.finally(() => {
+        if (inFlightProfileRef.current?.uid === firebaseUser.uid) {
+          inFlightProfileRef.current = null;
+        }
+      });
     }
+
+    return await fetchPromise;
   }, []);
 
   useEffect(() => {

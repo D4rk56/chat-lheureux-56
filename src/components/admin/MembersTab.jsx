@@ -690,8 +690,13 @@ export default function MembersTab({
 
                     {/* Actions Membre & Dates */}
                     <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-800/60 text-[11px] text-slate-400">
-                      <span>Inscrit : {formatDate(m.createdAt)}</span>
-                      <div className="flex items-center gap-1.5">
+                      <div>
+                        <span>Inscrit : {formatDate(m.createdAt)}</span>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          Connexion : {m.lastLoginAt ? formatDate(m.lastLoginAt) : 'Jamais connecté'}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
                         {onEditMember && (
                           <button
                             type="button"
