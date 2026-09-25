@@ -41,7 +41,12 @@ import {
   isLogExpired, 
   MAX_LOG_RETENTION_DAYS, 
   LOG_CATEGORIES, 
-  LOG_ACTIONS 
+  LOG_ACTIONS,
+  ACTION_NATURE,
+  ACTION_NATURE_LABELS,
+  getActionNature,
+  getLastLogActivityError,
+  clearLastLogActivityError
 } from '../src/firebase/activityLogService.js';
 import { 
   sortCats, 
@@ -990,6 +995,58 @@ describe('Historique d\'audit des actions et Rétention 7 jours (PLAN 3)', () =>
     assert.ok(LOG_ACTIONS.CAT_CREATE);
     assert.ok(LOG_ACTIONS.ADOPTION_STATUS_CHANGE);
     assert.ok(LOG_ACTIONS.MEMBER_ROLE_CHANGE);
+    assert.ok(LOG_ACTIONS.INVITE_CODE_DELETE);
+    assert.ok(LOG_ACTIONS.MEMBER_CREATE);
+    assert.ok(LOG_ACTIONS.ACTIVITY_PURGE);
+    assert.ok(LOG_ACTIONS.CAT_PURGE_EXPIRED);
+  });
+
+  test('getActionNature classifie fidèlement chaque type d\'action en catégorie visuelle', () => {
+    // Créations
+    assert.equal(getActionNature(LOG_ACTIONS.CAT_CREATE), ACTION_NATURE.CREATE);
+    assert.equal(getActionNature(LOG_ACTIONS.STORY_CREATE), ACTION_NATURE.CREATE);
+    assert.equal(getActionNature(LOG_ACTIONS.ADOPTION_SUBMITTED), ACTION_NATURE.CREATE);
+    assert.equal(getActionNature(LOG_ACTIONS.MEMBER_CREATE), ACTION_NATURE.CREATE);
+    assert.equal(getActionNature(LOG_ACTIONS.INVITE_CODE_CREATE), ACTION_NATURE.CREATE);
+    assert.equal(getActionNature(LOG_ACTIONS.INVITE_CODE_REDEEM), ACTION_NATURE.CREATE);
+
+    // Modifications
+    assert.equal(getActionNature(LOG_ACTIONS.CAT_UPDATE), ACTION_NATURE.UPDATE);
+    assert.equal(getActionNature(LOG_ACTIONS.CAT_STATUS_CHANGE), ACTION_NATURE.UPDATE);
+    assert.equal(getActionNature(LOG_ACTIONS.ADOPTION_STATUS_CHANGE), ACTION_NATURE.UPDATE);
+    assert.equal(getActionNature(LOG_ACTIONS.ADOPTION_NOTES_UPDATE), ACTION_NATURE.UPDATE);
+    assert.equal(getActionNature(LOG_ACTIONS.MEMBER_ROLE_CHANGE), ACTION_NATURE.UPDATE);
+    assert.equal(getActionNature(LOG_ACTIONS.MEMBER_PROFILE_UPDATE), ACTION_NATURE.UPDATE);
+    assert.equal(getActionNature(LOG_ACTIONS.STORY_UPDATE), ACTION_NATURE.UPDATE);
+
+    // Suppressions
+    assert.equal(getActionNature(LOG_ACTIONS.CAT_DELETE), ACTION_NATURE.DELETE);
+    assert.equal(getActionNature(LOG_ACTIONS.STORY_DELETE), ACTION_NATURE.DELETE);
+    assert.equal(getActionNature(LOG_ACTIONS.MEMBER_DELETE), ACTION_NATURE.DELETE);
+    assert.equal(getActionNature(LOG_ACTIONS.INVITE_CODE_DELETE), ACTION_NATURE.DELETE);
+
+    // Purges & Archives
+    assert.equal(getActionNature(LOG_ACTIONS.ADOPTION_ARCHIVE), ACTION_NATURE.PURGE);
+    assert.equal(getActionNature(LOG_ACTIONS.ADOPTION_PURGE), ACTION_NATURE.PURGE);
+    assert.equal(getActionNature(LOG_ACTIONS.CAT_PURGE_EXPIRED), ACTION_NATURE.PURGE);
+    assert.equal(getActionNature(LOG_ACTIONS.ACTIVITY_PURGE), ACTION_NATURE.PURGE);
+
+    // Cas limites / Inconnus
+    assert.equal(getActionNature('UNKNOWN_ACTION'), ACTION_NATURE.OTHER);
+    assert.equal(getActionNature(null), ACTION_NATURE.OTHER);
+    assert.equal(getActionNature(''), ACTION_NATURE.OTHER);
+  });
+
+  test('ACTION_NATURE_LABELS propose des libellés conviviaux en français', () => {
+    assert.equal(ACTION_NATURE_LABELS[ACTION_NATURE.CREATE], 'Créations');
+    assert.equal(ACTION_NATURE_LABELS[ACTION_NATURE.UPDATE], 'Modifications');
+    assert.equal(ACTION_NATURE_LABELS[ACTION_NATURE.DELETE], 'Suppressions');
+    assert.equal(ACTION_NATURE_LABELS[ACTION_NATURE.PURGE], 'Purges & Archives');
+  });
+
+  test('Diagnostic et gestion des erreurs de permission Firestore', () => {
+    clearLastLogActivityError();
+    assert.equal(getLastLogActivityError(), null);
   });
 });
 
