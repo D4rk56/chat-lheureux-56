@@ -44,12 +44,20 @@ export function AuthProvider({ children }) {
       setRole(USER_ROLES.BENEVOLE);
       return null;
     }
-    const isSuperAdmin = isSuperAdminEmail(firebaseUser.email);
-    if (isSuperAdmin) {
-      setRole(USER_ROLES.ADMIN);
-    }
     const cleanEmail = (firebaseUser.email || '').trim().toLowerCase();
-    const isKnown = isSuperAdmin || isAssoPresidentEmail(cleanEmail) || KNOWN_ACCOUNTS.some(k => k.email?.toLowerCase() === cleanEmail);
+    const isSuperAdmin = isSuperAdminEmail(cleanEmail);
+    const isPresident = isAssoPresidentEmail(cleanEmail);
+    const knownAcc = KNOWN_ACCOUNTS.find(k => k.email?.toLowerCase() === cleanEmail);
+
+    if (isSuperAdmin || isPresident) {
+      setRole(USER_ROLES.ADMIN);
+    } else if (knownAcc?.role) {
+      setRole(knownAcc.role);
+    } else if (explicitRole) {
+      setRole(explicitRole);
+    }
+
+    const isKnown = isSuperAdmin || isPresident || !!knownAcc;
 
     try {
       const existing = await fetchUserProfile(firebaseUser.uid);
@@ -62,27 +70,36 @@ export function AuthProvider({ children }) {
         return null;
       }
 
-      const roleToAssign = isSuperAdmin ? USER_ROLES.ADMIN : (explicitRole || pendingRegisterRoleRef.current);
+      const roleToAssign = (isSuperAdmin || isPresident)
+        ? USER_ROLES.ADMIN
+        : (explicitRole || pendingRegisterRoleRef.current || knownAcc?.role);
+
       const profile = await ensureUserRecord(firebaseUser, roleToAssign);
       setUserProfile(profile);
-      setRole(isSuperAdmin ? USER_ROLES.ADMIN : (profile?.role || USER_ROLES.BENEVOLE));
+      setRole(isSuperAdmin || isPresident ? USER_ROLES.ADMIN : (profile?.role || USER_ROLES.BENEVOLE));
       return profile;
     } catch (err) {
       console.warn("Erreur chargement profil utilisateur :", err);
-      setRole(isSuperAdmin ? USER_ROLES.ADMIN : USER_ROLES.BENEVOLE);
+      const fallbackRole = (isSuperAdmin || isPresident) ? USER_ROLES.ADMIN : (knownAcc?.role || USER_ROLES.BENEVOLE);
+      setRole(fallbackRole);
       return null;
     }
   }, []);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuthState(async (currentUser) => {
-      setUser(currentUser);
       if (currentUser) {
-        if (isSuperAdminEmail(currentUser.email)) {
+        const cleanEmail = (currentUser.email || '').trim().toLowerCase();
+        if (isSuperAdminEmail(cleanEmail) || isAssoPresidentEmail(cleanEmail)) {
           setRole(USER_ROLES.ADMIN);
+        } else {
+          const knownAcc = KNOWN_ACCOUNTS.find(k => k.email?.toLowerCase() === cleanEmail);
+          if (knownAcc?.role) setRole(knownAcc.role);
         }
         await loadUserProfile(currentUser);
+        setUser(currentUser);
       } else {
+        setUser(null);
         setUserProfile(null);
         setRole(USER_ROLES.BENEVOLE);
       }
@@ -93,17 +110,28 @@ export function AuthProvider({ children }) {
   }, [loadUserProfile]);
 
   const login = async (email, password) => {
-    const cred = await loginUser(email, password);
-    if (cred.user) {
-      await loadUserProfile(cred.user);
+    setLoading(true);
+    try {
+      const cred = await loginUser(email, password);
+      if (cred.user) {
+        await loadUserProfile(cred.user);
+        setUser(cred.user);
+      }
+      return cred;
+    } finally {
+      setLoading(false);
     }
-    return cred;
   };
 
   const logout = async () => {
+    setUser(null);
     setUserProfile(null);
     setRole(USER_ROLES.BENEVOLE);
-    return await logoutUser();
+    try {
+      return await logoutUser();
+    } catch (err) {
+      console.warn("Erreur déconnexion Firebase :", err);
+    }
   };
 
   const sendPasswordReset = async (email) => {
@@ -196,9 +224,14 @@ export function AuthProvider({ children }) {
   };
 
   const cancelGoogleRegistration = async () => {
+    setUser(null);
     setUserProfile(null);
     setRole(USER_ROLES.BENEVOLE);
-    return await logoutUser();
+    try {
+      return await logoutUser();
+    } catch (err) {
+      console.warn("Erreur annulation Google :", err);
+    }
   };
 
   const refreshProfile = async () => {

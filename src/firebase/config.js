@@ -14,9 +14,28 @@ const apiKey = (typeof import.meta !== "undefined" && import.meta.env?.VITE_FIRE
   || (typeof process !== "undefined" && process.env?.VITE_FIREBASE_API_KEY)
   || "AIzaSy_PLACEHOLDER_SET_IN_NETLIFY_ENV";
 
+// Détermination dynamique de l'authDomain :
+// Si l'utilisateur est sur chat-lheureux.netlify.app ou chat-lheureux.fr,
+// utiliser le même domaine d'origine pour éviter le blocage des cookies tiers
+// (partitioned cookies) grâce au proxy Netlify /__/auth/*
+export function resolveAuthDomain() {
+  if (typeof window !== "undefined" && window.location) {
+    const hostname = window.location.hostname;
+    if (
+      hostname === "chat-lheureux.netlify.app" ||
+      hostname === "chat-lheureux.fr" ||
+      hostname.endsWith(".netlify.app") ||
+      hostname.endsWith("chat-lheureux.fr")
+    ) {
+      return hostname;
+    }
+  }
+  return "chat-lheureux-56.firebaseapp.com";
+}
+
 const firebaseConfig = {
   apiKey: apiKey,
-  authDomain: "chat-lheureux-56.firebaseapp.com",
+  authDomain: resolveAuthDomain(),
   projectId: "chat-lheureux-56",
   storageBucket: "chat-lheureux-56.firebasestorage.app",
   messagingSenderId: "238050920889",

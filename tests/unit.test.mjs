@@ -31,6 +31,7 @@ import {
   sendCustomInfoEmail 
 } from '../src/services/emailService.js';
 import sendEmailFunction from '../netlify/functions/send-email.js';
+import { resolveAuthDomain } from '../src/firebase/config.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -756,6 +757,101 @@ describe('Connexion Google et sécurisation par code d\'invitation', () => {
     const codeDocWithRole = { id: 'CLH-TEST-0002', role: USER_ROLES.GESTION };
     const assignedRole = codeDocWithRole.role || USER_ROLES.BENEVOLE;
     assert.equal(assignedRole, USER_ROLES.GESTION);
+  });
+});
+
+describe('Réorganisation des photos des chats et rétrocompatibilité (OBJECTIF 1)', () => {
+  const movePhoto = (arr, idx, dir) => {
+    const next = [...arr];
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= next.length) return next;
+    const tmp = next[idx];
+    next[idx] = next[newIdx];
+    next[newIdx] = tmp;
+    return next;
+  };
+
+  const setPrimaryPhoto = (arr, idx) => {
+    const next = [...arr];
+    const item = next.splice(idx, 1)[0];
+    return [item, ...next];
+  };
+
+  const reorderPhotosDrop = (arr, fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return arr;
+    const next = [...arr];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    return next;
+  };
+
+  const getPrimaryCover = (photos, fallbackImage) => {
+    const valid = Array.isArray(photos) ? photos.filter(p => typeof p === 'string' && p.trim().length > 0) : [];
+    if (valid.length > 0) return valid[0];
+    return fallbackImage || 'https://placehold.co/600x400?text=Pas+de+photo';
+  };
+
+  const normalizeCatPhotosForEdit = (cat) => {
+    if (Array.isArray(cat?.photos) && cat.photos.length > 0) {
+      return [...cat.photos];
+    }
+    return cat?.image ? [cat.image] : [];
+  };
+
+  test('movePhoto déplace correctement vers la gauche et vers la droite', () => {
+    const initial = ['photoA.jpg', 'photoB.jpg', 'photoC.jpg'];
+    const movedLeft = movePhoto(initial, 1, -1);
+    assert.deepEqual(movedLeft, ['photoB.jpg', 'photoA.jpg', 'photoC.jpg']);
+
+    const movedRight = movePhoto(movedLeft, 1, 1);
+    assert.deepEqual(movedRight, ['photoB.jpg', 'photoC.jpg', 'photoA.jpg']);
+
+    const outOfBoundsLeft = movePhoto(initial, 0, -1);
+    assert.deepEqual(outOfBoundsLeft, initial);
+    const outOfBoundsRight = movePhoto(initial, 2, 1);
+    assert.deepEqual(outOfBoundsRight, initial);
+  });
+
+  test('setPrimaryPhoto place la photo sélectionnée en première position (couverture)', () => {
+    const list = ['photo1.jpg', 'photo2.jpg', 'photo3.jpg'];
+    const updated = setPrimaryPhoto(list, 2);
+    assert.deepEqual(updated, ['photo3.jpg', 'photo1.jpg', 'photo2.jpg']);
+    assert.equal(updated[0], 'photo3.jpg');
+  });
+
+  test('reorderPhotosDrop réorganise fidèlement par glisser-déposer', () => {
+    const list = ['A', 'B', 'C', 'D'];
+    const dropped = reorderPhotosDrop(list, 3, 0);
+    assert.deepEqual(dropped, ['D', 'A', 'B', 'C']);
+
+    const droppedMid = reorderPhotosDrop(list, 0, 2);
+    assert.deepEqual(droppedMid, ['B', 'C', 'A', 'D']);
+  });
+
+  test('getPrimaryCover sélectionne toujours la première photo valide comme couverture', () => {
+    assert.equal(getPrimaryCover(['cover.jpg', 'side.jpg']), 'cover.jpg');
+    assert.equal(getPrimaryCover([], 'legacy.jpg'), 'legacy.jpg');
+    assert.equal(getPrimaryCover([], ''), 'https://placehold.co/600x400?text=Pas+de+photo');
+  });
+
+  test('normalizeCatPhotosForEdit assure la rétrocompatibilité des fiches chats sans photos array', () => {
+    const oldCat = { id: 'cat1', name: 'Felix', image: 'https://images.fr/felix.jpg' };
+    const normalizedOld = normalizeCatPhotosForEdit(oldCat);
+    assert.deepEqual(normalizedOld, ['https://images.fr/felix.jpg']);
+
+    const newCat = { id: 'cat2', name: 'Mimi', photos: ['p1.jpg', 'p2.jpg'], image: 'p1.jpg' };
+    const normalizedNew = normalizeCatPhotosForEdit(newCat);
+    assert.deepEqual(normalizedNew, ['p1.jpg', 'p2.jpg']);
+
+    const emptyArrayCat = { id: 'cat3', name: 'Caramel', photos: [], image: 'caramel.jpg' };
+    const normalizedEmpty = normalizeCatPhotosForEdit(emptyArrayCat);
+    assert.deepEqual(normalizedEmpty, ['caramel.jpg']);
+  });
+});
+
+describe('Résolution de l\'authDomain Firebase pour Netlify (OBJECTIF 2)', () => {
+  test('resolveAuthDomain renvoie le domaine par défaut en environnement Node/SSR', () => {
+    assert.equal(resolveAuthDomain(), 'chat-lheureux-56.firebaseapp.com');
   });
 });
 

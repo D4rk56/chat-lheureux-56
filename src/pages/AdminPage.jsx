@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, 
   Lock, 
@@ -98,6 +98,7 @@ export default function AdminPage() {
     cancelGoogleRegistration
   } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   // États de connexion
   const [loginEmail, setLoginEmail] = useState('');
@@ -147,6 +148,8 @@ export default function AdminPage() {
   const [catPhotos, setCatPhotos] = useState([]);
   const [catPhotoUrlInput, setCatPhotoUrlInput] = useState('');
   const [savingCat, setSavingCat] = useState(false);
+  const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
+  const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
 
   // Conflit d'édition
   const [lockConflictModalOpen, setLockConflictModalOpen] = useState(false);
@@ -570,10 +573,13 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     try {
+      cleanupLock();
       await logout();
       showToast("Déconnexion", "À bientôt !", "info");
+      navigate('/', { replace: true });
     } catch (err) {
-      console.error(err);
+      console.error("Erreur lors de la déconnexion :", err);
+      navigate('/', { replace: true });
     }
   };
 
@@ -697,7 +703,10 @@ export default function AdminPage() {
       vetTested: !!catItem.vetStatus?.tested
     });
 
-    setCatPhotos(catItem.photos ? [...catItem.photos] : (catItem.image ? [catItem.image] : []));
+    const initialPhotos = (Array.isArray(catItem.photos) && catItem.photos.length > 0)
+      ? [...catItem.photos]
+      : (catItem.image ? [catItem.image] : []);
+    setCatPhotos(initialPhotos);
     setCatPhotoUrlInput('');
 
     // Acquérir le verrou
@@ -811,6 +820,46 @@ export default function AdminPage() {
     });
   };
 
+  const handlePhotoDragStart = (e, idx) => {
+    if (isReadOnlyMode) return;
+    setDraggedPhotoIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+    try {
+      e.dataTransfer.setData('text/plain', String(idx));
+    } catch (_) {}
+  };
+
+  const handlePhotoDragOver = (e, idx) => {
+    e.preventDefault();
+    if (isReadOnlyMode || draggedPhotoIdx === null) return;
+    if (dragOverPhotoIdx !== idx) {
+      setDragOverPhotoIdx(idx);
+    }
+  };
+
+  const handlePhotoDrop = (e, targetIdx) => {
+    e.preventDefault();
+    if (isReadOnlyMode || draggedPhotoIdx === null) return;
+    if (draggedPhotoIdx === targetIdx) {
+      setDraggedPhotoIdx(null);
+      setDragOverPhotoIdx(null);
+      return;
+    }
+    setCatPhotos((prev) => {
+      const arr = [...prev];
+      const [movedItem] = arr.splice(draggedPhotoIdx, 1);
+      arr.splice(targetIdx, 0, movedItem);
+      return arr;
+    });
+    setDraggedPhotoIdx(null);
+    setDragOverPhotoIdx(null);
+  };
+
+  const handlePhotoDragEnd = () => {
+    setDraggedPhotoIdx(null);
+    setDragOverPhotoIdx(null);
+  };
+
   // Enregistrement Chat
   const handleSaveCat = async (e) => {
     e.preventDefault();
@@ -864,8 +913,8 @@ export default function AdminPage() {
         vaccinated: catFormData.vetVaccinated,
         tested: catFormData.vetTested
       },
-      photos: catPhotos,
-      image: catPhotos[0] || 'https://placehold.co/600x400?text=Pas+de+photo'
+      photos: catPhotos.filter((p) => typeof p === 'string' && p.trim().length > 0),
+      image: (catPhotos.length > 0 && catPhotos[0]) ? catPhotos[0] : 'https://placehold.co/600x400?text=Pas+de+photo'
     };
 
     try {
@@ -991,7 +1040,15 @@ export default function AdminPage() {
   }
 
   // Si l'utilisateur est authentifié avec Google mais n'a pas encore validé de code d'invitation
-  const isGooglePendingInvite = !!(user && !userProfile && !isSuperAdminEmail(user?.email));
+  const isGoogleUser = user?.providerData?.some((p) => p.providerId === 'google.com') || false;
+  const isKnownEmail = isSuperAdminEmail(user?.email) || isAssoPresidentEmail(user?.email);
+  const isGooglePendingInvite = Boolean(
+    !authLoading &&
+    user &&
+    isGoogleUser &&
+    !userProfile &&
+    !isKnownEmail
+  );
 
   if (isGooglePendingInvite) {
     return (
@@ -2119,46 +2176,102 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {/* Galerie de miniatures */}
-                <div className="grid grid-cols-5 gap-2">
-                  {catPhotos.map((p, idx) => (
-                    <div
-                      key={idx}
-                      className={`relative h-20 rounded-xl overflow-hidden bg-slate-800 border ${
-                        idx === 0 ? 'border-pink-500 ring-2 ring-pink-500/40' : 'border-slate-700'
-                      }`}
-                    >
-                      <img src={p} alt="" className="w-full h-full object-cover" />
+                {/* Galerie de miniatures avec réorganisation (Glisser-Déposer & Boutons Gauche/Droite) */}
+                {catPhotos.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span>
+                        📸 <strong>{catPhotos.length}/5 photo{catPhotos.length > 1 ? 's' : ''}</strong>
+                      </span>
                       {!isReadOnlyMode && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-around opacity-0 hover:opacity-100 transition-opacity p-1">
-                          {idx > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => setPrimaryPhoto(idx)}
-                              title="Définir comme photo principale"
-                              className="w-5 h-5 rounded bg-pink-600 text-white text-[10px] flex items-center justify-center font-bold"
-                            >
-                              ★
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(idx)}
-                            title="Supprimer"
-                            className="w-5 h-5 rounded bg-rose-600 text-white text-[10px] flex items-center justify-center"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      )}
-                      {idx === 0 && (
-                        <span className="absolute bottom-1 left-1 bg-pink-500 text-white text-[8px] font-black px-1 rounded">
-                          Couv.
+                        <span className="text-slate-400 text-[10px]">
+                          Glissez-déposez ou utilisez ◀ ▶ pour réorganiser
                         </span>
                       )}
                     </div>
-                  ))}
-                </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                      {catPhotos.map((p, idx) => (
+                        <div
+                          key={idx}
+                          draggable={!isReadOnlyMode}
+                          onDragStart={(e) => handlePhotoDragStart(e, idx)}
+                          onDragOver={(e) => handlePhotoDragOver(e, idx)}
+                          onDrop={(e) => handlePhotoDrop(e, idx)}
+                          onDragEnd={handlePhotoDragEnd}
+                          className={`relative h-28 rounded-2xl overflow-hidden bg-slate-800 border transition-all select-none ${
+                            idx === 0
+                              ? 'border-pink-500 ring-2 ring-pink-500/50 shadow-md'
+                              : 'border-slate-700/80 hover:border-slate-500'
+                          } ${dragOverPhotoIdx === idx ? 'ring-4 ring-pink-400 scale-[1.03] z-20' : ''} ${
+                            draggedPhotoIdx === idx ? 'opacity-40' : ''
+                          }`}
+                        >
+                          <img src={p} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover pointer-events-none" />
+
+                          {/* Badge Statut Couverture ou Ordre */}
+                          {idx === 0 ? (
+                            <span className="absolute top-1.5 left-1.5 bg-brand-gradient text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 z-10 pointer-events-none">
+                              ★ Couverture
+                            </span>
+                          ) : (
+                            <span className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-slate-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md z-10 pointer-events-none">
+                              #{idx + 1}
+                            </span>
+                          )}
+
+                          {/* Bouton Supprimer */}
+                          {!isReadOnlyMode && (
+                            <button
+                              type="button"
+                              onClick={() => removePhoto(idx)}
+                              title="Supprimer cette photo"
+                              className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-black flex items-center justify-center shadow-md transition-all z-20"
+                            >
+                              ✕
+                            </button>
+                          )}
+
+                          {/* Barre d'actions inférieure (Flèches gauche/droite et mise en couverture) */}
+                          {!isReadOnlyMode && (
+                            <div className="absolute bottom-1.5 inset-x-1.5 flex items-center justify-between gap-1 z-20 bg-slate-950/75 backdrop-blur-xs p-1 rounded-xl">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => movePhoto(idx, -1)}
+                                title="Déplacer vers la gauche"
+                                className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-pink-600 disabled:opacity-20 disabled:hover:bg-slate-800 text-white text-xs font-black flex items-center justify-center transition-colors"
+                              >
+                                ◀
+                              </button>
+
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setPrimaryPhoto(idx)}
+                                  title="Définir comme photo de couverture"
+                                  className="px-1.5 h-6 rounded-lg bg-pink-600/90 hover:bg-pink-500 text-white text-[9px] font-black flex items-center gap-0.5 shadow transition-colors"
+                                >
+                                  ★ Couv.
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                disabled={idx === catPhotos.length - 1}
+                                onClick={() => movePhoto(idx, 1)}
+                                title="Déplacer vers la droite"
+                                className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-pink-600 disabled:opacity-20 disabled:hover:bg-slate-800 text-white text-xs font-black flex items-center justify-center transition-colors"
+                              >
+                                ▶
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Boutons Footer Formulaire */}

@@ -25,6 +25,13 @@
   to = "/.netlify/functions/send-email"
   status = 200
 
+# Proxy Firebase Auth pour le même domaine (résout l'erreur 'The requested action is invalid')
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://chat-lheureux-56.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = true
+
 # SPA Fallback pour React Router
 [[redirects]]
   from = "/*"

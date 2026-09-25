@@ -42,12 +42,37 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'dark56100@gmail.com' ||
+        request.auth.token.email == 'asso.chatslheureux@gmail.com'
+      );
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        isSuperAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrateur')
+      );
+    }
+
     // Collection des profils membres et rôles
     match /users/{userId} {
       // Les membres connectés peuvent consulter la liste des membres
       allow read: if isAuthenticated();
-      // Création / modification par les utilisateurs connectés
-      allow create, update, delete: if isAuthenticated();
+      // Création : les admins peuvent créer (y compris comptes manuels), et les utilisateurs peuvent créer leur propre profil initial (sans s'auto-promouvoir Administrateur sauf super-admin)
+      allow create: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == userId && (request.resource.data.role != 'Administrateur' || isSuperAdmin()))
+      );
+      // Modification : les admins peuvent tout modifier (y compris le rôle), les utilisateurs ne peuvent modifier que leur propre profil sans altérer leur rôle ou statut admin
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isSuperAdmin', 'isPresident']))
+      );
+      // Suppression : strictement réservée aux administrateurs
+      allow delete: if isAdmin();
     }
 
     // Collection des codes d'invitation bénévoles
@@ -57,10 +82,10 @@ service cloud.firestore {
       allow get: if true;
       // Listing de l'ensemble des codes strictement réservé aux membres connectés
       allow list: if isAuthenticated();
-      // Création et suppression réservées aux membres connectés (administrateurs)
-      allow create, delete: if isAuthenticated();
-      // Mise à jour autorisée pour marquer le code comme utilisé lors de l'inscription
-      allow update: if isAuthenticated() || (
+      // Création et suppression strictement réservées aux administrateurs
+      allow create, delete: if isAdmin();
+      // Consommation d'un code autorisée lors de l'inscription (marquage unique used = true)
+      allow update: if isAdmin() || (
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedBy', 'usedByEmail', 'usedAt'])
         && request.resource.data.used == true
         && resource.data.used == false
