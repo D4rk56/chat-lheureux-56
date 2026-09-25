@@ -2,10 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper functions
+    // ==========================================
+    // FONCTIONS D'AUTHENTIFICATION ET DE RÔLES
+    // ==========================================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
+    
+    // Administrateurs permanents par e-mail vérifié (Super-Admin et Présidence)
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'dark56100@gmail.com' ||
+        request.auth.token.email == 'asso.chatslheureux@gmail.com'
+      );
+    }
+    
+    function hasUserDoc() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function getUserRole() {
+      return hasUserDoc() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
+    }
+    
+    // Rôle Administrateur (Dark56, Présidence, ou compte avec rôle 'Administrateur')
+    function isAdmin() {
+      return isAuthenticated() && (
+        isSuperAdmin() ||
+        getUserRole() == 'Administrateur'
+      );
+    }
+    
+    // Rôles Gestion ou Administrateur (autorisés pour fiches chats et avis)
+    function isGestionOrAdmin() {
+      return isAuthenticated() && (
+        isAdmin() ||
+        getUserRole() == 'Gestion'
+      );
+    }
+    
+    // ==========================================
+    // VALIDATIONS DE SCHÉMA
+    // ==========================================
     
     function isValidCat(data) {
       return data.name is string && data.name.size() > 0 && data.name.size() < 100
@@ -20,71 +59,78 @@ service cloud.firestore {
         && (!('photos' in data) || (data.photos is list && data.photos.size() <= 10));
     }
 
-    // Collection des chats
+    // ==========================================
+    // 1. COLLECTION DES CHATS
+    // ==========================================
     match /chats/{catId} {
-      // Lecture publique autorisée pour le site vitrine et l'edge function
+      // Lecture publique pour le catalogue web et les edge functions
       allow read: if true;
       
-      // Seuls les utilisateurs connectés peuvent créer, modifier ou supprimer
-      allow create: if isAuthenticated() && isValidCat(request.resource.data);
-      allow update: if isAuthenticated() && (
+      // Création et modification strictement réservées aux Gestionnaires et Administrateurs
+      allow create: if isGestionOrAdmin() && isValidCat(request.resource.data);
+      allow update: if isGestionOrAdmin() && (
         isValidCat(request.resource.data) ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['editingLock'])
       );
-      allow delete: if isAuthenticated();
+      
+      // Suppression définitive réservée strictement aux Administrateurs
+      allow delete: if isAdmin();
     }
 
-    // Collection des avis et témoignages
+    // ==========================================
+    // 2. COLLECTION DES AVIS & TÉMOIGNAGES
+    // ==========================================
     match /testimonials/{testimonialId} {
+      // Lecture publique pour le site vitrine
       allow read: if true;
-      allow create: if isAuthenticated() && isValidTestimonial(request.resource.data);
-      allow update: if isAuthenticated() && isValidTestimonial(request.resource.data);
-      allow delete: if isAuthenticated();
+      
+      // Création, modification et suppression autorisées aux Gestionnaires et Administrateurs
+      allow create: if isGestionOrAdmin() && isValidTestimonial(request.resource.data);
+      allow update: if isGestionOrAdmin() && isValidTestimonial(request.resource.data);
+      allow delete: if isGestionOrAdmin();
     }
 
-    function isSuperAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.email == 'dark56100@gmail.com' ||
-        request.auth.token.email == 'asso.chatslheureux@gmail.com'
-      );
-    }
-
-    function isAdmin() {
-      return isAuthenticated() && (
-        isSuperAdmin() ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrateur')
-      );
-    }
-
-    // Collection des profils membres et rôles
+    // ==========================================
+    // 3. COLLECTION DES PROFILS MEMBRES & RÔLES
+    // ==========================================
     match /users/{userId} {
-      // Les membres connectés peuvent consulter la liste des membres
+      // Les membres connectés peuvent consulter l'annuaire interne
       allow read: if isAuthenticated();
-      // Création : les admins peuvent créer (y compris comptes manuels), et les utilisateurs peuvent créer leur propre profil initial (sans s'auto-promouvoir Administrateur sauf super-admin)
+      
+      // Création : les admins peuvent créer n'importe quel compte,
+      // un nouveau membre peut créer son propre profil initial (sans s'auto-promouvoir admin)
       allow create: if isAuthenticated() && (
         isAdmin() ||
         (request.auth.uid == userId && (request.resource.data.role != 'Administrateur' || isSuperAdmin()))
       );
-      // Modification : les admins peuvent tout modifier (y compris le rôle), les utilisateurs ne peuvent modifier que leur propre profil sans altérer leur rôle ou statut admin
+      
+      // Modification : les admins peuvent tout modifier (y compris les rôles),
+      // les membres peuvent modifier leur profil personnel (téléphone, pseudo) sans pouvoir modifier leur rôle
       allow update: if isAuthenticated() && (
         isAdmin() ||
         (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isSuperAdmin', 'isPresident']))
       );
-      // Suppression : strictement réservée aux administrateurs
+      
+      // Suppression de compte : strictement réservée aux Administrateurs
       allow delete: if isAdmin();
     }
 
-    // Collection des codes d'invitation bénévoles
+    // ==========================================
+    // 4. COLLECTION DES CODES D'INVITATION
+    // ==========================================
     match /invitationCodes/{codeId} {
-      // Lecture unitaire par ID direct autorisée pour valider le code lors de l'inscription
-      // (Empêche l'énumération / fuite publique de tous les codes générés)
+      // Lecture unitaire directe par ID autorisée pour valider un code saisi lors de l'inscription
+      // (Empêche l'énumération / listing public des codes générés)
       allow get: if true;
-      // Listing de l'ensemble des codes strictement réservé aux membres connectés
-      allow list: if isAuthenticated();
-      // Création et suppression strictement réservées aux administrateurs
+      
+      // Listing de tous les codes : réservé aux Administrateurs
+      allow list: if isAdmin();
+      
+      // Création et suppression de codes : réservées aux Administrateurs
       allow create, delete: if isAdmin();
-      // Consommation d'un code autorisée lors de l'inscription (marquage unique used = true)
+      
+      // Consommation à usage unique d'un code lors de l'inscription :
+      // Autorise uniquement le basculement irréversible de used: false vers used: true
       allow update: if isAdmin() || (
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['used', 'usedBy', 'usedByEmail', 'usedAt'])
         && request.resource.data.used == true
@@ -92,14 +138,20 @@ service cloud.firestore {
       );
     }
 
-    // Collection des demandes d'adoption (questionnaire officiel)
+    // ==========================================
+    // 5. COLLECTION DES DEMANDES D'ADOPTION
+    // ==========================================
     match /adoptionRequests/{requestId} {
-      // Soumission publique autorisée avec validation minimale
+      // Soumission publique de formulaire autorisée avec validation de base
       allow create: if request.resource.data.catName is string
         && request.resource.data.fullName is string
         && request.resource.data.email is string;
-      // Lecture, suivi et suppression réservés aux membres connectés
-      allow read, update, delete: if isAuthenticated();
+      
+      // Consultation, traitement, suivi et archivage : tous les membres connectés (Bénévoles, Gestion, Admin)
+      allow read, update: if isAuthenticated();
+      
+      // Purge et suppression définitive : réservée aux Administrateurs
+      allow delete: if isAdmin();
     }
     
     // Par défaut, refuser tout le reste
