@@ -26,6 +26,11 @@ import {
   ADOPTION_PURGE_DAYS, 
   ADOPTION_STATUS 
 } from '../src/firebase/adoptionsService.js';
+import { 
+  sendAdoptionConfirmationEmail, 
+  sendCustomInfoEmail 
+} from '../src/services/emailService.js';
+import sendEmailFunction from '../netlify/functions/send-email.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -637,3 +642,74 @@ describe('Cycle de vie des demandes d\'adoption (archivage 30j & purge 60j)', ()
     assert.equal(info.isPurgable, true);
   });
 });
+
+describe('Service et fonction d\'envoi d\'e-mails (noreply@chat-lheureux.fr)', () => {
+  test('sendAdoptionConfirmationEmail doit rejeter proprement si e-mail manquant', async () => {
+    const res = await sendAdoptionConfirmationEmail({ fullName: 'Jean Dupont' });
+    assert.equal(res.success, false);
+    assert.equal(res.error, 'Adresse e-mail manquante');
+  });
+
+  test('sendCustomInfoEmail doit rejeter proprement si destinataire manquant', async () => {
+    const res = await sendCustomInfoEmail({ subject: 'Test' });
+    assert.equal(res.success, false);
+    assert.equal(res.error, 'Destinataire manquant');
+  });
+
+  test('Netlify Function send-email doit refuser les requêtes GET avec code 405', async () => {
+    const req = new Request('https://chat-lheureux.fr/api/send-email', { method: 'GET' });
+    const res = await sendEmailFunction(req, {});
+    assert.equal(res.status, 405);
+  });
+
+  test('Netlify Function send-email doit exiger le champ to avec code 400', async () => {
+    const req = new Request('https://chat-lheureux.fr/api/send-email', { 
+      method: 'POST',
+      body: JSON.stringify({ subject: 'Sans destinataire' })
+    });
+    const res = await sendEmailFunction(req, {});
+    assert.equal(res.status, 400);
+  });
+
+  test('Netlify Function send-email doit fonctionner en mode simulation sans clé API', async () => {
+    const req = new Request('https://chat-lheureux.fr/api/send-email', { 
+      method: 'POST',
+      body: JSON.stringify({ 
+        to: 'adoptant@example.com',
+        type: 'adoption_applicant',
+        data: {
+          catName: 'Mimi',
+          fullName: 'Marie Curie',
+          phone: '06 00 00 00 00',
+          city: 'Vannes'
+        }
+      })
+    });
+    const res = await sendEmailFunction(req, {});
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
+    assert.equal(body.simulated, true);
+  });
+
+  test('Netlify Function send-email doit gérer la notification pour l\'association', async () => {
+    const req = new Request('https://chat-lheureux.fr/api/send-email', { 
+      method: 'POST',
+      body: JSON.stringify({ 
+        to: 'asso.chatslheureux@gmail.com',
+        type: 'adoption_admin_notification',
+        data: {
+          catName: 'Felix',
+          fullName: 'Pierre Paul',
+          phone: '06 11 22 33 44',
+          city: 'Lorient'
+        }
+      })
+    });
+    const res = await sendEmailFunction(req, {});
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
+  });
+});
+

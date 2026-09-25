@@ -1,6 +1,7 @@
 [build]
   publish = "dist"
   command = "npm run build"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -17,6 +18,12 @@
 [[edge_functions]]
   path = "/api/cat-image*"
   function = "og-preview"
+
+# API Functions
+[[redirects]]
+  from = "/api/send-email"
+  to = "/.netlify/functions/send-email"
+  status = 200
 
 # SPA Fallback pour React Router
 [[redirects]]

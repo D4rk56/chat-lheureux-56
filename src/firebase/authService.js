@@ -47,7 +47,14 @@ export async function logoutUser() {
 }
 
 export async function resetPassword(email) {
-  return await sendPasswordResetEmail(auth, email.trim());
+  const origin = (typeof window !== 'undefined' && window.location?.origin)
+    ? window.location.origin
+    : 'https://chat-lheureux.fr';
+  const actionCodeSettings = {
+    url: `${origin}/admin`,
+    handleCodeInApp: false
+  };
+  return await sendPasswordResetEmail(auth, email.trim(), actionCodeSettings);
 }
 
 export async function registerUser(email, password, displayName) {
