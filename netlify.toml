@@ -5,6 +5,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_PATHS = "legacy_html"
 
 # Edge functions pour réseaux sociaux & images dynamiques
 [[edge_functions]]

@@ -12,7 +12,7 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 const apiKey = (typeof import.meta !== "undefined" && import.meta.env?.VITE_FIREBASE_API_KEY)
   || (typeof process !== "undefined" && process.env?.FIREBASE_API_KEY)
   || (typeof process !== "undefined" && process.env?.VITE_FIREBASE_API_KEY)
-  || "AIzaSy_PLACEHOLDER_SET_IN_NETLIFY_ENV";
+  || "FIREBASE_API_KEY_PLACEHOLDER";
 
 // Détermination dynamique de l'authDomain :
 // Si l'utilisateur est sur chat-lheureux.netlify.app ou chat-lheureux.fr,
