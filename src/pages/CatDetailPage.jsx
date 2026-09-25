@@ -27,6 +27,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useToast } from '../context/ToastContext';
 import { getWhatsAppShareUrl, openWhatsAppUrl } from '../utils/whatsapp';
 import CatCard from '../components/CatCard';
+import ClickableText from '../components/common/ClickableText';
 
 export default function CatDetailPage() {
   const { id: routeId } = useParams();
@@ -449,9 +450,11 @@ export default function CatDetailPage() {
               <h3 className="font-title text-xs font-black uppercase tracking-wider text-gray-400 mb-2">
                 Histoire & Personnalité
               </h3>
-              <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line">
-                {cat.description || "Aucune description détaillée n'est renseignée."}
-              </p>
+              <ClickableText
+                as="p"
+                text={cat.description || "Aucune description détaillée n'est renseignée."}
+                className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line"
+              />
             </div>
 
             {/* Foyer Idéal */}
@@ -460,9 +463,11 @@ export default function CatDetailPage() {
                 <h3 className="font-title text-xs font-black uppercase tracking-wider text-[#d24de3] mb-1.5">
                   Foyer Idéal
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed">
-                  {cat.idealHome}
-                </p>
+                <ClickableText
+                  as="p"
+                  text={cat.idealHome}
+                  className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed whitespace-pre-line"
+                />
               </div>
             )}
 

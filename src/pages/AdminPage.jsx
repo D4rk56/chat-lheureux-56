@@ -28,7 +28,8 @@ import {
   Shield,
   History,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Link2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -104,6 +105,8 @@ import {
   isCatIncomplete, 
   formatCatAdminDate 
 } from '../utils/catSorting.js';
+import ClickableText from '../components/common/ClickableText';
+import { normalizeUrl } from '../utils/linkParser';
 
 export default function AdminPage() {
   const { 
@@ -176,6 +179,10 @@ export default function AdminPage() {
   const [savingCat, setSavingCat] = useState(false);
   const [draggedPhotoIdx, setDraggedPhotoIdx] = useState(null);
   const [dragOverPhotoIdx, setDragOverPhotoIdx] = useState(null);
+  const [catDescPreview, setCatDescPreview] = useState(false);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkText, setLinkText] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
 
   // Conflit d'édition
   const [lockConflictModalOpen, setLockConflictModalOpen] = useState(false);
@@ -901,6 +908,33 @@ export default function AdminPage() {
     setIsReadOnlyMode(false);
     setConcurrentAlert(null);
     setCatModalOpen(false);
+    setCatDescPreview(false);
+    setLinkModalOpen(false);
+    setLinkText('');
+    setLinkUrl('');
+  };
+
+  // Insertion d'un lien assisté dans la description du chat
+  const handleConfirmInsertLink = () => {
+    const rawUrl = linkUrl.trim();
+    if (!rawUrl) return;
+    const finalUrl = normalizeUrl(rawUrl);
+    const label = linkText.trim() || finalUrl;
+    const markdownSnippet = `[${label}](${finalUrl})`;
+
+    setCatFormData((prev) => {
+      const currentDesc = prev.description || '';
+      const separator = currentDesc.length > 0 && !currentDesc.endsWith(' ') && !currentDesc.endsWith('\n') ? ' ' : '';
+      return {
+        ...prev,
+        description: `${currentDesc}${separator}${markdownSnippet}`
+      };
+    });
+
+    setLinkModalOpen(false);
+    setLinkText('');
+    setLinkUrl('');
+    showToast("Lien inséré", `Le lien « ${label} » a été ajouté à la description.`);
   };
 
   // Gestion des photos dans le formulaire chat
@@ -2029,9 +2063,16 @@ export default function AdminPage() {
 
                         {/* Description avec voir plus / replier */}
                         <div className="mb-3">
-                          <p className={`text-slate-300 text-xs ${isExpanded ? 'whitespace-pre-line leading-relaxed' : 'line-clamp-2'}`}>
-                            {cat.description || <span className="text-slate-500 italic">Pas de description renseignée.</span>}
-                          </p>
+                          {cat.description ? (
+                            <ClickableText
+                              as="p"
+                              text={cat.description}
+                              className={`text-slate-300 text-xs ${isExpanded ? 'whitespace-pre-line leading-relaxed' : 'line-clamp-2'}`}
+                              linkClassName="text-pink-400 hover:text-pink-300 underline font-semibold transition-colors inline-flex items-baseline gap-0.5 break-all"
+                            />
+                          ) : (
+                            <p className="text-slate-500 italic text-xs">Pas de description renseignée.</p>
+                          )}
                           {cat.description && cat.description.trim().length > 70 && (
                             <button
                               type="button"
@@ -2403,17 +2444,137 @@ export default function AdminPage() {
 
               {/* Description & Foyer */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Description & Caractère
-                </label>
-                <textarea
-                  rows={3}
-                  disabled={isReadOnlyMode}
-                  value={catFormData.description}
-                  onChange={(e) => setCatFormData({ ...catFormData, description: e.target.value })}
-                  placeholder="Racontez son histoire, son comportement, ses petites habitudes..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-pink-500 disabled:opacity-60"
-                />
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Description & Caractère
+                  </label>
+                  
+                  <div className="flex items-center gap-1.5">
+                    {!isReadOnlyMode && (
+                      <button
+                        type="button"
+                        onClick={() => setLinkModalOpen(!linkModalOpen)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 ${
+                          linkModalOpen 
+                            ? 'bg-pink-600 text-white shadow-xs' 
+                            : 'bg-slate-800 hover:bg-slate-700 text-pink-400 border border-slate-700'
+                        }`}
+                        title="Insérer un lien cliquable (ex: album Facebook, vidéo YouTube, page Instagram)"
+                      >
+                        <Link2 className="w-3 h-3" />
+                        <span>Insérer un lien</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setCatDescPreview(!catDescPreview)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 ${
+                        catDescPreview 
+                          ? 'bg-brand-gradient text-white shadow-xs' 
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                      }`}
+                      title={catDescPreview ? "Revenir à l'édition du texte" : "Prévisualiser le texte avec les liens cliquables"}
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>{catDescPreview ? 'Rédiger' : 'Aperçu'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Assistant d'insertion de lien */}
+                {linkModalOpen && !isReadOnlyMode && (
+                  <div className="mb-2.5 p-3 rounded-xl bg-slate-950 border border-pink-500/40 space-y-2.5 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between text-xs font-bold text-pink-300">
+                      <span className="flex items-center gap-1.5">
+                        <Link2 className="w-3.5 h-3.5 text-pink-400" />
+                        <span>Ajouter un lien cliquable</span>
+                      </span>
+                      <button 
+                        type="button" 
+                        onClick={() => setLinkModalOpen(false)}
+                        className="text-slate-400 hover:text-white"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Texte affiché (Ex: Album Facebook de Mimi)
+                        </label>
+                        <input
+                          type="text"
+                          value={linkText}
+                          onChange={(e) => setLinkText(e.target.value)}
+                          placeholder="Ex: Voir son album photos"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                          Adresse web (URL) *
+                        </label>
+                        <input
+                          type="text"
+                          value={linkUrl}
+                          onChange={(e) => setLinkUrl(e.target.value)}
+                          placeholder="https://facebook.com/..."
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-pink-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-slate-500 italic">
+                        Insère automatiquement [Texte](Adresse)
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setLinkModalOpen(false)}
+                          className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white text-xs"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!linkUrl.trim()}
+                          onClick={handleConfirmInsertLink}
+                          className="px-3 py-1 rounded-lg bg-pink-600 hover:bg-pink-500 disabled:opacity-50 text-white text-xs font-bold transition-colors shadow-xs"
+                        >
+                          Insérer le lien
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Zone de saisie ou aperçu interactif */}
+                {catDescPreview ? (
+                  <div className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 min-h-[90px] text-xs sm:text-sm">
+                    {catFormData.description ? (
+                      <ClickableText
+                        as="p"
+                        text={catFormData.description}
+                        className="text-slate-200 whitespace-pre-line leading-relaxed"
+                        linkClassName="text-pink-400 hover:text-pink-300 underline font-semibold transition-colors inline-flex items-baseline gap-0.5 break-all"
+                      />
+                    ) : (
+                      <span className="text-slate-500 italic">Aucun texte saisi pour le moment.</span>
+                    )}
+                  </div>
+                ) : (
+                  <textarea
+                    rows={3}
+                    disabled={isReadOnlyMode}
+                    value={catFormData.description}
+                    onChange={(e) => setCatFormData({ ...catFormData, description: e.target.value })}
+                    placeholder="Racontez son histoire, son comportement, ses petites habitudes... Les adresses https://... ou [Mon titre](https://...) seront cliquables !"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-pink-500 disabled:opacity-60"
+                  />
+                )}
               </div>
 
               <div>

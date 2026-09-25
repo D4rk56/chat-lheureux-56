@@ -24,6 +24,7 @@ import {
   getWhatsAppShareUrl, 
   openWhatsAppUrl 
 } from '../../utils/whatsapp';
+import ClickableText from '../common/ClickableText';
 
 export default function AdoptionDetailModal({ 
   isOpen, 
@@ -362,9 +363,12 @@ export default function AdoptionDetailModal({
                 <FileText className="w-4 h-4" />
                 <span>Remarques de l'adoptant</span>
               </h3>
-              <p className="text-xs text-slate-200 whitespace-pre-line leading-relaxed">
-                {adoption.comments}
-              </p>
+              <ClickableText
+                as="p"
+                text={adoption.comments}
+                className="text-xs text-slate-200 whitespace-pre-line leading-relaxed"
+                linkClassName="text-pink-400 hover:text-pink-300 underline font-semibold transition-colors inline-flex items-baseline gap-0.5 break-all"
+              />
             </div>
           )}
 

@@ -49,6 +49,11 @@ import {
   isCatIncomplete, 
   formatCatAdminDate 
 } from '../src/utils/catSorting.js';
+import { 
+  parseLinksFromText, 
+  normalizeUrl, 
+  stripTrailingPunctuation 
+} from '../src/utils/linkParser.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -1067,5 +1072,66 @@ describe('Tri alphabétique, dates et complétude des fiches chats (catSorting)'
 
     assert.equal(formatCatAdminDate(null), '');
     assert.equal(formatCatAdminDate({}), '');
+  });
+});
+
+describe('Détection et rendu des liens cliquables (linkParser)', () => {
+  test('normalizeUrl ajoute https:// si manquant pour les préfixes www.', () => {
+    assert.equal(normalizeUrl('https://chat-lheureux.fr'), 'https://chat-lheureux.fr');
+    assert.equal(normalizeUrl('http://test.com'), 'http://test.com');
+    assert.equal(normalizeUrl('www.facebook.com/page'), 'https://www.facebook.com/page');
+    assert.equal(normalizeUrl(''), '');
+    assert.equal(normalizeUrl(null), '');
+  });
+
+  test('stripTrailingPunctuation détache les signes de ponctuation en fin d\'URL', () => {
+    assert.deepEqual(stripTrailingPunctuation('https://chat-lheureux.fr.'), { cleanUrl: 'https://chat-lheureux.fr', trailing: '.' });
+    assert.deepEqual(stripTrailingPunctuation('https://chat-lheureux.fr!'), { cleanUrl: 'https://chat-lheureux.fr', trailing: '!' });
+    assert.deepEqual(stripTrailingPunctuation('https://chat-lheureux.fr)'), { cleanUrl: 'https://chat-lheureux.fr', trailing: ')' });
+    assert.deepEqual(stripTrailingPunctuation('https://chat-lheureux.fr'), { cleanUrl: 'https://chat-lheureux.fr', trailing: '' });
+  });
+
+  test('parseLinksFromText gère les textes sans liens', () => {
+    const segments = parseLinksFromText('Bonjour, ce chat est très affectueux et propre.');
+    assert.equal(segments.length, 1);
+    assert.equal(segments[0].type, 'text');
+    assert.equal(segments[0].text, 'Bonjour, ce chat est très affectueux et propre.');
+  });
+
+  test('parseLinksFromText détecte les URLs brutes https:// et www.', () => {
+    const text = 'Visitez notre site https://chat-lheureux.fr ou notre page www.facebook.com/profile.php pour plus d\'infos.';
+    const segments = parseLinksFromText(text);
+
+    const links = segments.filter(s => s.type === 'link');
+    assert.equal(links.length, 2);
+    assert.equal(links[0].url, 'https://chat-lheureux.fr');
+    assert.equal(links[1].url, 'https://www.facebook.com/profile.php');
+  });
+
+  test('parseLinksFromText ne capture pas le point de fin de phrase dans l\'URL', () => {
+    const text = 'Consultez la fiche sur https://chat-lheureux.fr.';
+    const segments = parseLinksFromText(text);
+    const link = segments.find(s => s.type === 'link');
+    assert.ok(link);
+    assert.equal(link.url, 'https://chat-lheureux.fr');
+    assert.equal(segments[segments.length - 1].text, '.');
+  });
+
+  test('parseLinksFromText interprète fidèlement les liens Markdown nommés [Titre](URL)', () => {
+    const text = 'Regardez [sa vidéo TikTok](https://tiktok.com/@chatlheureux) et [ses photos](www.instagram.com/p/123) ici !';
+    const segments = parseLinksFromText(text);
+
+    const links = segments.filter(s => s.type === 'link');
+    assert.equal(links.length, 2);
+    assert.equal(links[0].text, 'sa vidéo TikTok');
+    assert.equal(links[0].url, 'https://tiktok.com/@chatlheureux');
+    assert.equal(links[1].text, 'ses photos');
+    assert.equal(links[1].url, 'https://www.instagram.com/p/123');
+  });
+
+  test('parseLinksFromText gère les chaînes vides, nulles ou invalides avec grâce', () => {
+    assert.deepEqual(parseLinksFromText(''), []);
+    assert.deepEqual(parseLinksFromText(null), []);
+    assert.deepEqual(parseLinksFromText(undefined), []);
   });
 });
