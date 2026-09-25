@@ -22,6 +22,12 @@ import {
   ADOPTION_PURGE_DAYS, 
   getAdoptionLifecycleInfo 
 } from '../../firebase/adoptionsService';
+import WhatsAppIcon from '../icons/WhatsAppIcon';
+import { 
+  formatAdoptionWhatsAppMessage, 
+  getWhatsAppShareUrl, 
+  openWhatsAppUrl 
+} from '../../utils/whatsapp';
 
 export default function AdoptionsTab({ 
   adoptions = [], 
@@ -390,6 +396,20 @@ export default function AdoptionsTab({
                       <span className="hidden sm:inline">Archiver</span>
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = formatAdoptionWhatsAppMessage(item);
+                      const url = getWhatsAppShareUrl(text);
+                      openWhatsAppUrl(url);
+                    }}
+                    className="p-2 sm:px-3 sm:py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                    title="Partager cette demande sur WhatsApp"
+                  >
+                    <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
+                    <span className="hidden lg:inline">WhatsApp</span>
+                  </button>
 
                   <button
                     type="button"

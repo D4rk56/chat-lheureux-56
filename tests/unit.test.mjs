@@ -32,6 +32,17 @@ import {
 } from '../src/services/emailService.js';
 import sendEmailFunction from '../netlify/functions/send-email.js';
 import { resolveAuthDomain } from '../src/firebase/config.js';
+import { 
+  cleanPhoneNumberForWhatsApp, 
+  getWhatsAppShareUrl, 
+  formatAdoptionWhatsAppMessage 
+} from '../src/utils/whatsapp.js';
+import { 
+  isLogExpired, 
+  MAX_LOG_RETENTION_DAYS, 
+  LOG_CATEGORIES, 
+  LOG_ACTIONS 
+} from '../src/firebase/activityLogService.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -854,5 +865,122 @@ describe('Résolution de l\'authDomain Firebase pour Netlify (OBJECTIF 2)', () =
     assert.equal(resolveAuthDomain(), 'chat-lheureux-56.firebaseapp.com');
   });
 });
+
+describe('Utilitaires WhatsApp et Partage de Dossier d\'Adoption (PLAN 1 & 2)', () => {
+  test('cleanPhoneNumberForWhatsApp formate correctement les numéros français et internationaux', () => {
+    assert.equal(cleanPhoneNumberForWhatsApp('06 12 34 56 78'), '33612345678');
+    assert.equal(cleanPhoneNumberForWhatsApp('06.12.34.56.78'), '33612345678');
+    assert.equal(cleanPhoneNumberForWhatsApp('+33 6 12 34 56 78'), '33612345678');
+    assert.equal(cleanPhoneNumberForWhatsApp('0033 6 12 34 56 78'), '33612345678');
+    assert.equal(cleanPhoneNumberForWhatsApp('07-11-22-33-44'), '33711223344');
+    assert.equal(cleanPhoneNumberForWhatsApp(''), '');
+    assert.equal(cleanPhoneNumberForWhatsApp(null), '');
+    assert.equal(cleanPhoneNumberForWhatsApp(undefined), '');
+  });
+
+  test('getWhatsAppShareUrl produit des URLs wa.me conformes', () => {
+    const generalUrl = getWhatsAppShareUrl('Bonjour tout le monde !');
+    assert.equal(generalUrl, 'https://wa.me/?text=Bonjour%20tout%20le%20monde%20!');
+
+    const directPhoneUrl = getWhatsAppShareUrl('Bonjour candidat', '06 12 34 56 78');
+    assert.equal(directPhoneUrl, 'https://wa.me/33612345678?text=Bonjour%20candidat');
+
+    const emptyUrl = getWhatsAppShareUrl('');
+    assert.equal(emptyUrl, 'https://wa.me/?text=');
+  });
+
+  test('formatAdoptionWhatsAppMessage synthétise fidèlement les données d\'une demande', () => {
+    const adoption = {
+      catName: 'Mimi',
+      fullName: 'Marie Dupont',
+      phone: '06 99 88 77 66',
+      email: 'marie.dupont@example.com',
+      postalCodeCity: '56000 Vannes',
+      address: '12 rue des Fleurs',
+      profession: 'Enseignante',
+      adultsCount: 2,
+      childrenCount: 1,
+      childrenAges: '7 ans',
+      housingType: 'Maison',
+      hasGarden: 'Oui',
+      gardenSurface: '400m²',
+      hasBalcony: 'Non',
+      hasAnimals: 'Oui',
+      animalDetails: '1 chat sociable',
+      adoptionReason: 'Coup de cœur pour Mimi.',
+      submittedAt: '2026-09-20T10:00:00.000Z'
+    };
+
+    const message = formatAdoptionWhatsAppMessage(adoption);
+    assert.ok(message.includes('*Chat :* Mimi'));
+    assert.ok(message.includes('*Nom :* Marie Dupont'));
+    assert.ok(message.includes('*Tél :* 06 99 88 77 66'));
+    assert.ok(message.includes('*E-mail :* marie.dupont@example.com'));
+    assert.ok(message.includes('12 rue des Fleurs, 56000 Vannes'));
+    assert.ok(message.includes('2 adulte(s), 1 enfant(s) (âges : 7 ans)'));
+    assert.ok(message.includes('Maison'));
+    assert.ok(message.includes('Oui (400m²)'));
+    assert.ok(message.includes('1 chat sociable'));
+    assert.ok(message.includes('Coup de cœur pour Mimi.'));
+    assert.ok(message.includes('https://chat-lheureux.fr/admin'));
+  });
+
+  test('formatAdoptionWhatsAppMessage gère les cas d\'adoption vide ou partielle', () => {
+    assert.equal(formatAdoptionWhatsAppMessage(null), '');
+    const partial = { fullName: 'Jean Inconnu' };
+    const result = formatAdoptionWhatsAppMessage(partial);
+    assert.ok(result.includes('*Chat :* Non précisé'));
+    assert.ok(result.includes('*Nom :* Jean Inconnu'));
+  });
+});
+
+describe('Historique d\'audit des actions et Rétention 7 jours (PLAN 3)', () => {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+  test('isLogExpired identifie correctement les logs récents vs expirés (> 7 jours)', () => {
+    const now = Date.now();
+    
+    // Log d'aujourd'hui
+    assert.equal(isLogExpired(now, 7), false);
+
+    // Log d'il y a 3 jours
+    assert.equal(isLogExpired(now - (3 * ONE_DAY_MS), 7), false);
+
+    // Log d'il y a 6 jours et 23h
+    assert.equal(isLogExpired(now - (6.9 * ONE_DAY_MS), 7), false);
+
+    // Log d'il y a 7 jours et 1 heure (expiré)
+    assert.equal(isLogExpired(now - (7 * ONE_DAY_MS + 3600000), 7), true);
+
+    // Log d'il y a 14 jours (expiré)
+    assert.equal(isLogExpired(now - (14 * ONE_DAY_MS), 7), true);
+  });
+
+  test('isLogExpired supporte les chaînes de dates ISO', () => {
+    const freshIso = new Date(Date.now() - ONE_DAY_MS).toISOString();
+    assert.equal(isLogExpired(freshIso, 7), false);
+
+    const expiredIso = new Date(Date.now() - 10 * ONE_DAY_MS).toISOString();
+    assert.equal(isLogExpired(expiredIso, 7), true);
+  });
+
+  test('isLogExpired gère les dates nulles ou invalides avec grâce', () => {
+    assert.equal(isLogExpired(null), false);
+    assert.equal(isLogExpired(''), false);
+    assert.equal(isLogExpired('invalid'), false);
+  });
+
+  test('Constantes de rétention et catégories correctement définies', () => {
+    assert.equal(MAX_LOG_RETENTION_DAYS, 7);
+    assert.equal(LOG_CATEGORIES.CHATS, 'chats');
+    assert.equal(LOG_CATEGORIES.ADOPTIONS, 'adoptions');
+    assert.equal(LOG_CATEGORIES.MEMBERS, 'members');
+    assert.equal(LOG_CATEGORIES.STORIES, 'stories');
+    assert.ok(LOG_ACTIONS.CAT_CREATE);
+    assert.ok(LOG_ACTIONS.ADOPTION_STATUS_CHANGE);
+    assert.ok(LOG_ACTIONS.MEMBER_ROLE_CHANGE);
+  });
+});
+
 
 

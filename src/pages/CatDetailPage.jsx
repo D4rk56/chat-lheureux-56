@@ -25,6 +25,7 @@ import { fetchCatById, fetchCats, getCachedCats } from '../firebase/catsService'
 import { getCatAdoptionInfo } from '../utils/age';
 import { useFavorites } from '../context/FavoritesContext';
 import { useToast } from '../context/ToastContext';
+import { getWhatsAppShareUrl, openWhatsAppUrl } from '../utils/whatsapp';
 import CatCard from '../components/CatCard';
 
 export default function CatDetailPage() {
@@ -128,8 +129,10 @@ export default function CatDetailPage() {
   };
 
   const shareWhatsApp = () => {
-    const text = `Regarde la fiche de ${cat?.name || 'ce chat'} à l'adoption chez Chat L'Heureux 56 : ${window.location.href}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    const shareUrl = window.location.href;
+    const text = `🐾 Regarde la fiche de ${cat?.name || 'ce chat'} à l'adoption chez Chat L'Heureux 56 dans le Morbihan :\n\n${shareUrl}`;
+    const waUrl = getWhatsAppShareUrl(text);
+    openWhatsAppUrl(waUrl);
   };
 
   const shareFacebook = () => {

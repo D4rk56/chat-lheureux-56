@@ -1,10 +1,11 @@
 export default async (request, context) => {
   try {
     const url = new URL(request.url);
+    const secureOrigin = url.origin.replace(/^http:\/\//i, "https://");
     const apiKey = Netlify.env.get("FIREBASE_API_KEY") || Netlify.env.get("VITE_FIREBASE_API_KEY");
     const keyParam = apiKey ? `?key=${encodeURIComponent(apiKey)}` : "";
 
-    // 1. Route API pour convertir et servir l'image binaire du chat à Facebook/WhatsApp
+    // 1. Route API pour convertir et servir l'image binaire du chat à WhatsApp / Facebook (SANS REDIRECTION 302)
     if (url.pathname === "/api/cat-image" || url.pathname.startsWith("/api/cat-image")) {
       let catId = url.searchParams.get("id");
       if (!catId && url.pathname.startsWith("/api/cat-image/")) {
@@ -14,12 +15,34 @@ export default async (request, context) => {
         }
       }
       if (catId) {
-        // Supprimer toute extension éventuelle (.jpg, .jpeg, etc.) pour retrouver l'ID Firestore exact
         catId = catId.replace(/\.(jpg|jpeg|png|webp)$/i, "");
       }
 
-      const fallbackImg = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop";
-      if (!catId) return Response.redirect(fallbackImg, 302);
+      // Fonction helper pour renvoyer la couverture locale par défaut avec statut 200 direct
+      const serveFallbackCover = async () => {
+        try {
+          const coverRes = await fetch(`${secureOrigin}/og-cover.jpg`);
+          if (coverRes.ok) {
+            const coverBuffer = await coverRes.arrayBuffer();
+            return new Response(coverBuffer, {
+              status: 200,
+              headers: {
+                "Content-Type": "image/jpeg",
+                "Content-Length": String(coverBuffer.byteLength),
+                "Cache-Control": "public, max-age=86400, s-maxage=86400",
+                "Access-Control-Allow-Origin": "*",
+              },
+            });
+          }
+        } catch (e) {
+          // Fallback sur image externe si le fetch local échoue
+        }
+        return Response.redirect("https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop", 302);
+      };
+
+      if (!catId) {
+        return await serveFallbackCover();
+      }
 
       try {
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/chat-lheureux-56/databases/(default)/documents/chats/${catId}${keyParam}`;
@@ -47,34 +70,50 @@ export default async (request, context) => {
               bytes[i] = binaryString.charCodeAt(i);
             }
 
-            const responseHeaders = {
-              "Content-Type": mimeType,
-              "Content-Length": String(bytes.length),
-              "Accept-Ranges": "bytes",
-              "Cache-Control": "public, max-age=86400, s-maxage=86400",
-              "Access-Control-Allow-Origin": "*",
-            };
-
             return new Response(bytes, {
               status: 200,
-              headers: responseHeaders,
+              headers: {
+                "Content-Type": mimeType,
+                "Content-Length": String(bytes.length),
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=86400, s-maxage=86400",
+                "Access-Control-Allow-Origin": "*",
+              },
             });
           } else if (photoData.startsWith("http")) {
-            return Response.redirect(photoData, 302);
+            // WhatsApp refuse les redirections 302 pour les images : on proxifie le binaire directement
+            try {
+              const remoteRes = await fetch(photoData);
+              if (remoteRes.ok) {
+                const cType = remoteRes.headers.get("content-type") || "image/jpeg";
+                const remoteBuffer = await remoteRes.arrayBuffer();
+                return new Response(remoteBuffer, {
+                  status: 200,
+                  headers: {
+                    "Content-Type": cType,
+                    "Content-Length": String(remoteBuffer.byteLength),
+                    "Cache-Control": "public, max-age=86400, s-maxage=86400",
+                    "Access-Control-Allow-Origin": "*",
+                  },
+                });
+              }
+            } catch (proxyErr) {
+              console.error("Erreur proxy image http:", proxyErr);
+            }
           }
         }
       } catch (err) {
         console.error("Erreur image binaire:", err);
       }
 
-      return Response.redirect(fallbackImg, 302);
+      return await serveFallbackCover();
     }
 
-    // 2. Interception des robots de réseaux sociaux
+    // 2. Interception des robots de réseaux sociaux (WhatsApp, Facebook, Twitter, Discord, etc.)
     const userAgent = request.headers.get("user-agent") || "";
-    const isSocialBot = /facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Pinterest|Slackbot|vkShare|W3C_Validator|redditbot|Applebot/i.test(userAgent);
+    const isSocialBot = /facebookexternalhit|Facebot|Twitterbot|WhatsApp|LinkedInBot|TelegramBot|Discordbot|Pinterest|Slackbot|vkShare|W3C_Validator|redditbot|Applebot|Googlebot/i.test(userAgent);
 
-    // CRUCIAL : Pour les visiteurs normaux (navigateurs humains), passer la main à Netlify via context.next()
+    // Pour les visiteurs normaux (navigateurs humains), passer la main à Netlify via context.next()
     if (!isSocialBot) {
       return context.next();
     }
@@ -143,21 +182,10 @@ export default async (request, context) => {
       }
     }
 
-    let photoData = "";
-    if (catData?.photos?.arrayValue?.values?.length > 0) {
-      photoData = catData.photos.arrayValue.values[0].stringValue || "";
-    } else if (catData?.image?.stringValue) {
-      photoData = catData.image.stringValue;
-    }
-
-    const secureOrigin = url.origin.replace(/^http:\/\//i, "https://");
-    let photoUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1200&h=630&fit=crop";
-    if (photoData.startsWith("data:image")) {
-      // Fournir une URL explicite avec extension .jpg pour que le scraper Facebook la valide immédiatement
-      photoUrl = `${secureOrigin}/api/cat-image/${resolvedCatId || catId}.jpg`;
-    } else if (photoData.startsWith("http")) {
-      photoUrl = photoData;
-    }
+    // L'URL de la photo pointe TOUJOURS vers /api/cat-image/[id].jpg pour garantir un statut 200 direct (sans redirect 302 pour WhatsApp)
+    const photoUrl = resolvedCatId 
+      ? `${secureOrigin}/api/cat-image/${resolvedCatId}.jpg`
+      : `${secureOrigin}/og-cover.jpg`;
 
     let dynamicTitle = `🐾 ${name} (${sex}${age}) — À l'adoption à ${location}`;
     let dynamicDesc = rawDesc.length > 160 ? rawDesc.substring(0, 157) + "..." : rawDesc;
@@ -174,6 +202,7 @@ export default async (request, context) => {
     // URL sécurisée et complète
     const currentUrl = url.href.replace(/^http:\/\//i, "https://");
 
+    // Important pour WhatsApp : og:image et og:title placés dès le début du <head>
     const botHtml = `<!DOCTYPE html>
 <html lang="fr" prefix="og: https://ogp.me/ns# fb: https://ogp.me/ns/fb#">
 <head>
@@ -182,20 +211,22 @@ export default async (request, context) => {
     <meta name="description" content="${dynamicDesc}">
     <link rel="canonical" href="${currentUrl}">
     
-    <!-- Identifiant officiel Facebook App -->
-    <meta property="fb:app_id" content="966242223397117">
-    
-    <!-- Open Graph / Facebook / WhatsApp -->
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Chat L'Heureux 56">
-    <meta property="og:title" content="${dynamicTitle}">
-    <meta property="og:description" content="${dynamicDesc}">
+    <!-- Open Graph Image pour WhatsApp & Facebook (En tout premier dans le head) -->
     <meta property="og:image" content="${photoUrl}">
     <meta property="og:image:secure_url" content="${photoUrl}">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="${name}">
+    
+    <!-- Identifiant officiel Facebook App -->
+    <meta property="fb:app_id" content="966242223397117">
+    
+    <!-- Open Graph Métadonnées -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chat L'Heureux 56">
+    <meta property="og:title" content="${dynamicTitle}">
+    <meta property="og:description" content="${dynamicDesc}">
     <meta property="og:url" content="${currentUrl}">
     <meta property="og:locale" content="fr_FR">
 

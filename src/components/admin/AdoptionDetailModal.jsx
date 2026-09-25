@@ -18,6 +18,12 @@ import {
   Check 
 } from 'lucide-react';
 import { ADOPTION_STATUS } from '../../firebase/adoptionsService';
+import WhatsAppIcon from '../icons/WhatsAppIcon';
+import { 
+  formatAdoptionWhatsAppMessage, 
+  getWhatsAppShareUrl, 
+  openWhatsAppUrl 
+} from '../../utils/whatsapp';
 
 export default function AdoptionDetailModal({ 
   isOpen, 
@@ -45,6 +51,12 @@ export default function AdoptionDetailModal({
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleShareWhatsApp = () => {
+    const text = formatAdoptionWhatsAppMessage(adoption);
+    const url = getWhatsAppShareUrl(text);
+    openWhatsAppUrl(url);
   };
 
   const handleSave = async () => {
@@ -104,13 +116,26 @@ export default function AdoptionDetailModal({
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleShareWhatsApp}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-950/30"
+              title="Partager le résumé de ce dossier sur WhatsApp (avec la FA ou l'équipe)"
+            >
+              <WhatsAppIcon className="w-4 h-4 fill-white" />
+              <span className="hidden sm:inline">Partager WhatsApp</span>
+              <span className="sm:hidden">WhatsApp</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Corps Défilable */}
@@ -150,6 +175,18 @@ export default function AdoptionDetailModal({
                   >
                     {copiedField === 'phone' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
+                  {adoption.phone && (
+                    <a
+                      href={getWhatsAppShareUrl(`Bonjour ${adoption.fullName}, je vous contacte au sujet de votre demande d'adoption pour ${adoption.catName} auprès de l'association Chat L'Heureux 56.`, adoption.phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors flex items-center gap-1 text-[11px] font-bold"
+                      title="Contacter directement sur WhatsApp"
+                    >
+                      <WhatsAppIcon className="w-3.5 h-3.5 fill-emerald-400" />
+                      <span className="hidden sm:inline">WhatsApp</span>
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -397,7 +434,16 @@ export default function AdoptionDetailModal({
             )}
           </div>
 
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handleShareWhatsApp}
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+              title="Partager le résumé complet de la demande sur WhatsApp"
+            >
+              <WhatsAppIcon className="w-4 h-4 fill-emerald-400" />
+              <span>Partager sur WhatsApp</span>
+            </button>
             <button
               type="button"
               onClick={onClose}

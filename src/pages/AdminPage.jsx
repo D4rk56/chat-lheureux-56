@@ -25,7 +25,8 @@ import {
   KeyRound,
   Users,
   Sparkles,
-  Shield
+  Shield,
+  History
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -83,8 +84,18 @@ import GoogleIcon from '../components/icons/GoogleIcon';
 
 import AdoptionsTab from '../components/admin/AdoptionsTab';
 import MembersTab from '../components/admin/MembersTab';
+import ActivityTab from '../components/admin/ActivityTab';
 import AdoptionDetailModal from '../components/admin/AdoptionDetailModal';
 import PasswordResetModal from '../components/admin/PasswordResetModal';
+import { 
+  logActivity, 
+  LOG_CATEGORIES, 
+  LOG_ACTIONS, 
+  fetchRecentActivityLogs, 
+  subscribeActivityLogs, 
+  purgeOldActivityLogs, 
+  MAX_LOG_RETENTION_DAYS 
+} from '../firebase/activityLogService';
 
 export default function AdminPage() {
   const { 
@@ -126,11 +137,13 @@ export default function AdminPage() {
   const [adoptions, setAdoptions] = useState([]);
   const [members, setMembers] = useState([]);
   const [inviteCodes, setInviteCodes] = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
   const [loadingAdoptions, setLoadingAdoptions] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
-  // Onglet courant : 'cats', 'stories', 'adoptions', ou 'members'
+  // Onglet courant : 'cats', 'stories', 'adoptions', 'members', ou 'activity'
   const [currentTab, setCurrentTab] = useState('cats');
 
   // Modale Détail Demande d'Adoption
@@ -221,8 +234,20 @@ export default function AdminPage() {
       setAdoptions([]);
       setMembers([]);
       setInviteCodes([]);
+      setActivityLogs([]);
     }
   }, [user, role]);
+
+  // Abonnement en temps réel aux logs d'activité (7 jours)
+  useEffect(() => {
+    if (!user) return;
+    const unsub = subscribeActivityLogs((logs) => {
+      setActivityLogs(logs);
+    }, MAX_LOG_RETENTION_DAYS);
+    return () => {
+      if (unsub) unsub();
+    };
+  }, [user]);
 
   // Initialisation de l'onglet par défaut selon le rôle
   useEffect(() => {
@@ -245,12 +270,13 @@ export default function AdminPage() {
   const loadAllData = async () => {
     setLoadingData(true);
     try {
-      const [catsSettled, storiesSettled, adoptionsSettled, membersSettled, codesSettled] = await Promise.allSettled([
+      const [catsSettled, storiesSettled, adoptionsSettled, membersSettled, codesSettled, activitySettled] = await Promise.allSettled([
         fetchCats(false),
         fetchStories(),
         canManageAdoptions(role) ? fetchAdoptionRequests() : Promise.resolve([]),
         isAdminRole(role) ? fetchAllUsers() : Promise.resolve([]),
-        isAdminRole(role) ? fetchInviteCodes() : Promise.resolve([])
+        isAdminRole(role) ? fetchInviteCodes() : Promise.resolve([]),
+        fetchRecentActivityLogs(MAX_LOG_RETENTION_DAYS)
       ]);
 
       if (catsSettled.status === 'fulfilled') {
@@ -282,10 +308,48 @@ export default function AdminPage() {
       } else if (codesSettled) {
         console.warn("Échec chargement codes d'invitation :", codesSettled.reason);
       }
+
+      if (activitySettled && activitySettled.status === 'fulfilled') {
+        setActivityLogs(activitySettled.value || []);
+      } else if (activitySettled) {
+        console.warn("Échec chargement logs d'activité :", activitySettled.reason);
+      }
+
+      // Auto-purge silencieuse en tâche de fond des logs de plus de 7 jours
+      if (isAdminRole(role)) {
+        purgeOldActivityLogs(MAX_LOG_RETENTION_DAYS).catch(e => console.warn("Auto-purge background :", e));
+      }
     } catch (err) {
       console.error("Erreur inattendue chargement données admin :", err);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  const loadActivityLogs = async () => {
+    setLoadingActivity(true);
+    try {
+      const freshLogs = await fetchRecentActivityLogs(MAX_LOG_RETENTION_DAYS);
+      setActivityLogs(freshLogs);
+      if (isAdminRole(role)) {
+        purgeOldActivityLogs(MAX_LOG_RETENTION_DAYS).catch(e => console.warn("Auto-purge logs background :", e));
+      }
+    } catch (err) {
+      console.error("Erreur chargement logs :", err);
+      showToast("Erreur", "Impossible de charger l'historique.", "error");
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
+  const handleManualPurgeActivity = async () => {
+    try {
+      const res = await purgeOldActivityLogs(MAX_LOG_RETENTION_DAYS);
+      await loadActivityLogs();
+      return res;
+    } catch (err) {
+      console.error("Erreur purge manuelle logs :", err);
+      showToast("Erreur", "Impossible de purger les logs expirés.", "error");
     }
   };
 
@@ -328,10 +392,21 @@ export default function AdminPage() {
   const handleUpdateAdoptionStatus = async (id, updates) => {
     try {
       await updateAdoptionRequest(id, updates);
+      const currentTarget = adoptions.find(a => a.id === id) || selectedAdoption;
       setAdoptions(prev => prev.map(a => a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a));
       if (selectedAdoption && selectedAdoption.id === id) {
         setSelectedAdoption(prev => ({ ...prev, ...updates, updatedAt: new Date().toISOString() }));
       }
+      logActivity({
+        actionType: LOG_ACTIONS.ADOPTION_STATUS_CHANGE,
+        category: LOG_CATEGORIES.ADOPTIONS,
+        description: `Mise à jour du dossier d'adoption de ${currentTarget?.fullName || 'candidat'}`,
+        details: updates.status ? `Statut passé à : ${updates.status}` : 'Mise à jour des notes de suivi',
+        targetId: id,
+        targetName: currentTarget ? `${currentTarget.catName} (${currentTarget.fullName})` : 'Demande d\'adoption',
+        user,
+        userProfile
+      });
       showToast("Suivi enregistré", "Le dossier d'adoption a été mis à jour avec succès.");
     } catch (err) {
       console.error(err);
@@ -347,10 +422,21 @@ export default function AdminPage() {
   const handleArchiveAdoption = async (id) => {
     try {
       await archiveAdoptionRequest(id);
+      const currentTarget = adoptions.find(a => a.id === id) || selectedAdoption;
       setAdoptions(prev => prev.map(a => a.id === id ? { ...a, status: ADOPTION_STATUS.ARCHIVEE, archivedAt: new Date().toISOString() } : a));
       if (selectedAdoption && selectedAdoption.id === id) {
         setSelectedAdoption(prev => ({ ...prev, status: ADOPTION_STATUS.ARCHIVEE, archivedAt: new Date().toISOString() }));
       }
+      logActivity({
+        actionType: LOG_ACTIONS.ADOPTION_ARCHIVE,
+        category: LOG_CATEGORIES.ADOPTIONS,
+        description: `Archivage de la demande d'adoption`,
+        details: currentTarget ? `Pour ${currentTarget.catName} par ${currentTarget.fullName}` : '',
+        targetId: id,
+        targetName: currentTarget ? `${currentTarget.catName} (${currentTarget.fullName})` : 'Demande d\'adoption',
+        user,
+        userProfile
+      });
       showToast("Dossier archivé", "La demande d'adoption a été déplacée dans les archives.");
     } catch (err) {
       console.error(err);
@@ -363,6 +449,14 @@ export default function AdminPage() {
       const count = await archiveOldAdoptions(ADOPTION_ARCHIVE_DAYS);
       if (count > 0) {
         await loadAdoptions();
+        logActivity({
+          actionType: LOG_ACTIONS.ADOPTION_ARCHIVE,
+          category: LOG_CATEGORIES.ADOPTIONS,
+          description: `Archivage automatique groupé des demandes de plus de 30 jours`,
+          details: `${count} demande(s) archivée(s)`,
+          user,
+          userProfile
+        });
         showToast("Archivage terminé", `${count} demande(s) de plus de 30 jours ont été archivées.`);
       } else {
         showToast("Information", "Aucune demande de plus de 30 jours à archiver.");
@@ -378,6 +472,14 @@ export default function AdminPage() {
       const count = await purgeExpiredAdoptions(ADOPTION_PURGE_DAYS);
       if (count > 0) {
         await loadAdoptions();
+        logActivity({
+          actionType: LOG_ACTIONS.ADOPTION_PURGE,
+          category: LOG_CATEGORIES.ADOPTIONS,
+          description: `Purge définitive des demandes expirées de plus de 60 jours`,
+          details: `${count} demande(s) supprimée(s)`,
+          user,
+          userProfile
+        });
         showToast("Purge effectuée", `${count} demande(s) de plus de 60 jours ont été supprimées définitivement.`);
       } else {
         showToast("Information", "Aucune demande de plus de 60 jours à purger.");
@@ -393,6 +495,15 @@ export default function AdminPage() {
     try {
       const updated = await updateMemberProfile(uid, updates);
       setMembers(prev => prev.map(m => (m.uid === uid || m.id === uid) ? { ...m, ...updates } : m));
+      logActivity({
+        actionType: LOG_ACTIONS.MEMBER_PROFILE_UPDATE,
+        category: LOG_CATEGORIES.MEMBERS,
+        description: `Mise à jour du profil du membre ${updates.name || updates.pseudo || uid}`,
+        targetId: uid,
+        targetName: updates.name || updates.pseudo || 'Membre',
+        user,
+        userProfile
+      });
       showToast("Coordonnées mises à jour", "Les informations du membre ont été enregistrées avec succès.");
       return updated;
     } catch (err) {
@@ -405,7 +516,18 @@ export default function AdminPage() {
   const handleUpdateUserRole = async (uid, newRole) => {
     try {
       await updateUserRole(uid, newRole);
+      const targetMember = members.find(m => m.uid === uid || m.id === uid);
       setMembers(prev => prev.map(m => m.uid === uid ? { ...m, role: newRole } : m));
+      logActivity({
+        actionType: LOG_ACTIONS.MEMBER_ROLE_CHANGE,
+        category: LOG_CATEGORIES.MEMBERS,
+        description: `Modification du rôle de ${targetMember?.name || targetMember?.email || 'Membre'}`,
+        details: `Nouveau rôle : ${ROLE_LABELS[newRole] || newRole}`,
+        targetId: uid,
+        targetName: targetMember?.name || targetMember?.email || 'Membre',
+        user,
+        userProfile
+      });
       showToast("Rôle mis à jour", `Statut du membre modifié en ${ROLE_LABELS[newRole] || newRole}.`);
     } catch (err) {
       console.error(err);
@@ -436,6 +558,16 @@ export default function AdminPage() {
         createdBy: user?.email || 'admin'
       });
       setInviteCodes(prev => [newCode, ...prev]);
+      logActivity({
+        actionType: LOG_ACTIONS.INVITE_CODE_CREATE,
+        category: LOG_CATEGORIES.MEMBERS,
+        description: `Génération d'un code d'invitation ${newCode.code}`,
+        details: `Rôle attribué : ${ROLE_LABELS[codeRole] || codeRole}${note ? ` • Note : ${note}` : ''}`,
+        targetId: newCode.id,
+        targetName: newCode.code,
+        user,
+        userProfile
+      });
       showToast("Code généré !", `Code d'invitation ${newCode.code} créé.`);
     } catch (err) {
       console.error(err);
@@ -921,6 +1053,18 @@ export default function AdminPage() {
 
     try {
       await saveCat(payload, activeEditingCatId, user?.email || 'Admin');
+      logActivity({
+        actionType: activeEditingCatId ? LOG_ACTIONS.CAT_UPDATE : LOG_ACTIONS.CAT_CREATE,
+        category: LOG_CATEGORIES.CHATS,
+        description: activeEditingCatId 
+          ? `Mise à jour de la fiche de ${payload.name}` 
+          : `Création de la fiche de ${payload.name}`,
+        details: `Statut : ${payload.status} • Ville : ${payload.location}`,
+        targetId: activeEditingCatId,
+        targetName: payload.name,
+        user,
+        userProfile
+      });
       showToast(
         activeEditingCatId ? "Fiche mise à jour" : "Chat ajouté", 
         `${payload.name} a été enregistré avec succès.`
@@ -985,6 +1129,18 @@ export default function AdminPage() {
         photos: storyPhotos
       };
       await saveStory(payload, activeEditingStoryId);
+      logActivity({
+        actionType: activeEditingStoryId ? LOG_ACTIONS.STORY_UPDATE : LOG_ACTIONS.STORY_CREATE,
+        category: LOG_CATEGORIES.STORIES,
+        description: activeEditingStoryId 
+          ? `Mise à jour du témoignage de ${payload.catName}` 
+          : `Ajout d'un témoignage pour ${payload.catName}`,
+        details: payload.adoptant ? `Adoptant : ${payload.adoptant}` : '',
+        targetId: activeEditingStoryId,
+        targetName: payload.catName,
+        user,
+        userProfile
+      });
       showToast(
         activeEditingStoryId ? "Avis mis à jour" : "Avis ajouté", 
         "Témoignage enregistré avec succès."
@@ -1005,13 +1161,53 @@ export default function AdminPage() {
     try {
       if (pendingDelete.type === 'cat') {
         await deleteCat(pendingDelete.id);
+        logActivity({
+          actionType: LOG_ACTIONS.CAT_DELETE,
+          category: LOG_CATEGORIES.CHATS,
+          description: `Suppression définitive de la fiche chat`,
+          details: pendingDelete.label || '',
+          targetId: pendingDelete.id,
+          targetName: pendingDelete.label,
+          user,
+          userProfile
+        });
       } else if (pendingDelete.type === 'story') {
         await deleteStory(pendingDelete.id);
+        logActivity({
+          actionType: LOG_ACTIONS.STORY_DELETE,
+          category: LOG_CATEGORIES.STORIES,
+          description: `Suppression d'un témoignage`,
+          details: pendingDelete.label || '',
+          targetId: pendingDelete.id,
+          targetName: pendingDelete.label,
+          user,
+          userProfile
+        });
       } else if (pendingDelete.type === 'adoption') {
         await deleteAdoptionRequest(pendingDelete.id);
+        logActivity({
+          actionType: LOG_ACTIONS.ADOPTION_PURGE,
+          category: LOG_CATEGORIES.ADOPTIONS,
+          description: `Suppression définitive d'une demande d'adoption`,
+          details: pendingDelete.label || '',
+          targetId: pendingDelete.id,
+          targetName: pendingDelete.label,
+          user,
+          userProfile
+        });
         setAdoptionModalOpen(false);
       } else if (pendingDelete.type === 'member') {
         await deleteUserRecord(pendingDelete.id);
+        logActivity({
+          actionType: LOG_ACTIONS.MEMBER_DELETE,
+          category: LOG_CATEGORIES.MEMBERS,
+          description: `Suppression d'un compte membre`,
+          details: pendingDelete.label || '',
+          targetId: pendingDelete.id,
+          targetName: pendingDelete.label,
+          user,
+          userProfile
+        });
       }
       showToast("Supprimé", "L'élément a été retiré de la base de données.");
       setDeleteModalOpen(false);
@@ -1518,6 +1714,19 @@ export default function AdminPage() {
                 <span>Membres & Invitations</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => setCurrentTab('activity')}
+              className={`shrink-0 whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                currentTab === 'activity'
+                  ? 'bg-brand-gradient text-white shadow-md'
+                  : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+              }`}
+            >
+              <History className="w-3.5 h-3.5" />
+              <span>Historique ({activityLogs.length})</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
@@ -1814,6 +2023,17 @@ export default function AdminPage() {
             onCreateInviteCode={handleCreateInviteCode}
             onDeleteInviteCode={handleDeleteInviteCode}
             onAddManualMember={handleAddManualMember}
+          />
+        )}
+
+        {/* Vue Onglet 5 : Historique d'activité (7 jours) */}
+        {currentTab === 'activity' && (
+          <ActivityTab
+            logs={activityLogs}
+            loading={loadingActivity}
+            onRefresh={loadActivityLogs}
+            onPurgeExpired={handleManualPurgeActivity}
+            canPurge={isAdminRole(role)}
           />
         )}
 

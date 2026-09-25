@@ -153,6 +153,23 @@ service cloud.firestore {
       // Purge et suppression définitive : réservée aux Administrateurs
       allow delete: if isAdmin();
     }
+
+    // ==========================================
+    // 6. COLLECTION DE L'HISTORIQUE D'ACTIVITÉ
+    // ==========================================
+    match /activityLogs/{logId} {
+      // Consultation réservée aux membres authentifiés de l'association
+      allow read: if isAuthenticated();
+      
+      // Enregistrement d'une action réservé aux membres connectés
+      allow create: if isAuthenticated();
+      
+      // Purge des logs de plus de 7 jours réservée aux Administrateurs
+      allow delete: if isAdmin();
+      
+      // Audit immuable : aucune modification permise
+      allow update: if false;
+    }
     
     // Par défaut, refuser tout le reste
     match /{document=**} {
