@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, 
@@ -26,7 +26,9 @@ import {
   Users,
   Sparkles,
   Shield,
-  History
+  History,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -96,6 +98,12 @@ import {
   purgeOldActivityLogs, 
   MAX_LOG_RETENTION_DAYS 
 } from '../firebase/activityLogService';
+import { 
+  CAT_SORT_MODES, 
+  sortCats, 
+  isCatIncomplete, 
+  formatCatAdminDate 
+} from '../utils/catSorting.js';
 
 export default function AdminPage() {
   const { 
@@ -153,6 +161,9 @@ export default function AdminPage() {
   // Filtres admin
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState(null);
+  const [catSortMode, setCatSortMode] = useState(CAT_SORT_MODES.ALPHA);
+  const [filterIncompleteOnly, setFilterIncompleteOnly] = useState(false);
+  const [expandedCatDescriptions, setExpandedCatDescriptions] = useState(new Set());
 
   // Modale Chat (Ajout / Édition)
   const [catModalOpen, setCatModalOpen] = useState(false);
@@ -1219,13 +1230,38 @@ export default function AdminPage() {
     }
   };
 
-  // Filtrage admin des chats
-  const filteredCats = cats.filter((c) => {
+  // Bascule du dépliage de description
+  const toggleCatDescription = (catId) => {
+    setExpandedCatDescriptions((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) {
+        next.delete(catId);
+      } else {
+        next.add(catId);
+      }
+      return next;
+    });
+  };
+
+  // Nombre de fiches nécessitant d'être complétées
+  const incompleteCatsCount = useMemo(() => {
+    return cats.filter((c) => isCatIncomplete(c).incomplete).length;
+  }, [cats]);
+
+  // Filtrage et tri admin des fiches chats
+  const filteredCats = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const matchQuery = !q || (c.name || '').toLowerCase().includes(q) || (c.location || '').toLowerCase().includes(q);
-    const matchStatus = !statusFilter || (c.status || 'Disponible') === statusFilter;
-    return matchQuery && matchStatus;
-  });
+    const filtered = cats.filter((c) => {
+      const matchQuery = !q || 
+        (c.name || '').toLowerCase().includes(q) || 
+        (c.location || '').toLowerCase().includes(q) ||
+        (c.description || '').toLowerCase().includes(q);
+      const matchStatus = !statusFilter || (c.status || 'Disponible') === statusFilter;
+      const matchIncomplete = !filterIncompleteOnly || isCatIncomplete(c).incomplete;
+      return matchQuery && matchStatus && matchIncomplete;
+    });
+    return sortCats(filtered, catSortMode);
+  }, [cats, searchQuery, statusFilter, filterIncompleteOnly, catSortMode]);
 
   // Si utilisateur non connecté : formulaire de connexion
   if (authLoading) {
@@ -1790,6 +1826,87 @@ export default function AdminPage() {
               )}
             </div>
 
+            {/* Barre de sous-onglets de tri & filtres rapides pour les fiches chats */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 bg-slate-900/60 p-2 sm:p-2.5 rounded-2xl border border-slate-800/80">
+              {/* Sous-onglets de tri */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline">
+                  Trier :
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setCatSortMode(CAT_SORT_MODES.ALPHA)}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
+                    catSortMode === CAT_SORT_MODES.ALPHA
+                      ? 'bg-brand-gradient text-white shadow-sm'
+                      : 'bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700/60'
+                  }`}
+                  title="Trier par ordre alphabétique de A à Z"
+                >
+                  <span>🔤 Alphabétique (A-Z)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatSortMode(CAT_SORT_MODES.DATE_ADDED)}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
+                    catSortMode === CAT_SORT_MODES.DATE_ADDED
+                      ? 'bg-brand-gradient text-white shadow-sm'
+                      : 'bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700/60'
+                  }`}
+                  title="Trier par date d'enregistrement (plus récents en premier)"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Date d'ajout</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCatSortMode(CAT_SORT_MODES.DATE_UPDATED)}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shrink-0 ${
+                    catSortMode === CAT_SORT_MODES.DATE_UPDATED
+                      ? 'bg-brand-gradient text-white shadow-sm'
+                      : 'bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700/60'
+                  }`}
+                  title="Trier par date de dernière modification"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Récemment modifiés</span>
+                </button>
+              </div>
+
+              {/* Filtre fiches incomplètes & compteur */}
+              <div className="flex items-center gap-2 justify-between sm:justify-end shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setFilterIncompleteOnly(!filterIncompleteOnly)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    filterIncompleteOnly
+                      ? 'bg-amber-500 text-slate-950 shadow-sm ring-1 ring-amber-400 font-extrabold'
+                      : incompleteCatsCount > 0
+                      ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25'
+                      : 'bg-slate-800/80 text-slate-400 border border-slate-700/60 hover:text-slate-200'
+                  }`}
+                  title="Afficher uniquement les fiches sans description ou sans photo"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Fiches incomplètes</span>
+                  {incompleteCatsCount > 0 && (
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                      filterIncompleteOnly ? 'bg-slate-950 text-amber-300' : 'bg-amber-500/30 text-amber-200'
+                    }`}>
+                      {incompleteCatsCount}
+                    </span>
+                  )}
+                </button>
+
+                <span className="text-[11px] text-slate-400 font-semibold">
+                  {filteredCats.length} chat{filteredCats.length > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+
             {loadingData && cats.length === 0 ? (
               <div className="py-20 text-center text-slate-500">
                 <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -1797,7 +1914,9 @@ export default function AdminPage() {
               </div>
             ) : filteredCats.length === 0 ? (
               <div className="admin-glass-card rounded-2xl p-12 text-center text-slate-400 text-xs sm:text-sm">
-                Aucun chat ne correspond à ces critères.
+                {filterIncompleteOnly 
+                  ? 'Toutes les fiches de chats sont complètes ! (Aucune fiche sans texte ni photo)'
+                  : 'Aucun chat ne correspond à ces critères.'}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1806,6 +1925,9 @@ export default function AdminPage() {
                   const isLocked = isCatLockedByOther(cat, user?.email);
                   const isAdopted = cat.status === 'Adopté';
                   const adoptionInfo = getCatAdoptionInfo(cat);
+                  const isExpanded = expandedCatDescriptions.has(cat.id);
+                  const incompleteInfo = isCatIncomplete(cat);
+                  const catDateStr = formatCatAdminDate(cat, catSortMode === CAT_SORT_MODES.DATE_UPDATED ? 'updated' : 'added');
 
                   return (
                     <div
@@ -1815,6 +1937,8 @@ export default function AdminPage() {
                           ? 'border-rose-500/40 bg-rose-950/20'
                           : isLocked
                           ? 'border-amber-500/50 bg-amber-950/10'
+                          : incompleteInfo.incomplete
+                          ? 'border-amber-500/40 bg-amber-950/5'
                           : 'border-slate-800'
                       }`}
                     >
@@ -1842,13 +1966,40 @@ export default function AdminPage() {
                           </span>
                         </div>
 
-                        <h3 className="font-title text-xl font-black text-white mb-0.5">
-                          {cat.name}
-                        </h3>
+                        {/* Titre & Date */}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className="font-title text-xl font-black text-white">
+                            {cat.name}
+                          </h3>
+                          {catDateStr && (
+                            <span 
+                              className="text-[10px] font-semibold text-slate-400 bg-slate-800/80 border border-slate-700/60 px-2 py-0.5 rounded-lg shrink-0 mt-0.5 flex items-center gap-1"
+                              title={catDateStr}
+                            >
+                              <Clock className="w-2.5 h-2.5 text-slate-500" />
+                              <span>{catDateStr}</span>
+                            </span>
+                          )}
+                        </div>
+
                         <p className="text-xs text-slate-400 font-semibold mb-2">
                           <MapPin className="w-3 h-3 text-pink-400 inline mr-1" />
                           {cat.location || 'Morbihan (56)'}
                         </p>
+
+                        {/* Alerte fiche incomplète */}
+                        {incompleteInfo.incomplete && (
+                          <div className="mb-2.5 p-1.5 px-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold flex items-center gap-1.5">
+                            <AlertTriangle className="w-3 h-3 shrink-0 text-amber-400" />
+                            <span>
+                              {incompleteInfo.missingDescription && incompleteInfo.missingPhoto 
+                                ? '⚠️ Description et photo manquantes' 
+                                : incompleteInfo.missingDescription 
+                                ? '⚠️ Description manquante' 
+                                : '⚠️ Photo manquante'}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Alerte Verrou en cours */}
                         {isLocked && (
@@ -1876,9 +2027,31 @@ export default function AdminPage() {
                           </div>
                         )}
 
-                        <p className="text-slate-300 text-xs line-clamp-2 mb-3">
-                          {cat.description || 'Pas de description.'}
-                        </p>
+                        {/* Description avec voir plus / replier */}
+                        <div className="mb-3">
+                          <p className={`text-slate-300 text-xs ${isExpanded ? 'whitespace-pre-line leading-relaxed' : 'line-clamp-2'}`}>
+                            {cat.description || <span className="text-slate-500 italic">Pas de description renseignée.</span>}
+                          </p>
+                          {cat.description && cat.description.trim().length > 70 && (
+                            <button
+                              type="button"
+                              onClick={() => toggleCatDescription(cat.id)}
+                              className="text-[11px] font-bold text-pink-400 hover:text-pink-300 mt-1 inline-flex items-center gap-1 transition-colors"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="w-3 h-3" />
+                                  <span>Replier</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-3 h-3" />
+                                  <span>Voir plus</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Actions */}

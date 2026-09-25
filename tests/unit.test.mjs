@@ -43,6 +43,12 @@ import {
   LOG_CATEGORIES, 
   LOG_ACTIONS 
 } from '../src/firebase/activityLogService.js';
+import { 
+  sortCats, 
+  CAT_SORT_MODES, 
+  isCatIncomplete, 
+  formatCatAdminDate 
+} from '../src/utils/catSorting.js';
 
 describe('Calcul de l\'âge des chats (calculateAgeFromBirthDate)', () => {
   test('Doit gérer les dates futures avec grâce', () => {
@@ -982,5 +988,84 @@ describe('Historique d\'audit des actions et Rétention 7 jours (PLAN 3)', () =>
   });
 });
 
+describe('Tri alphabétique, dates et complétude des fiches chats (catSorting)', () => {
+  const sampleCats = [
+    { id: '1', name: 'Zorro', createdAt: '2026-09-01T10:00:00.000Z', updatedAt: '2026-09-10T10:00:00.000Z', description: 'Super chat.', photos: ['https://img.com/zorro.jpg'] },
+    { id: '2', name: 'Ébène', createdAt: '2026-09-15T10:00:00.000Z', updatedAt: '2026-09-15T10:00:00.000Z', description: 'Chaton joueur.', photos: ['https://img.com/ebene.jpg'] },
+    { id: '3', name: 'Caramel', createdAt: '2026-08-20T10:00:00.000Z', updatedAt: '2026-09-22T10:00:00.000Z', description: '', photos: [] },
+    { id: '4', name: 'billy', createdAt: '2026-09-21T10:00:00.000Z', updatedAt: '2026-09-21T10:00:00.000Z', description: 'Pas de description.', image: 'https://placehold.co/600x400?text=Pas+de+photo' },
+  ];
 
+  test('sortCats trie par défaut par ordre alphabétique insensible à la casse et gérant les accents', () => {
+    const sorted = sortCats(sampleCats, CAT_SORT_MODES.ALPHA);
+    const names = sorted.map(c => c.name);
+    assert.equal(names[0].toLowerCase(), 'billy');
+    assert.equal(names[1], 'Caramel');
+    assert.equal(names[2], 'Ébène');
+    assert.equal(names[3], 'Zorro');
+  });
 
+  test('sortCats trie par date d\'ajout décroissante (DATE_ADDED)', () => {
+    const sorted = sortCats(sampleCats, CAT_SORT_MODES.DATE_ADDED);
+    assert.equal(sorted[0].name, 'billy');
+    assert.equal(sorted[1].name, 'Ébène');
+    assert.equal(sorted[2].name, 'Zorro');
+    assert.equal(sorted[3].name, 'Caramel');
+  });
+
+  test('sortCats trie par date de dernière modification (DATE_UPDATED)', () => {
+    const sorted = sortCats(sampleCats, CAT_SORT_MODES.DATE_UPDATED);
+    assert.equal(sorted[0].name, 'Caramel');
+    assert.equal(sorted[1].name, 'billy');
+    assert.equal(sorted[2].name, 'Ébène');
+    assert.equal(sorted[3].name, 'Zorro');
+  });
+
+  test('sortCats gère les tableaux vides et valeurs nulles sans lever d\'erreur', () => {
+    assert.deepEqual(sortCats([]), []);
+    assert.deepEqual(sortCats(null), []);
+    const withNulls = [{ name: '' }, { name: 'Mimi' }, { name: null }];
+    const sorted = sortCats(withNulls);
+    assert.equal(sorted.length, 3);
+  });
+
+  test('isCatIncomplete détecte correctement les fiches incomplètes', () => {
+    // 1: Zorro complet
+    const zorroCheck = isCatIncomplete(sampleCats[0]);
+    assert.equal(zorroCheck.incomplete, false);
+    assert.equal(zorroCheck.missingDescription, false);
+    assert.equal(zorroCheck.missingPhoto, false);
+
+    // 3: Caramel (sans description et sans photo)
+    const caramelCheck = isCatIncomplete(sampleCats[2]);
+    assert.equal(caramelCheck.incomplete, true);
+    assert.equal(caramelCheck.missingDescription, true);
+    assert.equal(caramelCheck.missingPhoto, true);
+
+    // 4: billy (description placeholder 'Pas de description.' et photo placeholder)
+    const billyCheck = isCatIncomplete(sampleCats[3]);
+    assert.equal(billyCheck.incomplete, true);
+    assert.equal(billyCheck.missingDescription, true);
+    assert.equal(billyCheck.missingPhoto, true);
+
+    // Objet nul ou vide
+    assert.equal(isCatIncomplete(null).incomplete, true);
+  });
+
+  test('formatCatAdminDate formate proprement les dates en français', () => {
+    const cat = {
+      createdAt: '2026-09-18T14:30:00.000Z',
+      updatedAt: '2026-09-22T09:15:00.000Z'
+    };
+    const addedStr = formatCatAdminDate(cat, 'added');
+    assert.ok(addedStr.includes('18/09/2026'));
+    assert.ok(addedStr.includes('Ajouté le'));
+
+    const updatedStr = formatCatAdminDate(cat, 'updated');
+    assert.ok(updatedStr.includes('22/09/2026'));
+    assert.ok(updatedStr.includes('Modifié le'));
+
+    assert.equal(formatCatAdminDate(null), '');
+    assert.equal(formatCatAdminDate({}), '');
+  });
+});
