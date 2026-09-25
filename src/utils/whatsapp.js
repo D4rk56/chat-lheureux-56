@@ -83,11 +83,23 @@ export function formatAdoptionWhatsAppMessage(adoption) {
   // Animaux
   let animals = 'Non';
   if (adoption.hasAnimals === 'Oui') {
-    animals = `Oui (${adoption.animalDetails || 'détails non précisés'})`;
+    const statusStr = Array.isArray(adoption.animalStatus) && adoption.animalStatus.length > 0 
+      ? ` [${adoption.animalStatus.join(', ')}]` 
+      : '';
+    const dogStr = adoption.dogDetails ? ` • Chien : ${adoption.dogDetails}` : '';
+    animals = `Oui (${adoption.animalDetails || 'détails non précisés'}${statusStr}${dogStr})`;
   }
 
+  // Conditions d'accueil
+  const isolatedRoom = adoption.hasIsolatedRoom || 'Oui';
+  const hoursAbsent = adoption.hoursAbsent ? `${adoption.hoursAbsent}h/jour` : 'Non précisé';
+  const sleepingPlace = adoption.sleepingPlace || 'Non précisé';
+
   // Remarques / motivations
-  const motivations = (adoption.adoptionReason || adoption.catExpectations || adoption.internalNotes || '').trim();
+  const motivations = (adoption.comments || adoption.adoptionReason || adoption.catExpectations || adoption.internalNotes || '').trim();
+
+  // Fiche chat URL
+  const catUrl = adoption.catId ? `https://chat-lheureux.fr/chats/${adoption.catId}` : null;
 
   // Date
   let dateStr = '';
@@ -96,7 +108,9 @@ export function formatAdoptionWhatsAppMessage(adoption) {
       dateStr = new Date(adoption.submittedAt).toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       dateStr = adoption.submittedAt;
@@ -106,26 +120,33 @@ export function formatAdoptionWhatsAppMessage(adoption) {
   const lines = [
     `🐾 *Chat L'Heureux 56 — Demande d'adoption*`,
     `🐱 *Chat :* ${catName}`,
+    ...(catUrl ? [`🔗 *Fiche du chat :* ${catUrl}`] : []),
     ...(dateStr ? [`📅 *Reçue le :* ${dateStr}`] : []),
     ``,
     `👤 *CANDIDAT*`,
     `• *Nom :* ${fullName}`,
     `• *Tél :* ${phone}`,
     `• *E-mail :* ${email}`,
-    `• *Ville :* ${city}`,
+    `• *Adresse & Ville :* ${city}`,
     `• *Profession :* ${profession}`,
     ``,
     `🏠 *FOYER & LOGEMENT*`,
     `• *Composition :* ${adults} adulte(s), ${children} enfant(s)${childrenDetails}`,
-    `• *Type :* ${housing}`,
+    ...(adoption.childrenAnimalContact ? [`• *Contact enfants/animaux :* ${adoption.childrenAnimalContact}`] : []),
+    `• *Type logement :* ${housing}`,
+    `• *Pièce isolée (arrivée) :* ${isolatedRoom}`,
     `• *Jardin :* ${garden}`,
     `• *Balcon :* ${balcony}`,
     `• *Animaux actuels :* ${animals}`,
     ``,
-    `📝 *MOTIVATION & ATTENTES*`,
+    `⏰ *RYTHME DE VIE & ACCUEIL*`,
+    `• *Absence quotidienne :* ${hoursAbsent}`,
+    `• *Couchage prévu :* ${sleepingPlace}`,
+    ``,
+    `📝 *REMARQUES & MOTIVATIONS*`,
     motivations ? motivations : `Aucune remarque particulière renseignée.`,
     ``,
-    `💬 *Espace gestion de l'association :*`,
+    `💬 *Traiter sur l'espace admin :*`,
     `https://chat-lheureux.fr/admin`
   ];
 

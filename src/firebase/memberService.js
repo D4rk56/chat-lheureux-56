@@ -29,7 +29,8 @@ export const KNOWN_ACCOUNTS = [
     displayName: 'Dark56',
     role: USER_ROLES.ADMIN,
     phone: '',
-    isSuperAdmin: true
+    isSuperAdmin: true,
+    receiveAdoptionEmails: true
   },
   {
     email: 'asso.chatslheureux@gmail.com',
@@ -37,14 +38,16 @@ export const KNOWN_ACCOUNTS = [
     displayName: 'Présidence / Association',
     role: USER_ROLES.ADMIN,
     phone: '06 61 50 88 28',
-    isPresident: true
+    isPresident: true,
+    receiveAdoptionEmails: true
   },
   {
     email: 'galexandre@galexandre.com',
     fullName: 'Alexandre G.',
     displayName: 'Alexandre',
     role: USER_ROLES.GESTION,
-    phone: ''
+    phone: '',
+    receiveAdoptionEmails: true
   }
 ];
 
@@ -211,6 +214,7 @@ export async function ensureUserRecord(user, initialRole = null, extraProfile = 
     role: assignedRole,
     isSuperAdmin: isSuperAdmin || !!known?.isSuperAdmin,
     isPresident: isPresident || !!known?.isPresident,
+    receiveAdoptionEmails: true,
     createdAt: now,
     lastLoginAt: now
   };
@@ -253,6 +257,7 @@ export async function fetchAllUsers() {
         role: account.role,
         isSuperAdmin: !!account.isSuperAdmin,
         isPresident: !!account.isPresident,
+        receiveAdoptionEmails: true,
         createdAt: now,
         lastLoginAt: null
       };
@@ -312,12 +317,15 @@ export async function fetchAllUsers() {
   });
 }
 
+export const SYSTEM_SETTINGS_COLLECTION = "systemSettings";
+export const NOTIFICATIONS_SETTINGS_DOC = "notifications";
+
 /**
  * Enregistre manuellement un membre préexistant dans Firestore
  * @param {Object} data 
  * @returns {Promise<Object>}
  */
-export async function addManualMember({ email, fullName, phone, pseudo = '', role = USER_ROLES.BENEVOLE }) {
+export async function addManualMember({ email, fullName, phone, pseudo = '', role = USER_ROLES.BENEVOLE, receiveAdoptionEmails = true }) {
   if (!email || !email.includes('@')) throw new Error("Une adresse e-mail valide est requise.");
   if (!fullName || !fullName.trim()) throw new Error("Le vrai nom et prénom sont obligatoires.");
   if (!phone || !phone.trim()) throw new Error("Le numéro de téléphone est obligatoire.");
@@ -341,22 +349,24 @@ export async function addManualMember({ email, fullName, phone, pseudo = '', rol
     role: (isSuperAdmin || isPresident) ? USER_ROLES.ADMIN : (role || USER_ROLES.BENEVOLE),
     isSuperAdmin,
     isPresident,
+    receiveAdoptionEmails: typeof receiveAdoptionEmails === 'boolean' ? receiveAdoptionEmails : true,
     createdAt: now,
     lastLoginAt: null
   };
 
   await setDoc(userRef, payload, { merge: true });
+  syncNotificationSettings().catch(e => console.warn("Sync notifications settings :", e));
   return payload;
 }
 
 /**
- * Met à jour les coordonnées et le profil d'un membre (nom, téléphone, pseudo, rôle)
- * Utilisé par les administrateurs pour corriger une faute de frappe ou un changement de numéro.
+ * Met à jour les coordonnées et le profil d'un membre (nom, téléphone, pseudo, rôle, notifications)
+ * Utilisé par les administrateurs pour corriger une faute de frappe, numéro ou statut d'alerte.
  * @param {string} uid 
  * @param {Object} profileUpdates 
  * @returns {Promise<Object>}
  */
-export async function updateMemberProfile(uid, { fullName, phone, pseudo = '', role = null }) {
+export async function updateMemberProfile(uid, { fullName, phone, pseudo = '', role = null, receiveAdoptionEmails = undefined }) {
   if (!uid) throw new Error("Identifiant du membre requis.");
   if (!fullName || !fullName.trim()) throw new Error("Le vrai nom et prénom sont obligatoires.");
   if (!phone || !phone.trim()) throw new Error("Le numéro de téléphone est obligatoire.");
@@ -387,8 +397,84 @@ export async function updateMemberProfile(uid, { fullName, phone, pseudo = '', r
     updates.role = role;
   }
 
+  if (typeof receiveAdoptionEmails === 'boolean') {
+    updates.receiveAdoptionEmails = receiveAdoptionEmails;
+  }
+
   await updateDoc(userRef, updates);
+  syncNotificationSettings().catch(e => console.warn("Sync notifications settings :", e));
   return { uid, id: uid, ...existing, ...updates };
+}
+
+/**
+ * Active ou désactive rapidement la réception des formulaires d'adoption par e-mail pour un membre.
+ * Seul un Administrateur peut appeler cette fonction.
+ * @param {string} uid 
+ * @param {boolean} enabled 
+ * @returns {Promise<boolean>}
+ */
+export async function toggleMemberAdoptionNotification(uid, enabled) {
+  if (!uid) throw new Error("Identifiant du membre requis.");
+  const userRef = doc(db, USERS_COLLECTION, uid);
+  await updateDoc(userRef, {
+    receiveAdoptionEmails: !!enabled,
+    updatedAt: new Date().toISOString()
+  });
+  await syncNotificationSettings().catch(e => console.warn("Sync notifications settings :", e));
+  return !!enabled;
+}
+
+/**
+ * Synchronise la liste des e-mails abonnés aux alertes de formulaires dans Firestore (systemSettings/notifications).
+ * @returns {Promise<string[]>} Liste des e-mails abonnés
+ */
+export async function syncNotificationSettings() {
+  try {
+    const snap = await getDocs(collection(db, USERS_COLLECTION));
+    const emails = new Set();
+    // Toujours inclure l'adresse officielle de l'association
+    emails.add('asso.chatslheureux@gmail.com');
+
+    snap.forEach((d) => {
+      const data = d.data();
+      const email = data.email?.toLowerCase().trim();
+      // Par défaut actif sauf si explicitement désactivé (false)
+      if (email && email.includes('@') && data.receiveAdoptionEmails !== false) {
+        emails.add(email);
+      }
+    });
+
+    const list = Array.from(emails);
+    const settingsRef = doc(db, SYSTEM_SETTINGS_COLLECTION, NOTIFICATIONS_SETTINGS_DOC);
+    await setDoc(settingsRef, {
+      adoptionRecipients: list,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    return list;
+  } catch (err) {
+    console.warn("Échec synchronisation systemSettings/notifications :", err);
+    return ['asso.chatslheureux@gmail.com'];
+  }
+}
+
+/**
+ * Récupère la liste actuelle des e-mails abonnés aux alertes d'adoption.
+ * @returns {Promise<string[]>}
+ */
+export async function fetchActiveAdoptionRecipients() {
+  try {
+    const settingsRef = doc(db, SYSTEM_SETTINGS_COLLECTION, NOTIFICATIONS_SETTINGS_DOC);
+    const snap = await getDoc(settingsRef);
+    if (snap.exists() && Array.isArray(snap.data()?.adoptionRecipients) && snap.data().adoptionRecipients.length > 0) {
+      return snap.data().adoptionRecipients;
+    }
+  } catch (e) {
+    console.warn("Lecture systemSettings/notifications :", e);
+  }
+
+  // Fallback direct sur syncNotificationSettings
+  return await syncNotificationSettings();
 }
 
 /**
@@ -429,6 +515,7 @@ export async function deleteUserRecord(uid) {
     }
   }
   await deleteDoc(userRef);
+  syncNotificationSettings().catch(e => console.warn("Sync notifications settings :", e));
 }
 
 // ==========================================

@@ -65,7 +65,8 @@ import {
   createInviteCode, 
   fetchInviteCodes, 
   deleteInviteCode,
-  validateInviteCode
+  validateInviteCode,
+  toggleMemberAdoptionNotification
 } from '../firebase/memberService';
 import { 
   USER_ROLES, 
@@ -661,6 +662,31 @@ export default function AdminPage() {
       console.error(err);
       showToast("Erreur", err.message || "Impossible d'ajouter le membre.", "error");
       throw err;
+    }
+  };
+
+  const handleToggleMemberNotification = async (uid, enabled) => {
+    try {
+      await toggleMemberAdoptionNotification(uid, enabled);
+      setMembers(prev => prev.map(m => (m.uid === uid || m.id === uid) ? { ...m, receiveAdoptionEmails: enabled } : m));
+      const targetMember = members.find(m => m.uid === uid || m.id === uid);
+      logActivity({
+        actionType: LOG_ACTIONS.MEMBER_PROFILE_UPDATE,
+        category: LOG_CATEGORIES.MEMBERS,
+        description: `${enabled ? 'Activation' : 'Désactivation'} des alertes e-mail d'adoption`,
+        details: `Membre : ${targetMember?.fullName || targetMember?.email || uid} (${enabled ? 'Actif' : 'Inactif'})`,
+        targetId: uid,
+        targetName: targetMember?.fullName || targetMember?.email || 'Membre',
+        user,
+        userProfile
+      });
+      showToast(
+        enabled ? "Alertes activées" : "Alertes désactivées",
+        `Le membre ${enabled ? 'recevra' : 'ne recevra plus'} les formulaires d'adoption par e-mail.`
+      );
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur", "Impossible de modifier les préférences d'alerte.", "error");
     }
   };
 
@@ -2291,6 +2317,7 @@ export default function AdminPage() {
             onCreateInviteCode={handleCreateInviteCode}
             onDeleteInviteCode={handleDeleteInviteCode}
             onAddManualMember={handleAddManualMember}
+            onToggleNotification={handleToggleMemberNotification}
           />
         )}
 

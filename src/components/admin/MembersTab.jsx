@@ -17,7 +17,9 @@ import {
   Plus,
   X,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  Bell,
+  BellOff
 } from 'lucide-react';
 import { 
   USER_ROLES, 
@@ -38,7 +40,8 @@ export default function MembersTab({
   onSendPasswordReset,
   onCreateInviteCode,
   onDeleteInviteCode,
-  onAddManualMember
+  onAddManualMember,
+  onToggleNotification
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedCodeId, setCopiedCodeId] = useState(null);
@@ -58,6 +61,7 @@ export default function MembersTab({
   const [manualPhone, setManualPhone] = useState('');
   const [manualPseudo, setManualPseudo] = useState('');
   const [manualRole, setManualRole] = useState(USER_ROLES.BENEVOLE);
+  const [manualReceiveNotifications, setManualReceiveNotifications] = useState(true);
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const [manualError, setManualError] = useState('');
 
@@ -68,6 +72,7 @@ export default function MembersTab({
   const [editPhone, setEditPhone] = useState('');
   const [editPseudo, setEditPseudo] = useState('');
   const [editRole, setEditRole] = useState(USER_ROLES.BENEVOLE);
+  const [editReceiveNotifications, setEditReceiveNotifications] = useState(true);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -132,7 +137,8 @@ export default function MembersTab({
           fullName: manualFullName.trim(),
           phone: manualPhone.trim(),
           pseudo: manualPseudo.trim(),
-          role: manualRole
+          role: manualRole,
+          receiveAdoptionEmails: manualReceiveNotifications
         });
       }
       setManualModalOpen(false);
@@ -141,6 +147,7 @@ export default function MembersTab({
       setManualPhone('');
       setManualPseudo('');
       setManualRole(USER_ROLES.BENEVOLE);
+      setManualReceiveNotifications(true);
     } catch (err) {
       setManualError(err.message || "Erreur lors de l'enregistrement du membre.");
     } finally {
@@ -154,6 +161,7 @@ export default function MembersTab({
     setEditPhone(member.phone || '');
     setEditPseudo(member.pseudo || '');
     setEditRole(member.role || USER_ROLES.BENEVOLE);
+    setEditReceiveNotifications(member.receiveAdoptionEmails !== false);
     setEditError('');
     setEditModalOpen(true);
   };
@@ -179,7 +187,8 @@ export default function MembersTab({
           fullName: editFullName.trim(),
           phone: editPhone.trim(),
           pseudo: editPseudo.trim(),
-          role: editRole
+          role: editRole,
+          receiveAdoptionEmails: editReceiveNotifications
         });
       }
       setEditModalOpen(false);
@@ -299,6 +308,7 @@ export default function MembersTab({
                   <th className="py-3.5 px-4 sm:px-6">Membre</th>
                   <th className="py-3.5 px-4">Coordonnées (Contact)</th>
                   <th className="py-3.5 px-4">Rôle attribué</th>
+                  <th className="py-3.5 px-4 text-center">Alertes e-mail</th>
                   <th className="py-3.5 px-4 hidden md:table-cell">Inscription</th>
                   <th className="py-3.5 px-4 hidden lg:table-cell">Dernière activité</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
@@ -307,7 +317,7 @@ export default function MembersTab({
               <tbody className="divide-y divide-slate-800/60">
                 {filteredMembers.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="py-8 text-center text-slate-500 text-xs">
+                    <td colSpan="7" className="py-8 text-center text-slate-500 text-xs">
                       Aucun membre ne correspond à votre recherche.
                     </td>
                   </tr>
@@ -447,7 +457,41 @@ export default function MembersTab({
                           )}
                         </td>
 
-                        {/* Colonne 4 : Date Inscription */}
+                        {/* Colonne Alertes e-mail */}
+                        <td className="py-3.5 px-4 text-center">
+                          {onToggleNotification ? (
+                            <button
+                              type="button"
+                              onClick={() => onToggleNotification(m.uid, !(m.receiveAdoptionEmails !== false))}
+                              className={`p-2 rounded-xl transition-all inline-flex items-center gap-1.5 text-xs font-bold border ${
+                                m.receiveAdoptionEmails !== false
+                                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25'
+                                  : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-slate-300'
+                              }`}
+                              title={
+                                m.receiveAdoptionEmails !== false
+                                  ? 'Reçoit les formulaires d\'adoption par e-mail (Cliquer pour désactiver)'
+                                  : 'Ne reçoit pas les alertes e-mail (Cliquer pour activer)'
+                              }
+                            >
+                              {m.receiveAdoptionEmails !== false ? (
+                                <>
+                                  <Bell className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span className="hidden xl:inline text-[11px]">Actif</span>
+                                </>
+                              ) : (
+                                <>
+                                  <BellOff className="w-3.5 h-3.5 text-slate-500" />
+                                  <span className="hidden xl:inline text-[11px]">Désactivé</span>
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-slate-500 text-xs">-</span>
+                          )}
+                        </td>
+
+                        {/* Colonne Date Inscription */}
                         <td className="py-3.5 px-4 hidden md:table-cell text-slate-400">
                           {formatDate(m.createdAt)}
                         </td>
@@ -613,6 +657,36 @@ export default function MembersTab({
                         </a>
                       </div>
                     </div>
+
+                    {/* Alerte e-mail toggle mobile */}
+                    {onToggleNotification && (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                        <div className="flex items-center gap-2">
+                          {m.receiveAdoptionEmails !== false ? (
+                            <Bell className="w-4 h-4 text-emerald-400 shrink-0" />
+                          ) : (
+                            <BellOff className="w-4 h-4 text-slate-500 shrink-0" />
+                          )}
+                          <div>
+                            <div className="text-xs font-bold text-white">Alertes adoptions</div>
+                            <div className="text-[10px] text-slate-400">
+                              {m.receiveAdoptionEmails !== false ? 'Reçoit les nouveaux formulaires' : 'Désactivé'}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onToggleNotification(m.uid, !(m.receiveAdoptionEmails !== false))}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all border ${
+                            m.receiveAdoptionEmails !== false
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                              : 'bg-slate-800 text-slate-400 border-slate-700'
+                          }`}
+                        >
+                          {m.receiveAdoptionEmails !== false ? 'Actif' : 'Inactif'}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Actions Membre & Dates */}
                     <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-800/60 text-[11px] text-slate-400">
@@ -980,6 +1054,30 @@ export default function MembersTab({
                 </select>
               </div>
 
+              {/* Alertes e-mail pour les nouveaux formulaires */}
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-2 rounded-lg ${editReceiveNotifications ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <label htmlFor="editReceiveNotifications" className="text-xs font-bold text-white cursor-pointer block">
+                      Recevoir les formulaires d'adoption
+                    </label>
+                    <p className="text-[10px] text-slate-400">
+                      Envoie un e-mail à chaque nouvelle candidature
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  id="editReceiveNotifications"
+                  checked={editReceiveNotifications}
+                  onChange={(e) => setEditReceiveNotifications(e.target.checked)}
+                  className="w-4 h-4 rounded text-pink-500 bg-slate-800 border-slate-700 focus:ring-pink-500 cursor-pointer"
+                />
+              </div>
+
               <div className="flex gap-3 pt-3">
                 <button
                   type="button"
@@ -1127,6 +1225,30 @@ export default function MembersTab({
                   <option value={USER_ROLES.GESTION} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Gestion (Chats & Témoignages)</option>
                   <option value={USER_ROLES.ADMIN} style={{ backgroundColor: '#0b0f19', color: '#ffffff' }}>Administrateur (Tous droits)</option>
                 </select>
+              </div>
+
+              {/* Alertes e-mail pour les nouveaux formulaires */}
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-2 rounded-lg ${manualReceiveNotifications ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+                    <Bell className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <label htmlFor="manualReceiveNotifications" className="text-xs font-bold text-white cursor-pointer block">
+                      Recevoir les formulaires d'adoption
+                    </label>
+                    <p className="text-[10px] text-slate-400">
+                      Envoie un e-mail à chaque nouvelle candidature
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  id="manualReceiveNotifications"
+                  checked={manualReceiveNotifications}
+                  onChange={(e) => setManualReceiveNotifications(e.target.checked)}
+                  className="w-4 h-4 rounded text-pink-500 bg-slate-800 border-slate-700 focus:ring-pink-500 cursor-pointer"
+                />
               </div>
 
               <div className="flex gap-3 pt-3">

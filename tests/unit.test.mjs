@@ -28,6 +28,7 @@ import {
 } from '../src/firebase/adoptionsService.js';
 import { 
   sendAdoptionConfirmationEmail, 
+  sendAdoptionNotificationToMembers,
   sendCustomInfoEmail 
 } from '../src/services/emailService.js';
 import sendEmailFunction from '../netlify/functions/send-email.js';
@@ -751,6 +752,52 @@ describe('Service et fonction d\'envoi d\'e-mails (noreply@chat-lheureux.fr)', (
     const body = await res.json();
     assert.equal(body.success, true);
   });
+
+  test('Netlify Function send-email doit supporter les destinataires en BCC pour préserver la confidentialité des bénévoles', async () => {
+    const req = new Request('https://chat-lheureux.fr/api/send-email', { 
+      method: 'POST',
+      body: JSON.stringify({ 
+        to: 'asso.chatslheureux@gmail.com',
+        bcc: ['benevole1@test.fr', 'benevole2@test.fr'],
+        type: 'adoption_admin_notification',
+        data: {
+          catName: 'Minouche',
+          fullName: 'Claire Martin',
+          phone: '06 12 34 56 78',
+          city: 'Vannes'
+        }
+      })
+    });
+    const res = await sendEmailFunction(req, {});
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
+    assert.equal(body.simulated, true);
+  });
+
+  test('Netlify Function send-email génère les boutons WhatsApp et l\'URL de la fiche chat', async () => {
+    const req = new Request('https://chat-lheureux.fr/api/send-email', { 
+      method: 'POST',
+      body: JSON.stringify({ 
+        to: 'asso.chatslheureux@gmail.com',
+        type: 'adoption_admin_notification',
+        data: {
+          catId: 'cat-456',
+          catName: 'Chaussette',
+          fullName: 'Julien Lefebvre',
+          phone: '06 99 88 77 66',
+          email: 'julien@example.com',
+          city: 'Auray',
+          housingType: 'Maison',
+          hasGarden: 'Oui'
+        }
+      })
+    });
+    const res = await sendEmailFunction(req, {});
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.success, true);
+  });
 });
 
 describe('Connexion Google et sécurisation par code d\'invitation', () => {
@@ -947,6 +994,17 @@ describe('Utilitaires WhatsApp et Partage de Dossier d\'Adoption (PLAN 1 & 2)', 
     const result = formatAdoptionWhatsAppMessage(partial);
     assert.ok(result.includes('*Chat :* Non précisé'));
     assert.ok(result.includes('*Nom :* Jean Inconnu'));
+  });
+
+  test('formatAdoptionWhatsAppMessage inclut le lien direct vers la fiche chat si catId est renseigné', () => {
+    const adoptionWithCatId = {
+      catId: 'nougat-56',
+      catName: 'Nougat',
+      fullName: 'Sophie Bernard'
+    };
+    const msg = formatAdoptionWhatsAppMessage(adoptionWithCatId);
+    assert.ok(msg.includes('https://chat-lheureux.fr/chats/nougat-56'));
+    assert.ok(msg.includes('*Chat :* Nougat'));
   });
 });
 

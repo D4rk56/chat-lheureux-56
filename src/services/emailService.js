@@ -1,15 +1,15 @@
 /**
  * Service d'envoi d'e-mails pour Chat L'Heureux 56
  * Communique avec la fonction serverless Netlify (/api/send-email)
- * Expéditeur officiel : noreply@chat-lheureux.fr
+ * Expéditeur officiel : noreply@chat-lheureux.fr (ou BREVO_SENDER_EMAIL)
  */
 
-const ASSO_EMAIL = "asso.chatslheureux@gmail.com";
+export const ASSO_EMAIL = "asso.chatslheureux@gmail.com";
 
 /**
  * Envoie une requête vers la fonction serverless /api/send-email
  */
-export async function sendEmail({ to, subject, type, data, html, text, replyTo }) {
+export async function sendEmail({ to, bcc = [], subject, type, data, html, text, replyTo }) {
   try {
     const response = await fetch('/api/send-email', {
       method: 'POST',
@@ -18,12 +18,13 @@ export async function sendEmail({ to, subject, type, data, html, text, replyTo }
       },
       body: JSON.stringify({
         to,
+        bcc,
         subject,
         type,
         data,
         html,
         text,
-        replyTo: replyTo || ASSO_EMAIL
+        replyTo: replyTo || (data?.email ? data.email : ASSO_EMAIL)
       })
     });
 
@@ -43,6 +44,7 @@ export async function sendEmail({ to, subject, type, data, html, text, replyTo }
 
 /**
  * Envoie un accusé de réception officiel et bienveillant au candidat adoptant
+ * avec le récapitulatif complet de ses réponses.
  * @param {Object} adoptionData Données de la demande d'adoption
  */
 export async function sendAdoptionConfirmationEmail(adoptionData) {
@@ -60,16 +62,27 @@ export async function sendAdoptionConfirmationEmail(adoptionData) {
 }
 
 /**
- * Envoie une notification instantanée à l'association lorsqu'un nouveau dossier arrive
+ * Envoie une notification instantanée à l'association et à tous les membres abonnés (en BCC)
+ * lorsqu'un nouveau dossier arrive.
  * @param {Object} adoptionData Données de la demande d'adoption
+ * @param {string[]} [bccRecipients] Liste des adresses e-mails des membres abonnés
  */
-export async function sendAdoptionNotificationToAsso(adoptionData) {
+export async function sendAdoptionNotificationToMembers(adoptionData, bccRecipients = []) {
   return await sendEmail({
     to: ASSO_EMAIL,
+    bcc: Array.isArray(bccRecipients) ? bccRecipients : [],
     type: 'adoption_admin_notification',
     data: adoptionData,
-    replyTo: adoptionData.email || ASSO_EMAIL
+    replyTo: adoptionData?.email || ASSO_EMAIL
   });
+}
+
+/**
+ * Rétrocompatibilité : Envoi à l'association seule
+ * @param {Object} adoptionData
+ */
+export async function sendAdoptionNotificationToAsso(adoptionData) {
+  return await sendAdoptionNotificationToMembers(adoptionData, []);
 }
 
 /**

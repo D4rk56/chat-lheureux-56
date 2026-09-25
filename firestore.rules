@@ -171,6 +171,17 @@ service cloud.firestore {
       allow update: if false;
     }
     
+    // ==========================================
+    // 7. PARAMÈTRES SYSTÈME (Ex: DESTINATAIRES NOTIFICATIONS)
+    // ==========================================
+    match /systemSettings/{settingId} {
+      // Lecture autorisée pour router les notifications de formulaires
+      allow read: if true;
+      
+      // Modification et synchronisation réservées aux Administrateurs
+      allow write: if isAdmin();
+    }
+    
     // Par défaut, refuser tout le reste
     match /{document=**} {
       allow read, write: if false;
