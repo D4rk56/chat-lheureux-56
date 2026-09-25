@@ -4,6 +4,7 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
+  doc,
 } from "firebase/firestore";
 import { db } from "./config.js";
 

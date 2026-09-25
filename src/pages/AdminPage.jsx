@@ -72,7 +72,9 @@ import {
   canManageStories, 
   canManageAdoptions, 
   canDeleteAdoptions, 
-  canManageMembers 
+  canManageMembers,
+  isSuperAdminEmail,
+  isAssoPresidentEmail
 } from '../utils/roles.js';
 import { calculateAgeFromBirthDate, getCatAdoptionInfo, ADOPTED_EXPIRATION_DAYS } from '../utils/age.js';
 import { compressImageFile } from '../utils/imageCompressor.js';
