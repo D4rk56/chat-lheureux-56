@@ -941,15 +941,15 @@ describe('Utilitaires WhatsApp et Partage de Dossier d\'Adoption (PLAN 1 & 2)', 
     assert.equal(cleanPhoneNumberForWhatsApp(undefined), '');
   });
 
-  test('getWhatsAppShareUrl produit des URLs wa.me conformes', () => {
+  test('getWhatsAppShareUrl produit des URLs directes api.whatsapp.com conformes', () => {
     const generalUrl = getWhatsAppShareUrl('Bonjour tout le monde !');
-    assert.equal(generalUrl, 'https://wa.me/?text=Bonjour%20tout%20le%20monde%20!');
+    assert.equal(generalUrl, 'https://api.whatsapp.com/send?text=Bonjour%20tout%20le%20monde%20!');
 
     const directPhoneUrl = getWhatsAppShareUrl('Bonjour candidat', '06 12 34 56 78');
-    assert.equal(directPhoneUrl, 'https://wa.me/33612345678?text=Bonjour%20candidat');
+    assert.equal(directPhoneUrl, 'https://api.whatsapp.com/send?phone=33612345678&text=Bonjour%20candidat');
 
     const emptyUrl = getWhatsAppShareUrl('');
-    assert.equal(emptyUrl, 'https://wa.me/?text=');
+    assert.equal(emptyUrl, 'https://api.whatsapp.com/send?text=');
   });
 
   test('formatAdoptionWhatsAppMessage synthétise fidèlement les données d\'une demande', () => {

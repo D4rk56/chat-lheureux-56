@@ -28,6 +28,7 @@ import { useToast } from '../context/ToastContext';
 import { getWhatsAppShareUrl, openWhatsAppUrl } from '../utils/whatsapp';
 import CatCard from '../components/CatCard';
 import ClickableText from '../components/common/ClickableText';
+import WhatsAppIcon from '../components/icons/WhatsAppIcon';
 
 export default function CatDetailPage() {
   const { id: routeId } = useParams();
@@ -395,6 +396,7 @@ export default function CatDetailPage() {
                 onClick={shareWhatsApp}
                 className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-xs"
               >
+                <WhatsAppIcon className="w-3.5 h-3.5 fill-white" />
                 <span>WhatsApp</span>
               </button>
               <button

@@ -22,7 +22,8 @@ export function cleanPhoneNumberForWhatsApp(phone) {
 }
 
 /**
- * Génère une URL de partage WhatsApp universelle (wa.me)
+ * Génère une URL de partage WhatsApp universelle (api.whatsapp.com)
+ * Évite les corruptions de caractères UTF-8 () causées par le redirecteur wa.me
  * @param {string} text - Message à pré-remplir
  * @param {string|null} phone - Numéro de téléphone optionnel pour contact direct
  * @returns {string}
@@ -32,10 +33,10 @@ export function getWhatsAppShareUrl(text, phone = null) {
   if (phone) {
     const cleanPhone = cleanPhoneNumberForWhatsApp(phone);
     if (cleanPhone) {
-      return `https://wa.me/${cleanPhone}?text=${encodedText}`;
+      return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`;
     }
   }
-  return `https://wa.me/?text=${encodedText}`;
+  return `https://api.whatsapp.com/send?text=${encodedText}`;
 }
 
 /**

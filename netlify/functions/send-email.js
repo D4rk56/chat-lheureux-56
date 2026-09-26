@@ -151,6 +151,7 @@ function renderAdoptionApplicantTemplate(data) {
 <html lang="fr">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accusé de réception - Chat L'Heureux 56</title>
 </head>
@@ -344,12 +345,12 @@ function renderAdoptionAdminNotificationTemplate(data) {
   // Remarques & motivations
   const motivations = (data.comments || data.adoptionReason || data.catExpectations || '').trim();
 
-  // URLs WhatsApp
+  // URLs WhatsApp directes (sans redirecteur wa.me pour préserver le décodage UTF-8)
   const whatsAppShareText = buildWhatsAppShareText(data);
-  const whatsAppShareUrl = `https://wa.me/?text=${encodeURIComponent(whatsAppShareText)}`;
+  const whatsAppShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsAppShareText)}`;
   const cleanCandidatePhone = cleanPhoneForWhatsApp(phone);
   const whatsAppCandidateUrl = cleanCandidatePhone 
-    ? `https://wa.me/${cleanCandidatePhone}?text=${encodeURIComponent(`Bonjour ${fullName}, je vous contacte suite à votre demande d'adoption pour ${catName} auprès de l'association Chat L'Heureux 56.`)}`
+    ? `https://api.whatsapp.com/send?phone=${cleanCandidatePhone}&text=${encodeURIComponent(`Bonjour ${fullName}, je vous contacte suite à votre demande d'adoption pour ${catName} auprès de l'association Chat L'Heureux 56.`)}`
     : null;
   const adminUrl = `${SITE_URL}/admin`;
   const catUrl = data.catId ? `${SITE_URL}/chat/${data.catId}` : null;
@@ -359,6 +360,7 @@ function renderAdoptionAdminNotificationTemplate(data) {
 <html lang="fr">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Demande d'adoption : ${escapeHtml(catName)} par ${escapeHtml(fullName)}</title>
 </head>

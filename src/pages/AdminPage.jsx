@@ -720,7 +720,14 @@ export default function AdminPage() {
       showToast("Connexion réussie", "Bienvenue dans l'espace administration.");
     } catch (err) {
       console.error("Erreur connexion :", err);
-      setLoginError(getAuthErrorMessage(err.code));
+      let msg = getAuthErrorMessage(err.code);
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        const cleanLogin = loginEmail.trim().toLowerCase();
+        if (cleanLogin.endsWith('@gmail.com') || isSuperAdminEmail(cleanLogin)) {
+          msg = "Identifiants incorrects. Si vous avez précédemment utilisé Google, connectez-vous avec le bouton « Continuer avec Google » ci-dessous, ou cliquez sur « Mot de passe oublié ? » pour réactiver votre mot de passe.";
+        }
+      }
+      setLoginError(msg);
     } finally {
       setLoginSubmitting(false);
     }
